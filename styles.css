@@ -1,159 +1,2048 @@
-/* Estilos otimizados do app - Central stylesheet */
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#3b82f6">
+    <title>Gerador de Cotação de Frete</title>
 
-/* Resetar e base styles */
-* {
-    box-sizing: border-box;
-}
+    <!-- OTIMIZAÇÕES GERAIS: Pré-conexão com servidores externos para carregamento mais rápido -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://www.gstatic.com">
 
-html, body {
-    margin: 0;
-    padding: 0;
-}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Script do EmailJS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    
+    <!-- Scripts do Firebase v8 (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
-body {
-    background-color: #f3f4f6;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
+    <!-- Script do PDF.js (Leitura de PDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
-div, input, textarea, select {
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-}
+    <style>
+        /* Transições suaves para o Dark Mode */
+        body, div, input, textarea, select { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        
+        body { background-color: #f3f4f6; }
+        .input-field {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+            background-color: #ffffff;
+            color: #374151;
+        }
+        .input-field:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
+        .input-disabled { background-color: #e5e7eb; color: #6b7280; cursor: not-allowed; }
+        .modal { display: none; background-color: rgba(0,0,0,0.5); }
+        .modal.active { display: flex; }
 
-/* Container otimizado */
-.max-w-6xl {
-    max-width: 88rem;
-}
+        /* Estilos do Dark Mode */
+        body.dark { background-color: #111827; color: #f9fafb; }
+        body.dark .bg-white { background-color: #1f2937; }
+        body.dark .bg-gray-50 { background-color: #111827; }
+        body.dark .bg-gray-100 { background-color: #374151; }
+        body.dark .bg-blue-50 { background-color: #1e3a8a; border-color: #1e3a8a; }
+        body.dark .text-gray-800, body.dark .text-gray-700 { color: #f9fafb; }
+        body.dark .text-gray-600, body.dark .text-gray-500 { color: #d1d5db; }
+        body.dark .border-gray-200, body.dark .border-gray-300 { border-color: #374151; }
+        body.dark .input-field { background-color: #374151; color: #f9fafb; border-color: #4b5563; }
+        body.dark .input-disabled { background-color: #1f2937; color: #9ca3af; }
+        body.dark .shadow-lg, body.dark .shadow-2xl { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25); }
+        body.dark .bg-yellow-100 { background-color: #78350f; color: #fef3c7; border-color: #92400e; }
+        body.dark .text-yellow-800 { color: #fde68a; }
+        body.dark .bg-blue-100 { background-color: #1e3a8a; color: #bfdbfe; }
+        body.dark .text-blue-700 { color: #93c5fd; }
+        body.dark .bg-red-50 { background-color: #7f1d1d; }
+        body.dark .text-red-500 { color: #fca5a5; }
 
-/* Input fields */
-.input-field {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    margin-top: 0.25rem;
-    font-size: 0.875rem;
-    background-color: #ffffff;
-    color: #374151;
-}
+        @keyframes fillBar {
+            0% { transform: scaleX(0); }
+            50% { transform: scaleX(0.5); }
+            100% { transform: scaleX(1); }
+        }
+        .animate-loader { animation: fillBar 1.5s infinite alternate ease-in-out; transform-origin: left; }
+    </style>
+</head>
 
-.input-field:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-}
+<body class="p-4 md:p-8 font-sans text-gray-800 relative">
 
-.input-disabled {
-    background-color: #e5e7eb;
-    color: #6b7280;
-    cursor: not-allowed;
-}
+    <!-- TELA DE CARREGAMENTO DO SERVIDOR (FIREBASE) -->
+    <div id="telaCarregamento" class="fixed inset-0 z-[500] bg-gray-900 flex flex-col items-center justify-center transition-opacity duration-300">
+        <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" class="h-20 w-20 mb-6 object-contain rounded-full shadow-lg animate-pulse">
+        <h2 class="text-white text-sm font-bold tracking-widest uppercase mb-4"><i class="fa-solid fa-cloud-arrow-down mr-2"></i> Conectando à Nuvem</h2>
+        <div class="w-48 h-1 bg-gray-700 rounded overflow-hidden">
+            <div class="h-full bg-blue-500 w-full animate-loader"></div>
+        </div>
+    </div>
 
-/* Modais */
-.modal {
-    display: none;
-    background-color: rgba(0, 0, 0, 0.5);
-}
+    <!-- TELA DE LOGIN DE ACESSO -->
+    <div id="telaLogin" class="fixed inset-0 z-[100] bg-gray-900/95 hidden items-center justify-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
+            <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" ondblclick="habilitarAdmin()" class="h-16 w-16 mb-4 object-contain rounded-full shadow-sm cursor-default" title="Acesso Restrito">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">Acesso Restrito</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Selecione o seu perfil e insira a senha.</p>
+            
+            <div class="w-full mb-4">
+                <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Seu Perfil</label>
+                <select id="usuarioLogin" class="input-field w-full px-4 py-3 font-bold text-gray-700 dark:text-gray-200 mb-2">
+                    <option value="MuriloAguiar">Murilo Aguiar</option>
+                    <option value="MarcosFernandes">Marcos Fernandes</option>
+                </select>
+            </div>
 
-.modal.active {
-    display: flex;
-}
+            <div class="w-full mb-6">
+                <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Senha</label>
+                <input type="password" id="senhaLogin" class="input-field w-full px-4 py-3 text-center text-xl tracking-[0.5em] font-bold" placeholder="••••••••" onkeydown="verificarEnter(event)">
+                <p id="msgErroLogin" class="text-red-500 dark:text-red-400 text-xs font-bold mt-2 hidden text-center"><i class="fa-solid fa-triangle-exclamation"></i> Senha incorreta!</p>
+                <div class="text-right mt-1">
+                    <button onclick="abrirRecuperacao()" class="text-[10px] text-blue-500 hover:text-blue-700 font-bold underline transition">Esqueci a minha senha</button>
+                </div>
+            </div>
+            
+            <button id="btnLogin" onclick="entrarSistema()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center">
+                <i class="fa-solid fa-right-to-bracket mr-2"></i> ACESSAR
+            </button>
+        </div>
+    </div>
 
-/* Dark Mode Styles */
-body.dark {
-    background-color: #111827;
-    color: #f9fafb;
-}
+    <!-- TELA DE TROCA DE SENHA (PRIMEIRO ACESSO) -->
+    <div id="telaTrocaSenha" class="fixed inset-0 z-[110] bg-gray-900/95 hidden items-center justify-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
+            <div class="bg-yellow-100 text-yellow-600 p-3 rounded-full mb-4">
+                <i class="fa-solid fa-key text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Primeiro Acesso</h2>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-6 text-center">Para a sua segurança, registe uma nova senha pessoal. Usá-la-á nas próximas vezes.</p>
+            
+            <div class="w-full mb-3">
+                <input type="password" id="novaSenha" class="input-field w-full px-4 py-2 text-center text-lg tracking-[0.2em] font-bold" placeholder="Nova Senha">
+            </div>
+            <div class="w-full mb-6">
+                <input type="password" id="confirmaSenha" class="input-field w-full px-4 py-2 text-center text-lg tracking-[0.2em] font-bold" placeholder="Repita a Senha">
+                <p id="msgErroSenha" class="text-red-500 dark:text-red-400 text-xs font-bold mt-2 hidden text-center"><i class="fa-solid fa-triangle-exclamation"></i> As senhas não coincidem ou estão vazias!</p>
+            </div>
+            
+            <button id="btnSalvarSenha" onclick="salvarNovaSenha()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center">
+                <i class="fa-solid fa-check mr-2"></i> GUARDAR E ENTRAR
+            </button>
+        </div>
+    </div>
 
-body.dark .bg-white {
-    background-color: #1f2937;
-}
+    <!-- TELA DE RECUPERAÇÃO DE SENHA -->
+    <div id="telaRecuperacao" class="fixed inset-0 z-[115] bg-gray-900/95 hidden items-center justify-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
+            <div class="bg-blue-100 text-blue-600 p-3 rounded-full mb-4">
+                <i class="fa-solid fa-envelope-open-text text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Recuperar Senha</h2>
+            
+            <!-- PASSO 1: CONFIRMAR E-MAIL -->
+            <div id="passo1Recuperacao" class="w-full flex flex-col items-center">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 text-center font-medium">Informe o e-mail para o qual deseja receber o código de segurança.</p>
+                <div class="w-full mb-6">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase">E-mail de Destino</label>
+                    <input type="email" id="emailRecuperacao" class="input-field w-full px-4 py-2 text-center text-sm font-bold" placeholder="Para qual e-mail enviar?">
+                </div>
+                <button onclick="enviarCodigoRecuperacao()" id="btnReceberCodigo" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> RECEBER CÓDIGO
+                </button>
+                <button onclick="cancelarRecuperacao()" class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-bold underline transition">
+                    Cancelar e Voltar
+                </button>
+            </div>
 
-body.dark .bg-gray-50 {
-    background-color: #111827;
-}
+            <!-- PASSO 2: DIGITAR CÓDIGO E NOVA SENHA -->
+            <div id="passo2Recuperacao" class="w-full flex flex-col items-center hidden">
+                <p id="textoEmailRecuperacao" class="text-xs text-gray-500 dark:text-gray-400 mb-6 text-center font-medium"></p>
+                
+                <div class="w-full mb-3">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase">Código de 6 dígitos</label>
+                    <input type="text" id="codigoRecuperacao" maxlength="6" class="input-field w-full px-4 py-2 text-center text-xl tracking-[0.5em] font-bold text-blue-600" placeholder="000000">
+                </div>
+                <div class="w-full mb-3">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase">Nova Senha</label>
+                    <input type="password" id="novaSenhaRecuperacao" class="input-field w-full px-4 py-2 text-center text-lg tracking-[0.2em] font-bold" placeholder="Nova Senha">
+                </div>
+                <div class="w-full mb-6">
+                    <label class="text-[10px] font-bold text-gray-500 uppercase">Repita a Senha</label>
+                    <input type="password" id="confirmaSenhaRecuperacao" class="input-field w-full px-4 py-2 text-center text-lg tracking-[0.2em] font-bold" placeholder="Repita a Senha">
+                    <p id="msgErroRecuperacao" class="text-red-500 dark:text-red-400 text-xs font-bold mt-2 hidden text-center"><i class="fa-solid fa-triangle-exclamation"></i> Erro!</p>
+                </div>
+                
+                <button id="btnConfirmaRecup" onclick="confirmarRecuperacao()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center mb-3">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> ALTERAR SENHA
+                </button>
+                <button onclick="cancelarRecuperacao()" class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-bold underline transition">
+                    Cancelar e Voltar
+                </button>
+            </div>
+        </div>
+    </div>
 
-body.dark .bg-gray-100 {
-    background-color: #374151;
-}
+    <!-- TOAST NOTIFICATION (AVISO FLUTUANTE) -->
+    <div id="toastNotification" class="fixed top-5 right-5 z-[200] transform translate-x-full opacity-0 transition-all duration-300 flex items-center px-4 py-3 rounded-lg shadow-xl text-white font-bold text-sm pointer-events-none">
+        <i id="toastIcon" class="mr-2"></i>
+        <span id="toastMessage"></span>
+    </div>
 
-body.dark .bg-blue-50 {
-    background-color: #1e3a8a;
-    border-color: #1e3a8a;
-}
+    <div class="max-w-6xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center">
+            <div class="mr-4 flex-shrink-0">
+                <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" alt="Logo Grupo Prime B2B" class="h-12 w-12 object-contain rounded-full">
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Grupo Prime B2B</h1>
+                <p class="text-sm text-gray-500">Sistema Gerador de Cotações <span id="nomeUsuarioLogado" class="ml-2 bg-blue-100 text-blue-800 text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded hidden"></span></p>
+            </div>
+        </div>
+        <div class="flex gap-2 w-full sm:w-auto">
+            <button onclick="toggleDarkMode()" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-yellow-400 px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Alternar Tema">
+                <i id="iconeTema" class="fa-solid fa-moon"></i>
+            </button>
+            <button onclick="abrirHistorico()" class="bg-gray-800 hover:bg-gray-900 dark:bg-gray-600 dark:hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0">
+                <i class="fa-solid fa-cloud mr-2"></i> Histórico na Nuvem
+            </button>
+            <button onclick="sairSistema()" class="bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 text-red-600 dark:text-red-300 px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Sair do Sistema">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+        </div>
+    </div>
 
-body.dark .text-gray-800,
-body.dark .text-gray-700 {
-    color: #f9fafb;
-}
+    <!-- AVISO ADMIN - VISÍVEL APENAS PARA O ADMINISTRADOR -->
+    <div id="avisoAdmin" class="max-w-6xl mx-auto mb-4 bg-red-100 dark:bg-red-900/40 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative hidden shadow-sm flex items-center justify-center">
+        <strong class="font-bold uppercase tracking-wide text-sm"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Perfil Admin: </strong>
+        <span class="block sm:inline ml-2 text-sm font-medium">Necessário efetuar login com perfil de utilizador para gerar cotações.</span>
+    </div>
 
-body.dark .text-gray-600,
-body.dark .text-gray-500 {
-    color: #d1d5db;
-}
+    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row">
+        
+        <div class="w-full md:w-1/2 p-6 overflow-y-auto" style="max-height: 85vh;">
+            
+            <!-- ÁREA DE IMPORTAÇÃO DE PDF -->
+            <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-sm font-bold text-blue-800 dark:text-blue-300"><i class="fa-solid fa-file-pdf mr-2 text-red-500"></i>Leitor de Pedidos (PDF)</h3>
+                    <p class="text-[11px] text-blue-600 dark:text-blue-400 mt-1">Importe o PDF do pedido padrão para preencher os dados automaticamente.</p>
+                </div>
+                <div class="shrink-0">
+                    <input type="file" id="pdfUpload" accept="application/pdf" class="hidden" onchange="iniciarLeituraPDF(event)">
+                    <label for="pdfUpload" id="lblPdfUpload" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-3 rounded shadow transition cursor-pointer flex items-center justify-center">
+                        <i class="fa-solid fa-upload mr-2"></i> LER PDF
+                    </label>
+                </div>
+            </div>
 
-body.dark .border-gray-200,
-body.dark .border-gray-300 {
-    border-color: #374151;
-}
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="text-xs font-bold text-gray-600 uppercase">Nº do Pedido</label>
+                    <input type="text" id="pedido" class="input-field" placeholder="Ex: 12345" oninput="dadosAlterados()">
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="text-xs font-bold text-gray-600 uppercase">Modalidade de Frete</label>
+                    <select id="modalidade" class="input-field font-bold text-gray-700" onchange="dadosAlterados()">
+                        <option value="CIF">CIF (Pago na Origem)</option>
+                        <option value="FOB">FOB (Pago no Destino)</option>
+                    </select>
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="text-xs font-bold text-gray-600 uppercase">Valor da NF (R$)</label>
+                    <input type="text" id="valorNf" class="input-field" placeholder="Ex: 1.500,00" oninput="this.value=mascaraMoeda(this.value); dadosAlterados()">
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <div class="flex gap-2">
+                        <div class="w-1/2">
+                            <label class="text-xs font-bold text-gray-600 uppercase">Total Vol.</label>
+                            <input type="text" id="qtdVolumes" class="input-field input-disabled text-center" readonly placeholder="0">
+                        </div>
+                        <div class="w-1/2">
+                            <label class="text-xs font-bold text-gray-600 uppercase">Total (kg)</label>
+                            <input type="text" id="pesoTotal" class="input-field input-disabled text-center" readonly placeholder="0.0">
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-body.dark .input-field {
-    background-color: #374151;
-    color: #f9fafb;
-    border-color: #4b5563;
-}
+            <hr class="my-4 border-gray-200">
 
-body.dark .input-disabled {
-    background-color: #1f2937;
-    color: #9ca3af;
-}
+            <div class="grid grid-cols-2 gap-4 mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <div class="col-span-2 flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-blue-700 dark:text-blue-300 uppercase"><i class="fa-solid fa-building mr-2"></i>Empresa Remetente</h3>
+                </div>
+                <div class="col-span-2">
+                    <select id="empresaRemetente" class="input-field border-blue-300 font-bold text-blue-800 dark:text-blue-200" onchange="dadosAlterados()">
+                        <option value="">-- Selecione a Empresa --</option>
+                        <option value="P">Prime2P</option>
+                        <option value="XD">PrimeXD</option>
+                        <option value="XC">PrimeXCORP</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <p class="text-[10px] text-gray-500 italic mt-1"><i class="fa-solid fa-circle-info"></i> O CNPJ, Nome e Endereço serão preenchidos automaticamente no texto final.</p>
+                </div>
+            </div>
 
-body.dark .shadow-lg,
-body.dark .shadow-2xl {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
-}
+            <hr class="my-4 border-gray-200">
 
-body.dark .bg-yellow-100 {
-    background-color: #78350f;
-    color: #fef3c7;
-    border-color: #92400e;
-}
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="col-span-2">
+                    <h3 class="text-sm font-bold text-green-600 uppercase mb-2"><i class="fa-solid fa-map-location-dot mr-2"></i>Destinatário</h3>
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="text-xs font-bold text-gray-600 uppercase">CNPJ</label>
+                    <div class="relative">
+                        <input type="text" id="destCnpj" class="input-field pr-8" placeholder="00.000.000/0000-00" maxlength="18" oninput="this.value = mascaraCNPJ(this.value); dadosAlterados();" onblur="buscarCNPJ(this.value, 'destNome', 'loadDestCnpj')">
+                        <span id="loadDestCnpj" class="absolute right-2 top-3 text-green-500 hidden"><i class="fas fa-spinner fa-spin"></i></span>
+                    </div>
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="text-xs font-bold text-gray-600 uppercase">Nome</label>
+                    <input type="text" id="destNome" class="input-field input-disabled" readonly placeholder="Busca automática via CNPJ" oninput="dadosAlterados()">
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="text-xs font-bold text-gray-600 uppercase">CEP</label>
+                    <div class="relative">
+                        <input type="text" id="destCep" class="input-field pr-8" placeholder="00000-000" maxlength="9" oninput="this.value = mascaraCEP(this.value); dadosAlterados(); if(this.value.length < 9) { const box = document.getElementById('boxRecomendacao'); if(box) box.classList.add('hidden'); }" onblur="buscarCEP(this.value, 'destCidade', 'loadDestCep')">
+                        <span id="loadDestCep" class="absolute right-2 top-3 text-green-500 hidden"><i class="fas fa-spinner fa-spin"></i></span>
+                    </div>
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="text-xs font-bold text-gray-600 uppercase">Cidade / UF</label>
+                    <input type="text" id="destCidade" class="input-field input-disabled" readonly placeholder="Busca automática via CEP" oninput="dadosAlterados()">
+                </div>
 
-body.dark .text-yellow-800 {
-    color: #fde68a;
-}
+                <!-- CAIXA DE INTELIGÊNCIA - TRANSPORTADORAS RECOMENDADAS -->
+                <div id="boxRecomendacao" class="col-span-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 p-4 rounded-lg shadow-inner hidden mt-2 transition-all duration-300">
+                    <div class="flex items-start">
+                        <div class="text-indigo-500 dark:text-indigo-400 mt-0.5 mr-3">
+                            <i class="fa-solid fa-robot text-xl animate-pulse"></i>
+                        </div>
+                        <div class="w-full">
+                            <h4 class="text-xs font-bold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider mb-1">Cérebro Logístico</h4>
+                            <p id="textoRecomendacao" class="text-[11px] text-indigo-600 dark:text-indigo-400 mb-3"></p>
+                            <div id="listaRecomendadas" class="flex flex-col gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-body.dark .bg-blue-100 {
-    background-color: #1e3a8a;
-    color: #bfdbfe;
-}
+            <hr class="my-4 border-gray-200">
 
-body.dark .text-blue-700 {
-    color: #93c5fd;
-}
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-purple-600 uppercase"><i class="fa-solid fa-cubes mr-2"></i>Itens da Cotação</h3>
+                <p class="text-[10px] text-gray-500 mt-1"><i class="fa-solid fa-circle-info"></i> Preencha as medidas e clique no botão <strong class="text-purple-600">+</strong> ao final da linha para adicionar outro item.</p>
+            </div>
+            
+            <!-- CABEÇALHO DA TABELA E CONTAINER COM SCROLL HORIZONTAL -->
+            <div class="w-full overflow-x-auto pb-2">
+                <div class="min-w-[650px]">
+                    <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 mb-2 px-2 text-[10px] font-bold text-gray-500 uppercase items-center">
+                        <div class="text-center">Vol</div>
+                        <div>Descrição</div>
+                        <div class="text-center">Comp</div>
+                        <div class="text-center">Larg</div>
+                        <div class="text-center">Alt</div>
+                        <div class="text-center">Peso Un.</div>
+                        <div class="text-center">Ações</div>
+                    </div>
+                    
+                    <div id="containerItens" class="space-y-3"></div>
+                </div>
+            </div>
 
-body.dark .bg-red-50 {
-    background-color: #7f1d1d;
-}
+        </div>
 
-body.dark .text-red-500 {
-    color: #fca5a5;
-}
+        <div class="w-full md:w-1/2 bg-gray-50 p-6 border-l border-gray-200 flex flex-col relative">
+            <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center justify-between">
+                <span><i class="fa-regular fa-file-lines mr-2"></i> Resultado Final</span>
+                <span id="badgeCodigo" class="bg-yellow-200 text-yellow-800 text-xs px-2 py-1 rounded font-bold hidden"></span>
+            </h2>
+            
+            <div class="flex-grow">
+                <textarea id="textoFinal" readonly tabindex="-1" class="w-full h-full min-h-[400px] p-4 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner text-sm font-mono text-gray-500 dark:text-gray-400 resize-none focus:outline-none cursor-not-allowed select-none"></textarea>
+            </div>
 
-/* Animações */
-@keyframes fillBar {
-    0% {
-        transform: scaleX(0);
-    }
-    50% {
-        transform: scaleX(0.5);
-    }
-    100% {
-        transform: scaleX(1);
-    }
-}
+            <button onclick="processarECopiar()" id="btnCopiar" class="mt-4 w-full py-3 bg-red-500 text-white font-bold rounded-lg shadow-md transition duration-200 flex items-center justify-center text-lg opacity-60 cursor-not-allowed">
+                <i class="fa-solid fa-lock mr-2"></i> SELECIONE O REMETENTE
+            </button>
+        </div>
 
-.animate-loader {
-    animation: fillBar 1.5s infinite alternate ease-in-out;
-    transform-origin: left;
-}
+    </div>
+
+    <!-- MODAL DE HISTÓRICO -->
+    <div id="modalHistorico" class="modal fixed inset-0 z-50 items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 w-11/12 max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[85vh] border border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center p-5 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+                <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-cloud mr-2 text-blue-500"></i> Histórico Sincronizado</h2>
+                <button onclick="fecharHistorico()" class="text-gray-500 hover:text-red-500 text-2xl transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-4 border-b border-gray-200 bg-white">
+                <div class="flex gap-2">
+                    <div class="relative flex-grow">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                        <input type="text" id="inputBuscaHistorico" placeholder="Buscar por ID, destinatário ou data..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 input-field" oninput="renderizarListaHistorico()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-grow bg-gray-100">
+                <div id="listaHistorico" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CUSTOMIZADO (ALERT/CONFIRM) -->
+    <div id="customDialog" class="modal fixed inset-0 z-[60] items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-11/12 max-w-sm p-6 transform transition-all border border-gray-200 dark:border-gray-700">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2 flex items-center" id="dialogTitle">
+                <i class="fa-solid fa-circle-info text-blue-500 mr-2"></i> Aviso
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6" id="dialogMessage"></p>
+            <div class="flex justify-end gap-3">
+                <button id="dialogBtnCancel" onclick="closeDialog()" class="hidden px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition">Cancelar</button>
+                <button id="dialogBtnConfirm" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition shadow">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===================================================================
+        // FIREBASE E CONFIGURAÇÕES GLOBAIS
+        // ===================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDhrqD3K9BdIZCLui282igMLfv4gcgQv6I",
+            authDomain: "prime-b2b-2a71b.firebaseapp.com",
+            databaseURL: "https://prime-b2b-2a71b-default-rtdb.firebaseio.com",
+            projectId: "prime-b2b-2a71b",
+            storageBucket: "prime-b2b-2a71b.firebasestorage.app",
+            messagingSenderId: "936264772198",
+            appId: "1:936264772198:web:f98ca29afbe652c9a3dba7"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let contadorItens = 0;
+        let idCotacaoSessao = null;
+        let historicoNuvem = []; // Guarda o histórico em tempo real
+        let catalogoProdutos = {}; // GUARDA A MEMÓRIA DOS PRODUTOS (NOVO)
+
+        // ===================================================================
+        // EMAILJS CONFIG
+        // ===================================================================
+        const EMAILJS_PUBLIC_KEY = "CTg8A_GwwkKvSsNfg"; 
+        const EMAILJS_SERVICE_ID = "service_cup0dnn";
+        const EMAILJS_TEMPLATE_ID = "template_qicj1j7";
+        if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== "") {
+            emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+        }
+
+        // ===================================================================
+        // USUÁRIOS E LOGIN NA NUVEM
+        // ===================================================================
+        const SENHA_PADRAO = "prime2026";
+        const USUARIOS_INICIAIS = {
+            "admin": { senha: SENHA_PADRAO, primeiroAcesso: false, email: "admin@grupoprimeb2b.com.br" },
+            "MuriloAguiar": { senha: SENHA_PADRAO, primeiroAcesso: true, email: "murilo.aguiar@gmail.com" },
+            "MarcosFernandes": { senha: SENHA_PADRAO, primeiroAcesso: true, email: "marcos.fernandes@gmail.com" }
+        };
+        let perfilSelecionado = null;
+
+        async function conectarFirebase() {
+            try {
+                // 1. Prepara Usuários
+                let snapUsuarios = await database.ref('usuarios').once('value');
+                if (!snapUsuarios.exists()) {
+                    await database.ref('usuarios').set(USUARIOS_INICIAIS);
+                } else {
+                    let dbUsers = snapUsuarios.val();
+                    let atualizou = false;
+                    if(!dbUsers["admin"]) { dbUsers["admin"] = USUARIOS_INICIAIS["admin"]; atualizou = true; }
+                    for (let u in USUARIOS_INICIAIS) {
+                        if (dbUsers[u] && !dbUsers[u].email) {
+                            dbUsers[u].email = USUARIOS_INICIAIS[u].email;
+                            atualizou = true;
+                        }
+                    }
+                    if (atualizou) await database.ref('usuarios').set(dbUsers);
+                }
+
+                // 2. Prepara Contadores (Se não existirem)
+                let snapContadores = await database.ref('contadores').once('value');
+                if (!snapContadores.exists()) {
+                    await database.ref('contadores').set({ "P": 0, "XD": 0, "XC": 0 });
+                }
+
+                // 3. Ouvinte de Histórico em Tempo Real
+                database.ref('historico').on('value', (snapshot) => {
+                    const dados = snapshot.val();
+                    let array = [];
+                    for(let key in dados) {
+                        array.push(dados[key]);
+                    }
+                    // Ordena do mais recente para o mais antigo
+                    array.sort((a,b) => b.timestamp - a.timestamp);
+                    historicoNuvem = array;
+                    
+                    if(document.getElementById('modalHistorico').classList.contains('active')){
+                        renderizarListaHistorico();
+                    }
+                });
+
+                // 4. Ouvinte do Catálogo Inteligente (Memória de Produtos)
+                database.ref('produtos').on('value', (snapshot) => {
+                    catalogoProdutos = snapshot.val() || {};
+                    atualizarDataListProdutos();
+                });
+
+                // Remove a tela de carregamento suavemente
+                setTimeout(() => {
+                    document.getElementById('telaCarregamento').style.opacity = '0';
+                    setTimeout(() => document.getElementById('telaCarregamento').style.display = 'none', 300);
+                }, 800);
+
+            } catch (err) {
+                console.error("Erro ao conectar ao Firebase:", err);
+                showToast("Erro de conexão. Verifique a internet.", "error");
+            }
+        }
+
+        function habilitarAdmin() {
+            const select = document.getElementById('usuarioLogin');
+            if(!select.querySelector('option[value="admin"]')) {
+                const opt = document.createElement('option');
+                opt.value = 'admin';
+                opt.text = 'Administrador (Admin)';
+                select.appendChild(opt);
+                select.value = 'admin';
+                showDialog('Modo de Administração liberado no seletor.', 'alert');
+            }
+        }
+
+        function checarEstadoLogin() {
+            const logado = localStorage.getItem('primeLogado');
+            const usuarioAtual = localStorage.getItem('primeUsuarioAtual');
+            const ultimaAtividade = localStorage.getItem('primeUltimaAtividade');
+
+            // Verifica inatividade logo ao abrir/checar o estado
+            if (logado === 'true' && ultimaAtividade) {
+                const TEMPO_EXPIRACAO = 60 * 60 * 1000; // 1 hora em milissegundos
+                if(Date.now() - parseInt(ultimaAtividade) > TEMPO_EXPIRACAO) {
+                    localStorage.removeItem('primeLogado');
+                    localStorage.removeItem('primeUsuarioAtual');
+                    localStorage.removeItem('primeUltimaAtividade');
+                    
+                    document.getElementById('telaLogin').style.display = 'flex';
+                    document.getElementById('telaTrocaSenha').style.display = 'none';
+                    document.getElementById('senhaLogin').value = '';
+                    document.getElementById('nomeUsuarioLogado').classList.add('hidden');
+                    document.getElementById('avisoAdmin').classList.add('hidden');
+                    
+                    showDialog('Sua sessão expirou devido a 1 hora de inatividade. Por favor, faça login novamente.', 'alert');
+                    return; // Interrompe para forçar login
+                }
+            }
+
+            if (logado === 'true' && usuarioAtual) {
+                document.getElementById('telaLogin').style.display = 'none';
+                document.getElementById('telaTrocaSenha').style.display = 'none';
+                document.getElementById('senhaLogin').value = '';
+                
+                const badge = document.getElementById('nomeUsuarioLogado');
+                badge.innerText = `Logado: ${usuarioAtual}`;
+                badge.classList.remove('hidden');
+
+                if (usuarioAtual === 'admin') {
+                    document.getElementById('avisoAdmin').classList.remove('hidden');
+                } else {
+                    document.getElementById('avisoAdmin').classList.add('hidden');
+                }
+                
+                validarBotaoCopiar(); 
+            } else {
+                document.getElementById('telaLogin').style.display = 'flex';
+                document.getElementById('telaTrocaSenha').style.display = 'none';
+                document.getElementById('senhaLogin').value = '';
+                document.getElementById('senhaLogin').focus();
+                document.getElementById('nomeUsuarioLogado').classList.add('hidden');
+                document.getElementById('avisoAdmin').classList.add('hidden');
+            }
+        }
+
+        async function entrarSistema() {
+            const user = document.getElementById('usuarioLogin').value;
+            const pass = document.getElementById('senhaLogin').value;
+
+            const btn = document.getElementById('btnLogin');
+            const btnOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> VALIDANDO...';
+            btn.disabled = true;
+
+            try {
+                let snap = await database.ref('usuarios/' + user).once('value');
+                let dadosUsuario = snap.val();
+
+                if (dadosUsuario && dadosUsuario.senha === pass) {
+                    document.getElementById('msgErroLogin').classList.add('hidden');
+                    
+                    if (dadosUsuario.primeiroAcesso) {
+                        perfilSelecionado = user;
+                        document.getElementById('telaLogin').style.display = 'none';
+                        document.getElementById('telaTrocaSenha').style.display = 'flex';
+                        document.getElementById('novaSenha').focus();
+                    } else {
+                        efetuarLogin(user);
+                    }
+                } else {
+                    document.getElementById('msgErroLogin').classList.remove('hidden');
+                    document.getElementById('senhaLogin').focus();
+                }
+            } catch (err) {
+                showToast("Erro ao comunicar com o servidor.", "error");
+            } finally {
+                btn.innerHTML = btnOriginal;
+                btn.disabled = false;
+            }
+        }
+
+        async function salvarNovaSenha() {
+            const nova = document.getElementById('novaSenha').value;
+            const conf = document.getElementById('confirmaSenha').value;
+
+            if(nova === '' || nova !== conf) {
+                document.getElementById('msgErroSenha').classList.remove('hidden');
+                return;
+            }
+
+            const btn = document.getElementById('btnSalvarSenha');
+            const btnOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...';
+            btn.disabled = true;
+
+            try {
+                await database.ref('usuarios/' + perfilSelecionado + '/senha').set(nova);
+                await database.ref('usuarios/' + perfilSelecionado + '/primeiroAcesso').set(false);
+
+                document.getElementById('msgErroSenha').classList.add('hidden');
+                document.getElementById('novaSenha').value = '';
+                document.getElementById('confirmaSenha').value = '';
+                
+                efetuarLogin(perfilSelecionado);
+                showDialog('Senha cadastrada com sucesso na Nuvem! Bem-vindo(a).', 'alert');
+            } catch (err) {
+                showToast("Erro ao salvar a senha.", "error");
+            } finally {
+                btn.innerHTML = btnOriginal;
+                btn.disabled = false;
+            }
+        }
+
+        function efetuarLogin(user) {
+            localStorage.setItem('primeLogado', 'true');
+            localStorage.setItem('primeUsuarioAtual', user);
+            localStorage.setItem('primeUltimaAtividade', Date.now().toString()); // Marca o tempo zero da sessão
+            checarEstadoLogin();
+        }
+
+        function verificarEnter(event) {
+            if (event.key === 'Enter') {
+                if (document.getElementById('telaLogin').style.display !== 'none') {
+                    entrarSistema();
+                }
+            }
+        }
+
+        function sairSistema() {
+            showDialog('Tem certeza que deseja desconectar do sistema?', 'confirm', () => {
+                localStorage.removeItem('primeLogado');
+                localStorage.removeItem('primeUsuarioAtual'); 
+                checarEstadoLogin();
+            });
+        }
+
+        // --- SISTEMA DE TOAST (AVISO PEQUENO FLUTUANTE) ---
+        function showToast(mensagem, tipo = 'success') {
+            const toast = document.getElementById('toastNotification');
+            const msg = document.getElementById('toastMessage');
+            const icon = document.getElementById('toastIcon');
+
+            msg.innerText = mensagem;
+            toast.className = 'fixed top-5 right-5 z-[200] transform transition-all duration-300 flex items-center px-4 py-3 rounded-lg shadow-xl text-white font-bold text-sm pointer-events-none';
+
+            if(tipo === 'success') {
+                toast.classList.add('bg-green-600');
+                icon.className = 'fa-solid fa-circle-check mr-2';
+            } else if(tipo === 'error') {
+                toast.classList.add('bg-red-600');
+                icon.className = 'fa-solid fa-triangle-exclamation mr-2';
+            } else {
+                toast.classList.add('bg-blue-600');
+                icon.className = 'fa-solid fa-circle-info mr-2';
+            }
+
+            setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
+            setTimeout(() => toast.classList.add('translate-x-full', 'opacity-0'), 4000);
+        }
+
+        // --- SISTEMA DE RECUPERAÇÃO DE SENHA (COM ENVIO REAL) ---
+        let codigoRecuperacaoAtual = null;
+
+        function abrirRecuperacao() {
+            document.getElementById('telaLogin').style.display = 'none';
+            document.getElementById('telaRecuperacao').style.display = 'flex';
+            
+            document.getElementById('passo1Recuperacao').classList.remove('hidden');
+            document.getElementById('passo2Recuperacao').classList.add('hidden');
+            
+            document.getElementById('emailRecuperacao').value = '';
+            document.getElementById('codigoRecuperacao').value = '';
+            document.getElementById('novaSenhaRecuperacao').value = '';
+            document.getElementById('confirmaSenhaRecuperacao').value = '';
+            document.getElementById('msgErroRecuperacao').classList.add('hidden');
+        }
+
+        function enviarCodigoRecuperacao() {
+            const user = document.getElementById('usuarioLogin').value;
+            const emailDigitado = document.getElementById('emailRecuperacao').value.trim();
+
+            if (!emailDigitado || !emailDigitado.includes('@')) {
+                showToast('Por favor, introduza um e-mail válido.', 'error');
+                return;
+            }
+
+            const btnEnvia = document.getElementById('btnReceberCodigo');
+            const textoOriginalBtn = btnEnvia.innerHTML;
+            btnEnvia.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> A ENVIAR...';
+            btnEnvia.disabled = true;
+
+            codigoRecuperacaoAtual = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            try {
+                if (typeof emailjs === 'undefined') throw new Error("EmailJS bloqueado ou não carregado");
+
+                emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                    to_email: emailDigitado,
+                    to_name: user,
+                    codigo: codigoRecuperacaoAtual
+                }).then(function(response) {
+                    avancarParaPasso2(emailDigitado);
+                    showToast('E-mail enviado! Verifique a sua caixa de entrada e Spam.', 'success');
+                    btnEnvia.innerHTML = textoOriginalBtn;
+                    btnEnvia.disabled = false;
+                }).catch(function(error) {
+                    let detalheErro = error.text || 'Verifique as chaves no código.';
+                    showToast('Erro EmailJS: ' + detalheErro, 'error');
+                    btnEnvia.innerHTML = textoOriginalBtn;
+                    btnEnvia.disabled = false;
+                });
+            } catch (err) {
+                if (err.message && err.message.includes("bloqueado")) {
+                    showToast('O sistema de e-mail foi bloqueado pelo seu navegador (verifique o AdBlock).', 'error');
+                } else {
+                    showToast('Ocorreu um erro no sistema de envio.', 'error');
+                }
+                btnEnvia.innerHTML = textoOriginalBtn;
+                btnEnvia.disabled = false;
+            }
+        }
+
+        function avancarParaPasso2(emailDigitado) {
+            document.getElementById('passo1Recuperacao').classList.add('hidden');
+            document.getElementById('passo2Recuperacao').classList.remove('hidden');
+            
+            const partesEmail = emailDigitado.split('@');
+            const prefixo = partesEmail[0].length > 3 ? partesEmail[0].substring(0, 3) : partesEmail[0];
+            const emailMascarado = prefixo + '****@' + partesEmail[1];
+            
+            document.getElementById('textoEmailRecuperacao').innerText = `Enviámos um código de 6 dígitos para:\n${emailMascarado}`;
+        }
+
+        function cancelarRecuperacao() {
+            document.getElementById('telaRecuperacao').style.display = 'none';
+            document.getElementById('telaLogin').style.display = 'flex';
+            codigoRecuperacaoAtual = null;
+        }
+
+        async function confirmarRecuperacao() {
+            const codigoDigitado = document.getElementById('codigoRecuperacao').value.trim();
+            const nova = document.getElementById('novaSenhaRecuperacao').value;
+            const conf = document.getElementById('confirmaSenhaRecuperacao').value;
+            const msgErro = document.getElementById('msgErroRecuperacao');
+            
+            if(codigoDigitado !== codigoRecuperacaoAtual) {
+                msgErro.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Código inválido!';
+                msgErro.classList.remove('hidden');
+                return;
+            }
+            
+            if(nova === '' || nova !== conf) {
+                msgErro.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> As senhas não coincidem ou estão vazias!';
+                msgErro.classList.remove('hidden');
+                return;
+            }
+
+            const btn = document.getElementById('btnConfirmaRecup');
+            const originalBtn = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...';
+            btn.disabled = true;
+            
+            try {
+                const user = document.getElementById('usuarioLogin').value;
+                await database.ref('usuarios/' + user + '/senha').set(nova);
+                await database.ref('usuarios/' + user + '/primeiroAcesso').set(false);
+                
+                codigoRecuperacaoAtual = null;
+                document.getElementById('telaRecuperacao').style.display = 'none';
+                document.getElementById('telaLogin').style.display = 'flex';
+                showDialog('Senha alterada com sucesso! Já pode acessar com a nova senha.', 'alert');
+            } catch(e) {
+                showToast("Erro ao alterar senha na nuvem.", "error");
+            } finally {
+                btn.innerHTML = originalBtn;
+                btn.disabled = false;
+            }
+        }
+
+        // --- SISTEMA DE DIALOG CUSTOMIZADO (Substitui alert e confirm) ---
+        let callbackConfirmDialog = null;
+
+        function showDialog(mensagem, tipo = 'alert', callback = null) {
+            document.getElementById('dialogMessage').innerText = mensagem;
+            const dialog = document.getElementById('customDialog');
+            const btnCancel = document.getElementById('dialogBtnCancel');
+            const titleIcon = document.querySelector('#dialogTitle i');
+            
+            if (tipo === 'confirm') {
+                btnCancel.classList.remove('hidden');
+                titleIcon.className = "fa-solid fa-triangle-exclamation text-yellow-500 mr-2";
+                document.getElementById('dialogTitle').innerHTML = titleIcon.outerHTML + " Confirmação";
+                callbackConfirmDialog = callback;
+            } else {
+                btnCancel.classList.add('hidden');
+                titleIcon.className = "fa-solid fa-circle-info text-blue-500 mr-2";
+                document.getElementById('dialogTitle').innerHTML = titleIcon.outerHTML + " Aviso";
+                callbackConfirmDialog = null;
+            }
+            
+            dialog.classList.add('active');
+        }
+
+        function closeDialog() {
+            document.getElementById('customDialog').classList.remove('active');
+        }
+
+        document.getElementById('dialogBtnConfirm').addEventListener('click', () => {
+            closeDialog();
+            if (callbackConfirmDialog) callbackConfirmDialog();
+        });
+
+
+        const dadosRemetentes = {
+            "P": {
+                nome: "PRIME2P SOLUCOES EM TI E REPRESENTACAO COMERCIAL LTDA",
+                cnpj: "11.259.196/00001-50", 
+                cep: "03511-050",
+                cidade: "São Paulo / SP"
+            },
+            "XD": {
+                nome: "PRIMEXD COMERCIO DE EQUIPAMENTOS E INFORMATICA LTDA",
+                cnpj: "43.391.624/0001-90", 
+                cep: "03511-050",
+                cidade: "São Paulo / SP"
+            },
+            "XC": {
+                nome: "PRIMEXCORP COMERCIO DE SUPRIMENTOS LTDA",
+                cnpj: "49.123.568/0001-99", 
+                cep: "03511-050",           
+                cidade: "SÃO PAULO / SP"    
+            }
+        };
+
+        function dadosAlterados() {
+            idCotacaoSessao = null; 
+            document.getElementById('badgeCodigo').classList.add('hidden');
+            calcularTotais(); 
+            gerarPreviaTexto();
+            validarBotaoCopiar();
+        }
+
+        function calcularTotais() {
+            let totalVolumes = 0;
+            let totalPeso = 0;
+
+            const rows = document.querySelectorAll('.item-row');
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const vol = parseInt(inputs[0].value.trim(), 10) || 0;
+                const pesoUn = parseFloat(inputs[5].value.replace(',', '.').trim()) || 0;
+
+                totalVolumes += vol;
+                totalPeso += (vol * pesoUn); 
+            });
+
+            document.getElementById('qtdVolumes').value = totalVolumes > 0 ? totalVolumes : "";
+            document.getElementById('pesoTotal').value = totalPeso > 0 ? totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 3}) : "";
+        }
+
+        function validarBotaoCopiar() {
+            const btn = document.getElementById('btnCopiar');
+            const usuarioAtual = localStorage.getItem('primeUsuarioAtual');
+            
+            if (usuarioAtual === 'admin') {
+                btn.innerHTML = '<i class="fa-solid fa-ban mr-2"></i> MODO ADMIN - CÓPIA BLOQUEADA';
+                btn.className = "mt-4 w-full py-3 bg-red-600 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-60 cursor-not-allowed";
+                btn.disabled = true;
+                return false;
+            }
+
+            const pedido = document.getElementById('pedido').value.trim();
+            const valorNf = document.getElementById('valorNf').value.trim();
+            const remetente = document.getElementById('empresaRemetente').value;
+            const destCnpj = document.getElementById('destCnpj').value.trim();
+            const destNome = document.getElementById('destNome').value.trim();
+            const destCep = document.getElementById('destCep').value.trim();
+            const destCidade = document.getElementById('destCidade').value.trim();
+            
+            if(!pedido || !valorNf) {
+                btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> PREENCHA O PEDIDO E VALOR DA NF';
+                btn.className = "mt-4 w-full py-3 bg-red-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-60 cursor-not-allowed";
+                btn.disabled = true;
+                return false;
+            }
+
+            if(!remetente) {
+                btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> SELECIONE O CNPJ REMETENTE';
+                btn.className = "mt-4 w-full py-3 bg-red-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-60 cursor-not-allowed";
+                btn.disabled = true;
+                return false;
+            } 
+            
+            if(!destCnpj || !destNome || !destCep || !destCidade) {
+                btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> PREENCHA O DESTINATÁRIO COMPLETO';
+                btn.className = "mt-4 w-full py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-90 cursor-not-allowed";
+                btn.disabled = true;
+                return false;
+            }
+
+            let itensCompletos = true;
+            const rows = document.querySelectorAll('.item-row');
+            
+            if(rows.length === 0) itensCompletos = false;
+            
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                inputs.forEach(input => {
+                    if (input.value.trim() === '') {
+                        itensCompletos = false;
+                    }
+                });
+            });
+
+            if(!itensCompletos) {
+                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> PREENCHA TODOS OS DADOS DOS ITENS';
+                btn.className = "mt-4 w-full py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-90 cursor-not-allowed";
+                btn.disabled = true;
+                return false;
+            } 
+
+            btn.innerHTML = '<i class="fa-regular fa-copy mr-2"></i> GERAR CÓDIGO E COPIAR';
+            btn.className = "mt-4 w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-200 flex items-center justify-center text-lg cursor-pointer";
+            btn.disabled = false;
+            return true;
+        }
+
+        // --- SISTEMA DE ITENS ERP INTELIGENTE ---
+        function adicionarItem() {
+            contadorItens++;
+            const div = document.createElement('div');
+            // Formato de grade alinhado com o novo cabeçalho
+            div.className = 'grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 bg-gray-50 dark:bg-gray-700 p-2 rounded-lg border border-gray-200 dark:border-gray-600 items-center item-row';
+            div.id = `item-${contadorItens}`;
+            
+            div.innerHTML = `
+                <input type="text" class="input-field m-0 py-1.5 px-2 text-center font-bold" placeholder="0" oninput="dadosAlterados()">
+                <input type="text" list="dlProdutos" class="input-field m-0 py-1.5 px-2 font-medium transition-colors" placeholder="Ex: Caixa de Parafusos..." oninput="verificarMemoriaProduto(this); dadosAlterados()" title="Nome do Produto">
+                <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
+                <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
+                <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
+                <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="kg" oninput="dadosAlterados()">
+                <div class="btn-container flex justify-center gap-1"></div>
+            `;
+            document.getElementById('containerItens').appendChild(div);
+            
+            atualizarBotoesItens();
+            dadosAlterados();
+        }
+
+        function atualizarBotoesItens() {
+            const rows = document.querySelectorAll('.item-row');
+            rows.forEach((row, index) => {
+                const btnContainer = row.querySelector('.btn-container');
+                const rowId = row.id;
+                
+                let botoesHTML = '';
+
+                if (rows.length > 1) {
+                    botoesHTML += `
+                        <button onclick="removerItem('${rowId}')" class="bg-red-100 hover:bg-red-200 text-red-600 rounded w-8 h-8 flex items-center justify-center font-bold shadow-sm transition border border-red-200 shrink-0" title="Remover Linha">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    `;
+                }
+
+                if (index === rows.length - 1) {
+                    botoesHTML += `
+                        <button onclick="adicionarItem()" class="bg-purple-600 hover:bg-purple-700 text-white rounded w-8 h-8 flex items-center justify-center font-bold shadow transition shrink-0" title="Adicionar Nova Linha">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    `;
+                }
+                
+                btnContainer.innerHTML = botoesHTML;
+            });
+        }
+
+        function removerItem(id) {
+            const rows = document.querySelectorAll('.item-row');
+            if (rows.length > 1) {
+                document.getElementById(id).remove();
+                atualizarBotoesItens();
+                dadosAlterados();
+            }
+        }
+
+        function gerarPreviaTexto(codigoFinal = null) {
+            const val = (id) => {
+                const el = document.getElementById(id);
+                return el ? el.value.trim() : "";
+            };
+            
+            let texto = "";
+            if (codigoFinal) {
+                texto += `[ CÓDIGO DA COTAÇÃO: ${codigoFinal} ]\n`;
+                texto += `------------------------------------------\n\n`;
+            }
+
+            texto += `PEDIDO ${val('pedido')}.\n\n`;
+            texto += `COTAÇÃO DE FRETE - GRUPO PRIME B2B\n`;
+            texto += `MODALIDADE DE FRETE: ${val('modalidade')}\n\n`;
+            
+            texto += `INFORMAÇÕES DO REMETENTE:\n\n`;
+            
+            const remetenteKey = val('empresaRemetente');
+            if(remetenteKey && dadosRemetentes[remetenteKey]) {
+                const rem = dadosRemetentes[remetenteKey];
+                texto += `NOME: ${rem.nome}.\n`;
+                texto += `CNPJ: ${rem.cnpj}.\n`;
+                texto += `CEP REMETENTE: ${rem.cep} - ${rem.cidade}\n`;
+            } else {
+                texto += `NOME: \n`;
+                texto += `CNPJ: \n`;
+                texto += `CEP REMETENTE: \n`;
+            }
+            texto += `\n`;
+            
+            texto += `INFORMAÇÕES DO DESTINATÁRIO:\n\n`;
+            texto += `NOME: ${val('destNome')}.\n`;
+            texto += `CNPJ: ${val('destCnpj')}.\n`;
+            let cidDest = val('destCidade') ? ` - ${val('destCidade')}` : "";
+            texto += `CEP DESTINATÁRIO: ${val('destCep')}${cidDest}\n\n`;
+            
+            texto += `VALOR DA NOTA FISCAL: R$ ${val('valorNf')}.\n`;
+            texto += `QUANTIDADE DE VOLUME(S): ${val('qtdVolumes')}.\n`;
+            texto += `PESO TOTAL: ${val('pesoTotal')} Kg.\n\n`;
+            
+            texto += `VOLUME(S) E PESO(S) DO(S) ITEM(NS):\n\n`;
+
+            const rows = document.querySelectorAll('.item-row');
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const vol = inputs[0].value.trim();
+                const desc = inputs[1].value.trim();
+                const comp = inputs[2].value.trim();
+                const larg = inputs[3].value.trim();
+                const alt = inputs[4].value.trim();
+                const pesoUn = inputs[5].value.trim();
+
+                if(vol !== "" && desc !== "") {
+                    texto += `${vol} vol. - ${desc} | ${comp}cm x ${larg}cm x ${alt}cm - ${pesoUn}kg un.\n`;
+                }
+            });
+
+            texto += `\nAguardamos o valor do frete e número da cotação para análise.`;
+
+            document.getElementById('textoFinal').value = texto;
+            return texto; 
+        }
+
+        // --- SISTEMA DE GERAÇÃO E CÓPIA NA NUVEM ---
+        async function processarECopiar() {
+            if(document.getElementById('btnCopiar').disabled) return; 
+
+            const prefixo = document.getElementById('empresaRemetente').value;
+            const btn = document.getElementById('btnCopiar');
+            const textarea = document.getElementById('textoFinal');
+            const destinatarioFinal = document.getElementById('destNome').value;
+            const destCidade = document.getElementById('destCidade').value.trim();
+            
+            if(!idCotacaoSessao) {
+                const textoOriginalBtn = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> GERANDO CÓDIGO NA NUVEM...';
+                btn.disabled = true;
+
+                try {
+                    // APRENDIZADO DE PRODUTOS: Salva as medidas na memória antes de gerar
+                    await salvarMemoriaProdutos();
+
+                    // 1. Puxa e atualiza o contador do servidor na hora!
+                    let snapContador = await database.ref('contadores/' + prefixo).once('value');
+                    let atual = snapContador.val() || 0;
+                    let novoNumero = atual + 1;
+                    
+                    // Atualiza no banco
+                    await database.ref('contadores/' + prefixo).set(novoNumero);
+                    
+                    let numFormatado = novoNumero.toString().padStart(4, '0');
+                    idCotacaoSessao = `${prefixo}-${numFormatado}`;
+                    
+                    const badge = document.getElementById('badgeCodigo');
+                    badge.innerText = `Cód: ${idCotacaoSessao}`;
+                    badge.classList.remove('hidden');
+
+                    let textoComId = gerarPreviaTexto(idCotacaoSessao);
+                    
+                    // Resgata as transportadoras primárias para salvar na nuvem
+                    let ufDestino = "";
+                    if (destCidade.includes('/')) {
+                        ufDestino = destCidade.split('/')[1].trim();
+                    }
+                    let primarias = getTransportadorasPrimariasPorUF(ufDestino);
+                    
+                    // 2. Salva no Histórico do Servidor
+                    await database.ref('historico/' + idCotacaoSessao).set({
+                        id: idCotacaoSessao,
+                        data: new Date().toLocaleString('pt-BR'),
+                        timestamp: Date.now(),
+                        destinatario: destinatarioFinal || "Sem Destinatário",
+                        usuario: localStorage.getItem('primeUsuarioAtual') || "Desconhecido", // <--- ADICIONADO AQUI: Guarda o responsável
+                        texto: textoComId,
+                        uf: ufDestino,
+                        primarias: primarias,
+                        cotacoes: {}
+                    });
+
+                    // 3. Efetua a cópia
+                    textarea.value = textoComId;
+                    textarea.removeAttribute('readonly');
+                    textarea.select();
+                    document.execCommand('copy');
+                    window.getSelection().removeAllRanges();
+                    textarea.setAttribute('readonly', 'true');
+                    
+                    btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> COPIADO (CÓD: ${idCotacaoSessao})`;
+                    btn.classList.replace('bg-green-600', 'bg-blue-600');
+                    btn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+
+                    setTimeout(() => validarBotaoCopiar(), 3000);
+                } catch(err) {
+                    console.error("Erro Nuvem:", err);
+                    showToast('Erro ao processar no servidor. Tente novamente.', 'error');
+                    btn.innerHTML = textoOriginalBtn;
+                    btn.disabled = false;
+                }
+            } else {
+                // Já gerou, só copia de novo
+                textarea.removeAttribute('readonly');
+                textarea.select();
+                document.execCommand('copy');
+                window.getSelection().removeAllRanges();
+                textarea.setAttribute('readonly', 'true');
+                showToast(`Cotação ${idCotacaoSessao} copiada!`, 'success');
+            }
+        }
+
+        function abrirHistorico() {
+            document.getElementById('inputBuscaHistorico').value = ''; 
+            renderizarListaHistorico();
+            document.getElementById('modalHistorico').classList.add('active');
+        }
+
+        function fecharHistorico() {
+            document.getElementById('modalHistorico').classList.remove('active');
+        }
+
+        function renderizarListaHistorico() {
+            // Guarda quais abas estão abertas para não fechá-las ao atualizar
+            let openItems = [];
+            document.querySelectorAll('[id^="previa-"]').forEach(el => {
+                if (!el.classList.contains('hidden')) {
+                    openItems.push(el.id.replace('previa-', ''));
+                }
+            });
+
+            const lista = document.getElementById('listaHistorico');
+            const termoBusca = document.getElementById('inputBuscaHistorico').value.toLowerCase();
+            
+            lista.innerHTML = '';
+            
+            let historicoFiltrado = historicoNuvem;
+
+            if (termoBusca) {
+                historicoFiltrado = historicoFiltrado.filter(item => 
+                    (item.id && item.id.toLowerCase().includes(termoBusca)) || 
+                    (item.destinatario && item.destinatario.toLowerCase().includes(termoBusca)) ||
+                    (item.data && item.data.toLowerCase().includes(termoBusca)) ||
+                    (item.texto && item.texto.toLowerCase().includes(termoBusca)) ||
+                    (item.usuario && item.usuario.toLowerCase().includes(termoBusca)) // Permite buscar pelo usuário
+                );
+            }
+            
+            if (historicoFiltrado.length === 0) {
+                lista.innerHTML = '<p class="text-center text-gray-500 py-10">Nenhuma cotação encontrada no servidor.</p>';
+            } else {
+                historicoFiltrado.forEach((item) => {
+                    
+                    // Recupera as primárias ou tenta extrair do texto (para cotações antigas)
+                    let primarias = item.primarias || [];
+                    if (primarias.length === 0 && item.texto) {
+                        const match = item.texto.match(/CEP DESTINATÁRIO:.*\/ ([A-Z]{2})/);
+                        if (match) primarias = getTransportadorasPrimariasPorUF(match[1]);
+                    }
+
+                    let formHtml = '';
+                    if (primarias.length > 0) {
+                        formHtml += `<div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center mb-3">
+                                <i class="fa-solid fa-money-check-dollar text-green-600 dark:text-green-400 mr-2"></i>
+                                <h4 class="text-[11px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Retorno das Transportadoras</h4>
+                            </div>`;
+                        
+                        primarias.forEach((t, idx) => {
+                            let c = (item.cotacoes && item.cotacoes[t]) ? item.cotacoes[t] : { valor: '', prazo: '', codigo: '' };
+                            formHtml += `
+                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mb-2 items-center bg-white dark:bg-gray-800 p-2 rounded shadow-sm border border-gray-100 dark:border-gray-600">
+                                    <div class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 truncate" title="${t}">${t}</div>
+                                    <div>
+                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Valor (R$)</label>
+                                        <input type="text" id="val_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-gray-700 text-center w-full" placeholder="R$ Valor" value="${c.valor}" oninput="this.value=mascaraFrete(this.value)">
+                                    </div>
+                                    <div>
+                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Prazo</label>
+                                        <input type="text" id="prazo_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Ex: 5" value="${c.prazo}" onblur="this.value=formatarPrazo(this.value)">
+                                    </div>
+                                    <div>
+                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Cód. Cotação</label>
+                                        <input type="text" id="cod_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Cód/Nº" value="${c.codigo}">
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        // BLOCO EXTRA: FreteClick (Opção Manual)
+                        let manualKey = 'FreteClick_Manual';
+                        let cManual = (item.cotacoes && item.cotacoes[manualKey]) ? item.cotacoes[manualKey] : { nomeTransp: '', valor: '', prazo: '', codigo: '' };
+                        
+                        formHtml += `
+                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mt-4 items-center bg-orange-50 dark:bg-orange-900/20 p-2 rounded shadow-sm border border-orange-200 dark:border-orange-800">
+                                    <div>
+                                        <label class="text-[8px] font-bold text-orange-500 uppercase block mb-0.5"><i class="fa-solid fa-computer-mouse"></i> FreteClick (Alternativa)</label>
+                                        <input type="text" id="nome_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-orange-700 w-full" placeholder="Nome da Transportadora" value="${cManual.nomeTransp}">
+                                    </div>
+                                    <div class="sm:mt-[14px]">
+                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Valor (R$)</label>
+                                        <input type="text" id="val_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-gray-700 text-center w-full" placeholder="R$ Valor" value="${cManual.valor}" oninput="this.value=mascaraFrete(this.value)">
+                                    </div>
+                                    <div class="sm:mt-[14px]">
+                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Prazo</label>
+                                        <input type="text" id="prazo_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Ex: 5" value="${cManual.prazo}" onblur="this.value=formatarPrazo(this.value)">
+                                    </div>
+                                    <div class="sm:mt-[14px]">
+                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Cód. Cotação</label>
+                                        <input type="text" id="cod_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Cód/Nº" value="${cManual.codigo}">
+                                    </div>
+                                </div>
+                        `;
+
+                        formHtml += `<button id="btnSalvarCot_${item.id}" onclick="salvarCotacoesHistorico('${item.id}')" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold py-2 rounded shadow transition"><i class="fa-solid fa-floppy-disk mr-1"></i> SALVAR VALORES NA NUVEM</button>
+                        </div>`;
+                    } else {
+                         formHtml += `<div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-[10px] text-gray-500 text-center"><i class="fa-solid fa-circle-info mr-1"></i> Nenhuma transportadora primária sugerida para o destino desta cotação.</div>`
+                    }
+
+                    lista.innerHTML += `
+                        <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm flex flex-col overflow-hidden transition-all">
+                            <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <div class="flex-grow w-full cursor-pointer select-none" onclick="togglePrevia('${item.id}')">
+                                    <div class="flex items-center flex-wrap gap-y-2">
+                                        <i id="icone-${item.id}" class="fa-solid fa-chevron-right text-gray-400 mr-3 w-3 text-center transition-transform duration-200"></i>
+                                        <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded border border-yellow-200 mr-3">${item.id}</span>
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 mr-3"><i class="fa-regular fa-calendar mr-1"></i> ${item.data}</span>
+                                        <span class="text-xs text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/40 px-2 py-1 rounded"><i class="fa-solid fa-user-tie mr-1"></i> ${item.usuario || 'Desconhecido'}</span>
+                                    </div>
+                                    <p class="text-sm font-bold text-gray-700 dark:text-gray-200 mt-2 ml-6"><i class="fa-regular fa-building mr-1"></i> Dest.: ${item.destinatario}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="apagarCotacaoHistorico('${item.id}')" class="bg-red-50 dark:bg-red-900 hover:bg-red-100 dark:hover:bg-red-800 text-red-500 dark:text-red-300 px-3 py-2 rounded font-bold transition shadow-sm" title="Apagar Cotação">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                    <button onclick="copiarDoHistorico('${item.id}')" class="bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 px-4 py-2 rounded font-bold transition whitespace-nowrap shadow-sm">
+                                        <i class="fa-regular fa-copy mr-1"></i> Copiar
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="previa-${item.id}" class="hidden bg-gray-100 dark:bg-gray-800 p-4 border-t border-gray-200 dark:border-gray-600">
+                                <div class="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-2">${item.texto}</div>
+                                ${formHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Restaura as abas que estavam abertas
+            openItems.forEach(id => {
+                let previa = document.getElementById(`previa-${id}`);
+                let icone = document.getElementById(`icone-${id}`);
+                if(previa && icone) {
+                    previa.classList.remove('hidden');
+                    icone.classList.replace('fa-chevron-right', 'fa-chevron-down');
+                }
+            });
+        }
+
+        async function salvarCotacoesHistorico(idCotacao) {
+            const btn = document.getElementById(`btnSalvarCot_${idCotacao}`);
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
+            btn.disabled = true;
+
+            try {
+                let item = historicoNuvem.find(i => i.id === idCotacao);
+                if (!item) throw new Error("Cotação não encontrada");
+
+                let primarias = item.primarias || [];
+                if (primarias.length === 0 && item.texto) {
+                    const match = item.texto.match(/CEP DESTINATÁRIO:.*\/ ([A-Z]{2})/);
+                    if (match) primarias = getTransportadorasPrimariasPorUF(match[1]);
+                }
+
+                let cotacoesParaSalvar = {};
+                
+                // Salvar Primárias
+                primarias.forEach((t, idx) => {
+                    const valInput = document.getElementById(`val_${idCotacao}_${idx}`);
+                    const prazoInput = document.getElementById(`prazo_${idCotacao}_${idx}`);
+                    const codInput = document.getElementById(`cod_${idCotacao}_${idx}`);
+                    
+                    if(valInput && prazoInput && codInput) {
+                        const valor = valInput.value.trim();
+                        const prazo = prazoInput.value.trim();
+                        const codigo = codInput.value.trim();
+                        
+                        if(valor || prazo || codigo) {
+                            cotacoesParaSalvar[t] = { valor, prazo, codigo };
+                        }
+                    }
+                });
+
+                // Salvar FreteClick Manual
+                const nomeManualInput = document.getElementById(`nome_${idCotacao}_manual`);
+                const valManualInput = document.getElementById(`val_${idCotacao}_manual`);
+                const prazoManualInput = document.getElementById(`prazo_${idCotacao}_manual`);
+                const codManualInput = document.getElementById(`cod_${idCotacao}_manual`);
+                
+                if(nomeManualInput && valManualInput && prazoManualInput && codManualInput) {
+                    const nomeTransp = nomeManualInput.value.trim();
+                    const valor = valManualInput.value.trim();
+                    const prazo = prazoManualInput.value.trim();
+                    const codigo = codManualInput.value.trim();
+                    
+                    // Só grava a secção manual se pelo menos algo além do nome estiver preenchido, ou se tiver o nome.
+                    if(nomeTransp || valor || prazo || codigo) {
+                         cotacoesParaSalvar['FreteClick_Manual'] = { nomeTransp, valor, prazo, codigo };
+                    }
+                }
+
+                // Salva diretamente na Nuvem da cotação específica
+                await database.ref('historico/' + idCotacao + '/cotacoes').set(cotacoesParaSalvar);
+                showToast('Valores de frete registrados com sucesso!', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('Erro ao salvar retornos.', 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function togglePrevia(id) {
+            const previa = document.getElementById(`previa-${id}`);
+            const icone = document.getElementById(`icone-${id}`);
+            if (previa.classList.contains('hidden')) {
+                previa.classList.remove('hidden');
+                icone.classList.replace('fa-chevron-right', 'fa-chevron-down');
+            } else {
+                previa.classList.add('hidden');
+                icone.classList.replace('fa-chevron-down', 'fa-chevron-right');
+            }
+        }
+
+        function apagarCotacaoHistorico(id) {
+            showDialog(`Tem certeza que deseja apagar a cotação ${id} do servidor?`, 'confirm', async () => {
+                try {
+                    await database.ref('historico/' + id).remove();
+                    showToast('Cotação apagada da nuvem.', 'success');
+                } catch(e) {
+                    showToast('Erro ao apagar cotação.', 'error');
+                }
+            });
+        }
+
+        function copiarDoHistorico(id) {
+            let item = historicoNuvem.find(i => i.id === id);
+            if(item) {
+                let temp = document.createElement("textarea");
+                temp.value = item.texto;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand("copy");
+                document.body.removeChild(temp);
+                showToast(`Cotação ${id} copiada!`, 'success');
+            }
+        }
+
+        function mascaraMoeda(v) {
+            v = v.replace(/\D/g, "");
+            v = (v/100).toFixed(2) + "";
+            v = v.replace(".", ",");
+            v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            return v;
+        }
+
+        function mascaraFrete(v) {
+            v = v.replace(/\D/g, "");
+            if(v === "") return "";
+            v = (v/100).toFixed(2) + "";
+            v = v.replace(".", ",");
+            v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            return "R$ " + v;
+        }
+
+        function formatarPrazo(v) {
+            v = v.trim();
+            // Se estiver vazio ou já contiver a palavra 'dia', não altera para não duplicar.
+            if(!v || v.toLowerCase().includes('dia')) return v;
+            return v + " dias úteis";
+        }
+
+        // Função para remover códigos/SKUs (que contenham números) do início ou final do nome do produto
+        function limparNomeProduto(nome) {
+            if (!nome) return "";
+            // Remove código do início contendo pelo menos um número (ex: "12345 - Geladeira" ou "PE11B - Geladeira")
+            let limpo = nome.replace(/^[a-zA-Z0-9]*\d[a-zA-Z0-9]*\s*-\s*/, '');
+            // Remove código do final contendo pelo menos um número (ex: "Geladeira - 12345")
+            limpo = limpo.replace(/\s*-\s*[a-zA-Z0-9]*\d[a-zA-Z0-9]*$/, '');
+            return limpo.trim();
+        }
+
+        function mascaraCNPJ(v) {
+            v = v.replace(/\D/g, "");
+            v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+            v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+            v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
+            v = v.replace(/(\d{4})(\d)/, "$1-$2");
+            return v.substring(0, 18);
+        }
+
+        function mascaraCEP(v) {
+            v = v.replace(/\D/g, "");
+            v = v.replace(/^(\d{5})(\d)/, "$1-$2");
+            return v.substring(0, 9);
+        }
+
+        /* -------------------------------------------------------------
+           INTELIGÊNCIA DE MAPEAMENTO DE TRANSPORTADORAS POR UF
+        ------------------------------------------------------------- */
+        const transportadorasMap = [
+            { nome: "BRASSPRESS", ufs: ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"] },
+            { nome: "FORMATO", ufs: ["AL","BA","CE","MA","PB","PE","PI","RN","SE"] },
+            { nome: "IDEALE CARGAS", ufs: ["SP", "RJ", "ES"] },
+            { nome: "MANDALÁ", ufs: ["SP", "DF", "GO", "MT", "MS", "TO", "MG", "AC", "PA", "RO"] },
+            { nome: "MIRIN DO SUL", ufs: ["SP", "PR", "SC", "RS"] },
+            { nome: "PÁSSARO TRANSPORTES", ufs: ["AL","BA","CE","MA","PB","PE","PI","RN","SE"] },
+            { nome: "RANA EXPRESS", ufs: ["PR"] },
+            { nome: "RÁPIDO FIGUEIREDO", ufs: ["AL","BA","CE","MA","PB","PE","PI","RN","SE"] },
+            { nome: "RODOCARGAS", ufs: ["MA", "PI"] },
+            // Rodonaves: Nacional exceto Nordeste
+            { nome: "RODONAVES", ufs: ["AC","AP","AM","DF","ES","GO","MT","MS","MG","PA","PR","RJ","RS","RO","RR","SC","SP","TO"] }, 
+            { nome: "TADEX", ufs: ["SP", "RJ", "ES"] },
+            { nome: "TODO BRASIL", ufs: ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"] },
+            { nome: "TRANSWELLS", ufs: ["SP", "RJ"] }
+        ];
+
+        // Função utilitária para extrair apenas as Primárias da UF
+        function getTransportadorasPrimariasPorUF(uf) {
+            if(!uf) return [];
+            const recomendadas = transportadorasMap.filter(t => t.ufs.includes(uf.toUpperCase()));
+            const secundariasNomes = ["BRASSPRESS", "TODO BRASIL", "RODONAVES"];
+            return recomendadas.filter(t => !secundariasNomes.includes(t.nome)).map(t => t.nome);
+        }
+
+        function sugerirTransportadora(uf) {
+            const box = document.getElementById('boxRecomendacao');
+            const lista = document.getElementById('listaRecomendadas');
+            const texto = document.getElementById('textoRecomendacao');
+            
+            if(!uf) {
+                box.classList.add('hidden');
+                return;
+            }
+
+            const recomendadas = transportadorasMap.filter(t => t.ufs.includes(uf.toUpperCase()));
+            const secundariasNomes = ["BRASSPRESS", "TODO BRASIL", "RODONAVES"];
+            const primarias = recomendadas.filter(t => !secundariasNomes.includes(t.nome));
+            const secundarias = recomendadas.filter(t => secundariasNomes.includes(t.nome));
+            
+            texto.innerHTML = `Com base no destino (<strong>Estado: ${uf.toUpperCase()}</strong>), indicamos as seguintes parceiras:`;
+            lista.innerHTML = '';
+
+            // 1. Renderiza Transportadoras Primárias (Especialistas)
+            let htmlPrimarias = '<div class="w-full flex flex-wrap gap-2">';
+            if (primarias.length === 0) {
+                htmlPrimarias += '<span class="bg-white border border-indigo-200 text-indigo-700 text-xs px-3 py-1.5 rounded-lg font-bold shadow-sm">Nenhuma parceira regional primária mapeada.</span>';
+            } else {
+                primarias.forEach(t => {
+                    let nota = (t.nome === "MIRIN DO SUL" && uf.toUpperCase() === "PR") ? " (Londrina/Curitiba)" : "";
+                    htmlPrimarias += `<span class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow transition cursor-default flex items-center"><i class="fa-solid fa-star text-yellow-300 mr-1.5"></i> ${t.nome}${nota}</span>`;
+                });
+            }
+            htmlPrimarias += '</div>';
+
+            // 2. Renderiza Transportadoras Secundárias e FreteClick
+            let htmlSecundarias = '<div class="w-full flex flex-wrap gap-2 items-center border-t border-indigo-200 dark:border-indigo-700/50 pt-2 mt-1">';
+            htmlSecundarias += '<span class="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold uppercase mr-1">Secundárias:</span>';
+            
+            secundarias.forEach(t => {
+                htmlSecundarias += `<span class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-600 text-[11px] px-2 py-1 rounded-lg font-bold shadow-sm cursor-default">${t.nome}</span>`;
+            });
+
+            // Opção Manual: FreteClick
+            htmlSecundarias += `<span class="bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700 text-[11px] px-2 py-1 rounded-lg font-bold shadow-sm cursor-help flex items-center ml-auto" title="Cotar manualmente / Fora do catálogo"><i class="fa-solid fa-computer-mouse mr-1"></i> FreteClick</span>`;
+            htmlSecundarias += '</div>';
+
+            lista.innerHTML = htmlPrimarias + htmlSecundarias;
+            box.classList.remove('hidden');
+        }
+
+        async function buscarCNPJ(cnpj, nomeId, loadingId) {
+            let cnpjLimpo = cnpj.replace(/\D/g, '');
+            if (cnpjLimpo.length === 14) {
+                document.getElementById(loadingId).classList.remove('hidden');
+                try {
+                    let response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+                    if (response.ok) {
+                        let data = await response.json();
+                        document.getElementById(nomeId).value = data.nome_fantasia || data.razao_social || "";
+                        dadosAlterados();
+                    }
+                } catch (error) {} finally { document.getElementById(loadingId).classList.add('hidden'); }
+            }
+        }
+
+        async function buscarCEP(cep, cidadeId, loadingId) {
+            let cepLimpo = cep.replace(/\D/g, '');
+            if (cepLimpo.length === 8) {
+                document.getElementById(loadingId).classList.remove('hidden');
+                try {
+                    let response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+                    if (response.ok) {
+                        let data = await response.json();
+                        if (!data.erro) {
+                            document.getElementById(cidadeId).value = `${data.localidade} / ${data.uf}`;
+                            sugerirTransportadora(data.uf); // Ativa o "Cérebro"
+                            dadosAlterados();
+                        }
+                    }
+                } catch (error) {} finally { document.getElementById(loadingId).classList.add('hidden'); }
+            }
+        }
+
+        // --- SISTEMA DE LEITURA INTELIGENTE DE PDF ---
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        async function iniciarLeituraPDF(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.type !== "application/pdf") {
+                showToast("Por favor, selecione um arquivo PDF.", "error");
+                return;
+            }
+
+            const lbl = document.getElementById('lblPdfUpload');
+            const originalHTML = lbl.innerHTML;
+            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> LENDO...';
+            lbl.classList.add('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
+
+            try {
+                const fileReader = new FileReader();
+                fileReader.onload = async function() {
+                    try {
+                        const typedarray = new Uint8Array(this.result);
+                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                        let fullText = "";
+                        
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map(item => item.str).join(" ");
+                            fullText += pageText + " ";
+                        }
+                        
+                        analisarTextoPDF(fullText);
+                    } catch (error) {
+                        console.error("Erro ao processar PDF:", error);
+                        showToast("Erro ao ler o PDF. Tente preencher manualmente.", "error");
+                    } finally {
+                        lbl.innerHTML = originalHTML;
+                        lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
+                        event.target.value = ''; // Reset do input
+                    }
+                };
+                fileReader.readAsArrayBuffer(file);
+            } catch (err) {
+                lbl.innerHTML = originalHTML;
+                lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
+            }
+        }
+
+        function analisarTextoPDF(texto) {
+            // 1. Identificar Empresa Remetente
+            if (texto.toUpperCase().includes('PRIME2P') || texto.toUpperCase().includes('PRIME 2P')) {
+                document.getElementById('empresaRemetente').value = "P";
+            } else if (texto.toUpperCase().includes('PRIMEXD') || texto.toUpperCase().includes('PRIME XD')) {
+                document.getElementById('empresaRemetente').value = "XD";
+            } else if (texto.toUpperCase().includes('PRIMEXCORP') || texto.toUpperCase().includes('PRIME XCORP')) {
+                document.getElementById('empresaRemetente').value = "XC";
+            }
+
+            // 2. Achar Pedido
+            let matchPedido = texto.match(/pedido\s+(\d+)/i) || texto.match(/PEDIDO\s*-\s*OP\s*(\d+)/i) || texto.match(/(\d+)-/);
+            if (matchPedido) {
+                let p = matchPedido[1];
+                if(p.length >= 4 && p.length <= 8) document.getElementById('pedido').value = p;
+            }
+
+            // 3. Achar Valor NF (Busca Inteligente pelo Total)
+            // Procura especificamente pelo valor que vem após a palavra "TOTAL"
+            let matchTotal = texto.match(/\bTOTAL\b[\s\S]{0,40}?R\$\s*([\d\.,]+)/i);
+            if (matchTotal) {
+                document.getElementById('valorNf').value = mascaraMoeda(matchTotal[1]);
+            } else {
+                // Fallback: pega o último valor em R$ do documento se não achar a palavra TOTAL
+                let matches = [...texto.matchAll(/R\$\s*([\d\.,]+)/gi)];
+                if (matches.length > 0) {
+                    document.getElementById('valorNf').value = mascaraMoeda(matches[matches.length - 1][1]);
+                }
+            }
+
+            // 4. Achar CNPJ Cliente
+            let cnpjs = texto.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}|\b\d{14}\b/g);
+            if (cnpjs) {
+                let cnpjCliente = "";
+                cnpjs = cnpjs.map(c => c.replace(/\D/g, ''));
+                const cnpjsPrime = ["11259196000150", "43391624000190", "49123568000199"];
+                cnpjCliente = cnpjs.find(c => !cnpjsPrime.includes(c));
+                
+                if (cnpjCliente) {
+                    let el = document.getElementById('destCnpj');
+                    el.value = mascaraCNPJ(cnpjCliente);
+                    buscarCNPJ(el.value, 'destNome', 'loadDestCnpj');
+                }
+            }
+
+            // 5. Achar CEP Cliente
+            let ceps = texto.match(/CEP\s*[:]?\s*(\d{5}-?\d{3})|\b\d{8}\b/gi);
+            if (ceps) {
+                let cepCliente = "";
+                ceps = ceps.map(c => c.replace(/\D/g, ''));
+                const cepsPrime = ["03511050"];
+                cepCliente = ceps.find(c => !cepsPrime.includes(c));
+                
+                if (cepCliente) {
+                    let el = document.getElementById('destCep');
+                    el.value = mascaraCEP(cepCliente);
+                    buscarCEP(el.value, 'destCidade', 'loadDestCep');
+                }
+            }
+
+            // 6. Tentar extrair Nomes dos Produtos do Pedido Prime
+            let inicioItens = texto.toUpperCase().indexOf("SUBTOTAL");
+            let fimItens = texto.toUpperCase().indexOf("TOTAL", inicioItens + 8);
+            
+            if (inicioItens !== -1 && fimItens !== -1) {
+                let blocoItens = texto.substring(inicioItens + 8, fimItens).trim();
+                
+                // Nova fórmula super robusta: usa os "R$" do Valor Unitário e Subtotal como âncoras infalíveis
+                let regexItem = /(?:\b\d+\s+|^)(.+?)\s+(\d+(?:,\d+)?)\s+R\$\s*[\d\.,]+\s+R\$\s*[\d\.,]+/gi;
+                let matchItem;
+                
+                let encontrouAlgo = false;
+                let gridSalva = document.getElementById('containerItens').innerHTML;
+
+                while ((matchItem = regexItem.exec(blocoItens)) !== null) {
+                    if(!encontrouAlgo) {
+                        document.getElementById('containerItens').innerHTML = '';
+                        contadorItens = 0;
+                    }
+                    encontrouAlgo = true;
+                    
+                    // Extrai o nome e já limpa os SKUs numéricos para manter só a descrição
+                    let descProduto = limparNomeProduto(matchItem[1].trim());
+                    let qtdProduto = matchItem[2] ? matchItem[2].split(',')[0].trim() : "1";
+                    
+                    adicionarItem(); 
+                    let rows = document.querySelectorAll('.item-row');
+                    let inputs = rows[rows.length - 1].querySelectorAll('input');
+                    
+                    inputs[0].value = qtdProduto;
+                    inputs[1].value = descProduto;
+                    
+                    try {
+                        verificarMemoriaProduto(inputs[1]);
+                    } catch (e) {
+                        console.warn("Aviso na memória do produto: ", e);
+                    }
+                }
+                
+                if(!encontrouAlgo) {
+                    document.getElementById('containerItens').innerHTML = gridSalva;
+                }
+            }
+
+            dadosAlterados();
+            if(!document.querySelector('.toastNotification')) {
+                showToast('Dados extraídos do PDF com sucesso!', 'success');
+            }
+        }
+
+        // --- LÓGICA DO CATÁLOGO DE PRODUTOS ---
+        function atualizarDataListProdutos() {
+            let dl = document.getElementById('dlProdutos');
+            if(!dl) {
+                dl = document.createElement('datalist');
+                dl.id = 'dlProdutos';
+                document.body.appendChild(dl);
+            }
+            dl.innerHTML = '';
+            for(let key in catalogoProdutos) {
+                let opt = document.createElement('option');
+                opt.value = catalogoProdutos[key].desc;
+                dl.appendChild(opt);
+            }
+        }
+
+        function verificarMemoriaProduto(inputDesc) {
+            const row = inputDesc.closest('.item-row');
+            if (!row) return; 
+            const inputs = row.querySelectorAll('input');
+            
+            // Limpa o termo buscado (remove SKUs que o usuário possa ter colado)
+            const descOriginal = inputDesc.value.trim();
+            const desc = limparNomeProduto(descOriginal).toUpperCase();
+            
+            if(!desc) {
+                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                return;
+            }
+            
+            let produtoEncontrado = null;
+            
+            // 1. Tenta Busca Exata
+            for(let key in catalogoProdutos) {
+                let prod = catalogoProdutos[key];
+                if(prod && prod.desc && prod.desc.toUpperCase() === desc) {
+                    produtoEncontrado = prod;
+                    break;
+                }
+            }
+
+            // 2. Tenta Busca Aproximada (Fuzzy) - Procura se as palavras que digitou estão no nome do catálogo
+            if(!produtoEncontrado && desc.length > 3) {
+                const palavrasDigitadas = desc.split(' ').filter(p => p.length > 2); // ignora "de", "com", etc.
+                
+                for(let key in catalogoProdutos) {
+                    let prod = catalogoProdutos[key];
+                    if(!prod || !prod.desc) continue;
+                    
+                    const nomeCatalogo = prod.desc.toUpperCase();
+                    if(palavrasDigitadas.length > 0) {
+                        const contemTodas = palavrasDigitadas.every(p => nomeCatalogo.includes(p));
+                        if(contemTodas) {
+                            produtoEncontrado = prod;
+                            // Corrige o campo para o nome completo oficial
+                            inputDesc.value = prod.desc; 
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if(produtoEncontrado) {
+                let parts = produtoEncontrado.parts;
+                if(!parts) {
+                    parts = [{
+                        comp: produtoEncontrado.comp,
+                        larg: produtoEncontrado.larg,
+                        alt: produtoEncontrado.alt,
+                        peso: produtoEncontrado.peso
+                    }];
+                }
+
+                inputs[2].value = parts[0].comp || "";
+                inputs[3].value = parts[0].larg || "";
+                inputs[4].value = parts[0].alt || "";
+                inputs[5].value = parts[0].peso || "";
+                inputDesc.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+
+                if(parts.length > 1 && !inputDesc.dataset.spawned) {
+                    inputDesc.dataset.spawned = "true";
+                    
+                    for(let i = 1; i < parts.length; i++) {
+                        adicionarItem(); 
+                        
+                        let allRows = document.querySelectorAll('.item-row');
+                        let newRow = allRows[allRows.length - 1];
+                        let newInputs = newRow.querySelectorAll('input');
+                        
+                        newInputs[0].value = parts[i].vol || "1";
+                        newInputs[1].value = produtoEncontrado.desc; 
+                        newInputs[2].value = parts[i].comp || "";
+                        newInputs[3].value = parts[i].larg || "";
+                        newInputs[4].value = parts[i].alt || "";
+                        newInputs[5].value = parts[i].peso || "";
+                        
+                        newInputs[1].classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                        newInputs[1].dataset.spawned = "true"; 
+                    }
+                    
+                    showToast(`Produto Multi-Volume! ${parts.length} partes adicionadas.`, 'info');
+                }
+
+            } else {
+                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                delete inputDesc.dataset.spawned;
+            }
+        }
+
+        async function salvarMemoriaProdutos() {
+            const rows = document.querySelectorAll('.item-row');
+            let grouped = {};
+
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const vol = inputs[0].value.trim();
+                // Limpa o nome do produto para salvar no Firebase sem os dígitos do SKU
+                const desc = limparNomeProduto(inputs[1].value.trim());
+                const comp = inputs[2].value.trim();
+                const larg = inputs[3].value.trim();
+                const alt = inputs[4].value.trim();
+                const peso = inputs[5].value.trim();
+
+                if (desc && (comp || larg || alt || peso)) {
+                    const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
+                    
+                    if(!grouped[safeKey]) {
+                        grouped[safeKey] = { desc: desc, parts: [] };
+                    }
+                    
+                    grouped[safeKey].parts.push({
+                        vol: vol || "1",
+                        comp: comp,
+                        larg: larg,
+                        alt: alt,
+                        peso: peso
+                    });
+                }
+            });
+
+            let promises = [];
+            for(let key in grouped) {
+                promises.push(database.ref('produtos/' + key).set(grouped[key]));
+            }
+            return Promise.all(promises);
+        }
+
+        // --- SISTEMA DE IMPORTAÇÃO DE PLANILHA CSV ---
+        async function importarCSVSKUs(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const lbl = document.getElementById('lblCsvUpload');
+            const originalHTML = lbl.innerHTML;
+            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> LENDO...';
+            lbl.classList.add('opacity-70', 'cursor-not-allowed');
+
+            try {
+                const text = await file.text();
+                const lines = text.split('\n');
+                let count = 0;
+                let grouped = {};
+
+                // Inicia no índice 2 para pular as duas primeiras linhas de cabeçalho da sua planilha
+                for (let i = 2; i < lines.length; i++) { 
+                    let line = lines[i].trim();
+                    if (!line) continue;
+
+                    // Divide as colunas pela vírgula, ignorando as vírgulas dentro de aspas
+                    let cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    
+                    if (cols.length >= 3) {
+                        let descBruta = cols[0].replace(/^"|"$/g, '').trim();
+                        // Limpa a descrição removendo SKUs (ex: "12345 - ") para manter o catálogo impecável
+                        let desc = limparNomeProduto(descBruta);
+                        let medidas = cols[1].replace(/^"|"$/g, '').trim(); // A*L*P
+                        let peso = cols[2].replace(/^"|"$/g, '').trim();
+
+                        if (desc && medidas && medidas.includes('*')) {
+                            let partesMedida = medidas.split('*');
+                            let alt = partesMedida[0] ? partesMedida[0].trim() : "";
+                            let larg = partesMedida[1] ? partesMedida[1].trim() : "";
+                            let comp = partesMedida[2] ? partesMedida[2].trim() : "";
+
+                            const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
+                            
+                            grouped[safeKey] = {
+                                desc: desc,
+                                parts: [{
+                                    vol: "1",
+                                    comp: comp, // Comprimento (Profundidade)
+                                    larg: larg, // Largura
+                                    alt: alt,   // Altura
+                                    peso: peso  // Peso
+                                }]
+                            };
+                            count++;
+                        }
+                    }
+                }
+
+                // Salva todos os produtos massivamente no Firebase
+                let promises = [];
+                for(let key in grouped) {
+                    promises.push(database.ref('produtos/' + key).set(grouped[key]));
+                }
+                await Promise.all(promises);
+
+                showToast(`${count} produtos importados para a memória!`, 'success');
+            } catch (error) {
+                console.error("Erro no CSV:", error);
+                showToast('Erro ao importar a planilha. Verifique o formato.', 'error');
+            } finally {
+                lbl.innerHTML = originalHTML;
+                lbl.classList.remove('opacity-70', 'cursor-not-allowed');
+                event.target.value = ''; // Reseta o input
+            }
+        }
+
+        function toggleDarkMode() {
+            const body = document.body;
+            const icone = document.getElementById('iconeTema');
+            
+            body.classList.toggle('dark');
+            
+            if (body.classList.contains('dark')) {
+                icone.classList.replace('fa-moon', 'fa-sun');
+                localStorage.setItem('primeTema', 'dark');
+            } else {
+                icone.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('primeTema', 'light');
+            }
+        }
+
+        window.onload = async () => {
+            document.getElementById('telaCarregamento').style.display = 'flex';
+            
+            await conectarFirebase();
+            checarEstadoLogin();
+            
+            adicionarItem();
+            gerarPreviaTexto();
+            
+            if(localStorage.getItem('primeTema') === 'dark') {
+                toggleDarkMode();
+            }
+
+            // --- CONTROLE DE INATIVIDADE DA SESSÃO (1 HORA) ---
+            const TEMPO_EXPIRACAO = 60 * 60 * 1000; // 1 hora em milissegundos
+            let timeoutAtividade = null;
+            
+            // Função para registrar a última vez que o usuário mexeu no sistema
+            const atualizarAtividade = () => {
+                if(localStorage.getItem('primeLogado') === 'true') {
+                    // Para não sobrecarregar o navegador, atualiza o LocalStorage a cada 5 segundos no máximo
+                    if(!timeoutAtividade) {
+                        timeoutAtividade = setTimeout(() => {
+                            localStorage.setItem('primeUltimaAtividade', Date.now().toString());
+                            timeoutAtividade = null;
+                        }, 5000); 
+                    }
+                }
+            };
+
+            // Função que roda de tempos em tempos para verificar se o tempo estourou
+            const verificarInatividade = () => {
+                const ultima = localStorage.getItem('primeUltimaAtividade');
+                if(localStorage.getItem('primeLogado') === 'true' && ultima) {
+                    if(Date.now() - parseInt(ultima) > TEMPO_EXPIRACAO) {
+                        localStorage.removeItem('primeLogado');
+                        localStorage.removeItem('primeUsuarioAtual');
+                        localStorage.removeItem('primeUltimaAtividade');
+                        checarEstadoLogin(); // Força a exibir a tela de login
+                        showDialog('Sua sessão expirou devido a 1 hora de inatividade. Por favor, faça login novamente.', 'alert');
+                    }
+                }
+            };
+
+            // "Escuta" as interações do usuário na tela (mouse, teclado, cliques e rolar página)
+        window.addEventListener('mousemove', atualizarAtividade);
+        window.addEventListener('keydown', atualizarAtividade);
+        window.addEventListener('click', atualizarAtividade);
+        window.addEventListener('scroll', atualizarAtividade);
+
+        // Verifica a inatividade a cada 1 minuto automaticamente
+        setInterval(verificarInatividade, 60000);
+
+        // --- PROTEÇÃO DO CÓDIGO-FONTE (Anti-Inspeção e Anti-Cópia) ---
+        // 1. Bloqueia o botão direito do mouse
+        document.addEventListener('contextmenu', event => {
+            event.preventDefault();
+        });
+
+        // 2. Bloqueia atalhos de desenvolvedor no teclado
+        document.addEventListener('keydown', event => {
+            // Bloqueia F12 (Inspecionar Elemento)
+            if (event.key === 'F12') {
+                event.preventDefault();
+                return false;
+            }
+            // Bloqueia Ctrl + Shift + I / J / C (Ferramentas de Desenvolvedor)
+            if (event.ctrlKey && event.shiftKey && (event.key === 'I' || event.key === 'J' || event.key === 'C' || event.key === 'i' || event.key === 'j' || event.key === 'c')) {
+                event.preventDefault();
+                return false;
+            }
+            // Bloqueia Ctrl + U (Ver Código Fonte)
+            if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) {
+                event.preventDefault();
+                return false;
+            }
+        });
+    };
+</script>
+</body>
+</html>
