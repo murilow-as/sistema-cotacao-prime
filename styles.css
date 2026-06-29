@@ -1,12 +1,32 @@
-/* Estilos extra do app, separados do HTML para melhor manutenção */
-body, div, input, textarea, select {
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+/* Estilos otimizados do app - Central stylesheet */
+
+/* Resetar e base styles */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
 }
 
 body {
     background-color: #f3f4f6;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+div, input, textarea, select {
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+/* Container otimizado */
+.max-w-6xl {
+    max-width: 88rem;
+}
+
+/* Input fields */
 .input-field {
     width: 100%;
     padding: 0.5rem;
@@ -30,6 +50,7 @@ body {
     cursor: not-allowed;
 }
 
+/* Modais */
 .modal {
     display: none;
     background-color: rgba(0, 0, 0, 0.5);
@@ -39,7 +60,7 @@ body {
     display: flex;
 }
 
-/* Estilos do Dark Mode */
+/* Dark Mode Styles */
 body.dark {
     background-color: #111827;
     color: #f9fafb;
@@ -120,13 +141,68 @@ body.dark .text-red-500 {
     color: #fca5a5;
 }
 
+/* Animações */
 @keyframes fillBar {
-    0% { transform: scaleX(0); }
-    50% { transform: scaleX(0.5); }
-    100% { transform: scaleX(1); }
+    0% {
+        transform: scaleX(0);
+    }
+    50% {
+        transform: scaleX(0.5);
+    }
+    100% {
+        transform: scaleX(1);
+    }
 }
 
 .animate-loader {
     animation: fillBar 1.5s infinite alternate ease-in-out;
     transform-origin: left;
+}
+
+/* Otimizações de Layout e Enquadramento */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container wrapper para melhor controle */
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem 1rem;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Dispositivos maiores */
+@media (min-width: 768px) {
+    main {
+        padding: 2rem;
+        gap: 2rem;
+    }
+}
+
+/* Otimização de overflow e scroll */
+div[style*="max-height"] {
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+/* Melhoria de responsividade geral */
+@media (max-width: 640px) {
+    .max-w-6xl {
+        width: 100%;
+        padding: 0;
+    }
+    
+    /* Melhor espaçamento em dispositivos móveis */
+    div.mx-2 {
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+    }
 }
