@@ -3,17 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#3b82f6">
     <title>Gerador de Cotação de Frete</title>
-
-    <!-- OTIMIZAÇÕES GERAIS: Pré-conexão com servidores externos para carregamento mais rápido -->
-    <link rel="preconnect" href="https://cdn.tailwindcss.com">
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preconnect" href="https://www.gstatic.com">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
     
     <!-- Script do EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -24,6 +16,53 @@
 
     <!-- Script do PDF.js (Leitura de PDF) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+    <style>
+        /* Transições suaves para o Dark Mode */
+        body, div, input, textarea, select { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        
+        body { background-color: #f3f4f6; }
+        .input-field {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+            background-color: #ffffff;
+            color: #374151;
+        }
+        .input-field:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
+        .input-disabled { background-color: #e5e7eb; color: #6b7280; cursor: not-allowed; }
+        .modal { display: none; background-color: rgba(0,0,0,0.5); }
+        .modal.active { display: flex; }
+
+        /* Estilos do Dark Mode */
+        body.dark { background-color: #111827; color: #f9fafb; }
+        body.dark .bg-white { background-color: #1f2937; }
+        body.dark .bg-gray-50 { background-color: #111827; }
+        body.dark .bg-gray-100 { background-color: #374151; }
+        body.dark .bg-blue-50 { background-color: #1e3a8a; border-color: #1e3a8a; }
+        body.dark .text-gray-800, body.dark .text-gray-700 { color: #f9fafb; }
+        body.dark .text-gray-600, body.dark .text-gray-500 { color: #d1d5db; }
+        body.dark .border-gray-200, body.dark .border-gray-300 { border-color: #374151; }
+        body.dark .input-field { background-color: #374151; color: #f9fafb; border-color: #4b5563; }
+        body.dark .input-disabled { background-color: #1f2937; color: #9ca3af; }
+        body.dark .shadow-lg, body.dark .shadow-2xl { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25); }
+        body.dark .bg-yellow-100 { background-color: #78350f; color: #fef3c7; border-color: #92400e; }
+        body.dark .text-yellow-800 { color: #fde68a; }
+        body.dark .bg-blue-100 { background-color: #1e3a8a; color: #bfdbfe; }
+        body.dark .text-blue-700 { color: #93c5fd; }
+        body.dark .bg-red-50 { background-color: #7f1d1d; }
+        body.dark .text-red-500 { color: #fca5a5; }
+
+        @keyframes fillBar {
+            0% { transform: scaleX(0); }
+            50% { transform: scaleX(0.5); }
+            100% { transform: scaleX(1); }
+        }
+        .animate-loader { animation: fillBar 1.5s infinite alternate ease-in-out; transform-origin: left; }
+    </style>
 </head>
 
 <body class="p-4 md:p-8 font-sans text-gray-800 relative">
@@ -386,7 +425,6 @@
         let contadorItens = 0;
         let idCotacaoSessao = null;
         let historicoNuvem = []; // Guarda o histórico em tempo real
-        let catalogoProdutos = {}; // GUARDA A MEMÓRIA DOS PRODUTOS (NOVO)
 
         // ===================================================================
         // EMAILJS CONFIG
@@ -450,12 +488,6 @@
                     }
                 });
 
-                // 4. Ouvinte do Catálogo Inteligente (Memória de Produtos)
-                database.ref('produtos').on('value', (snapshot) => {
-                    catalogoProdutos = snapshot.val() || {};
-                    atualizarDataListProdutos();
-                });
-
                 // Remove a tela de carregamento suavemente
                 setTimeout(() => {
                     document.getElementById('telaCarregamento').style.opacity = '0';
@@ -483,26 +515,6 @@
         function checarEstadoLogin() {
             const logado = localStorage.getItem('primeLogado');
             const usuarioAtual = localStorage.getItem('primeUsuarioAtual');
-            const ultimaAtividade = localStorage.getItem('primeUltimaAtividade');
-
-            // Verifica inatividade logo ao abrir/checar o estado
-            if (logado === 'true' && ultimaAtividade) {
-                const TEMPO_EXPIRACAO = 60 * 60 * 1000; // 1 hora em milissegundos
-                if(Date.now() - parseInt(ultimaAtividade) > TEMPO_EXPIRACAO) {
-                    localStorage.removeItem('primeLogado');
-                    localStorage.removeItem('primeUsuarioAtual');
-                    localStorage.removeItem('primeUltimaAtividade');
-                    
-                    document.getElementById('telaLogin').style.display = 'flex';
-                    document.getElementById('telaTrocaSenha').style.display = 'none';
-                    document.getElementById('senhaLogin').value = '';
-                    document.getElementById('nomeUsuarioLogado').classList.add('hidden');
-                    document.getElementById('avisoAdmin').classList.add('hidden');
-                    
-                    showDialog('Sua sessão expirou devido a 1 hora de inatividade. Por favor, faça login novamente.', 'alert');
-                    return; // Interrompe para forçar login
-                }
-            }
 
             if (logado === 'true' && usuarioAtual) {
                 document.getElementById('telaLogin').style.display = 'none';
@@ -601,7 +613,6 @@
         function efetuarLogin(user) {
             localStorage.setItem('primeLogado', 'true');
             localStorage.setItem('primeUsuarioAtual', user);
-            localStorage.setItem('primeUltimaAtividade', Date.now().toString()); // Marca o tempo zero da sessão
             checarEstadoLogin();
         }
 
@@ -916,13 +927,13 @@
         function adicionarItem() {
             contadorItens++;
             const div = document.createElement('div');
-            // Formato de grade alinhado com o novo cabeçalho
+            // Formato de grade alinhado com o novo cabeçalho (espaço extra garantido para a descrição)
             div.className = 'grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 bg-gray-50 dark:bg-gray-700 p-2 rounded-lg border border-gray-200 dark:border-gray-600 items-center item-row';
             div.id = `item-${contadorItens}`;
             
             div.innerHTML = `
                 <input type="text" class="input-field m-0 py-1.5 px-2 text-center font-bold" placeholder="0" oninput="dadosAlterados()">
-                <input type="text" list="dlProdutos" class="input-field m-0 py-1.5 px-2 font-medium transition-colors" placeholder="Ex: Caixa de Parafusos..." oninput="verificarMemoriaProduto(this); dadosAlterados()" title="Nome do Produto">
+                <input type="text" class="input-field m-0 py-1.5 px-2" placeholder="Ex: Caixa de Parafusos..." oninput="dadosAlterados()" title="Nome do Produto">
                 <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
                 <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
                 <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
@@ -943,6 +954,7 @@
                 
                 let botoesHTML = '';
 
+                // O botão de apagar SÓ aparece se houver mais de 1 linha no total
                 if (rows.length > 1) {
                     botoesHTML += `
                         <button onclick="removerItem('${rowId}')" class="bg-red-100 hover:bg-red-200 text-red-600 rounded w-8 h-8 flex items-center justify-center font-bold shadow-sm transition border border-red-200 shrink-0" title="Remover Linha">
@@ -951,6 +963,7 @@
                     `;
                 }
 
+                // O botão de adicionar só aparece na última linha
                 if (index === rows.length - 1) {
                     botoesHTML += `
                         <button onclick="adicionarItem()" class="bg-purple-600 hover:bg-purple-700 text-white rounded w-8 h-8 flex items-center justify-center font-bold shadow transition shrink-0" title="Adicionar Nova Linha">
@@ -965,9 +978,10 @@
 
         function removerItem(id) {
             const rows = document.querySelectorAll('.item-row');
+            // Garante que nunca apague se for a única linha restante
             if (rows.length > 1) {
                 document.getElementById(id).remove();
-                atualizarBotoesItens();
+                atualizarBotoesItens(); // Atualiza a posição do botão + imediatamente
                 dadosAlterados();
             }
         }
@@ -1052,9 +1066,6 @@
                 btn.disabled = true;
 
                 try {
-                    // APRENDIZADO DE PRODUTOS: Salva as medidas na memória antes de gerar
-                    await salvarMemoriaProdutos();
-
                     // 1. Puxa e atualiza o contador do servidor na hora!
                     let snapContador = await database.ref('contadores/' + prefixo).once('value');
                     let atual = snapContador.val() || 0;
@@ -1085,7 +1096,6 @@
                         data: new Date().toLocaleString('pt-BR'),
                         timestamp: Date.now(),
                         destinatario: destinatarioFinal || "Sem Destinatário",
-                        usuario: localStorage.getItem('primeUsuarioAtual') || "Desconhecido", // <--- ADICIONADO AQUI: Guarda o responsável
                         texto: textoComId,
                         uf: ufDestino,
                         primarias: primarias,
@@ -1153,8 +1163,7 @@
                     (item.id && item.id.toLowerCase().includes(termoBusca)) || 
                     (item.destinatario && item.destinatario.toLowerCase().includes(termoBusca)) ||
                     (item.data && item.data.toLowerCase().includes(termoBusca)) ||
-                    (item.texto && item.texto.toLowerCase().includes(termoBusca)) ||
-                    (item.usuario && item.usuario.toLowerCase().includes(termoBusca)) // Permite buscar pelo usuário
+                    (item.texto && item.texto.toLowerCase().includes(termoBusca))
                 );
             }
             
@@ -1171,25 +1180,26 @@
                     }
 
                     let formHtml = '';
+                    formHtml += `<div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center mb-3">
+                            <i class="fa-solid fa-money-check-dollar text-green-600 dark:text-green-400 mr-2"></i>
+                            <h4 class="text-[11px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Retorno das Transportadoras</h4>
+                        </div>`;
+                    
                     if (primarias.length > 0) {
-                        formHtml += `<div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div class="flex items-center mb-3">
-                                <i class="fa-solid fa-money-check-dollar text-green-600 dark:text-green-400 mr-2"></i>
-                                <h4 class="text-[11px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Retorno das Transportadoras</h4>
-                            </div>`;
-                        
                         primarias.forEach((t, idx) => {
+                            // Verifica se já existem cotações salvas para preencher os inputs
                             let c = (item.cotacoes && item.cotacoes[t]) ? item.cotacoes[t] : { valor: '', prazo: '', codigo: '' };
                             formHtml += `
                                 <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mb-2 items-center bg-white dark:bg-gray-800 p-2 rounded shadow-sm border border-gray-100 dark:border-gray-600">
                                     <div class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 truncate" title="${t}">${t}</div>
                                     <div>
                                         <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Valor (R$)</label>
-                                        <input type="text" id="val_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-gray-700 text-center w-full" placeholder="R$ Valor" value="${c.valor}" oninput="this.value=mascaraFrete(this.value)">
+                                        <input type="text" id="val_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-gray-700 text-center w-full" placeholder="R$ Valor" value="${c.valor}" oninput="this.value=mascaraMoeda(this.value)">
                                     </div>
                                     <div>
                                         <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Prazo</label>
-                                        <input type="text" id="prazo_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Ex: 5" value="${c.prazo}" onblur="this.value=formatarPrazo(this.value)">
+                                        <input type="text" id="prazo_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Dias" value="${c.prazo}">
                                     </div>
                                     <div>
                                         <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Cód. Cotação</label>
@@ -1198,49 +1208,52 @@
                                 </div>
                             `;
                         });
-                        
-                        // BLOCO EXTRA: FreteClick (Opção Manual)
-                        let manualKey = 'FreteClick_Manual';
-                        let cManual = (item.cotacoes && item.cotacoes[manualKey]) ? item.cotacoes[manualKey] : { nomeTransp: '', valor: '', prazo: '', codigo: '' };
-                        
-                        formHtml += `
-                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mt-4 items-center bg-orange-50 dark:bg-orange-900/20 p-2 rounded shadow-sm border border-orange-200 dark:border-orange-800">
-                                    <div>
-                                        <label class="text-[8px] font-bold text-orange-500 uppercase block mb-0.5"><i class="fa-solid fa-computer-mouse"></i> FreteClick (Alternativa)</label>
-                                        <input type="text" id="nome_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-orange-700 w-full" placeholder="Nome da Transportadora" value="${cManual.nomeTransp}">
-                                    </div>
-                                    <div class="sm:mt-[14px]">
-                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Valor (R$)</label>
-                                        <input type="text" id="val_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-gray-700 text-center w-full" placeholder="R$ Valor" value="${cManual.valor}" oninput="this.value=mascaraFrete(this.value)">
-                                    </div>
-                                    <div class="sm:mt-[14px]">
-                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Prazo</label>
-                                        <input type="text" id="prazo_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Ex: 5" value="${cManual.prazo}" onblur="this.value=formatarPrazo(this.value)">
-                                    </div>
-                                    <div class="sm:mt-[14px]">
-                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Cód. Cotação</label>
-                                        <input type="text" id="cod_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Cód/Nº" value="${cManual.codigo}">
-                                    </div>
-                                </div>
-                        `;
-
-                        formHtml += `<button id="btnSalvarCot_${item.id}" onclick="salvarCotacoesHistorico('${item.id}')" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold py-2 rounded shadow transition"><i class="fa-solid fa-floppy-disk mr-1"></i> SALVAR VALORES NA NUVEM</button>
-                        </div>`;
                     } else {
-                         formHtml += `<div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-[10px] text-gray-500 text-center"><i class="fa-solid fa-circle-info mr-1"></i> Nenhuma transportadora primária sugerida para o destino desta cotação.</div>`
+                        formHtml += `<div class="mb-3 p-2 bg-gray-100 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 text-[10px] text-gray-500 text-center"><i class="fa-solid fa-circle-info mr-1"></i> Nenhuma transportadora primária sugerida para o destino desta cotação.</div>`;
                     }
+
+                    // BLOCO FRETECLICK (Opção Manual)
+                    let fc = (item.cotacoes && item.cotacoes["FreteClick"]) ? item.cotacoes["FreteClick"] : { nome: '', valor: '', prazo: '', codigo: '' };
+                    formHtml += `
+                        <div class="mt-3 border-t border-gray-200 dark:border-gray-700 pt-3">
+                            <div class="flex items-center mb-2">
+                                <i class="fa-solid fa-computer-mouse text-orange-500 dark:text-orange-400 mr-2 text-[11px]"></i>
+                                <h4 class="text-[10px] font-bold text-orange-700 dark:text-orange-400 uppercase tracking-wider">FreteClick (Opção Manual)</h4>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mb-2 items-center bg-orange-50 dark:bg-orange-900/20 p-2 rounded shadow-sm border border-orange-200 dark:border-orange-800/50">
+                                <div>
+                                    <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Transportadora</label>
+                                    <input type="text" id="fc_nome_${item.id}" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-gray-700 text-left w-full" placeholder="Nome da Transportadora" value="${fc.nome}">
+                                </div>
+                                <div>
+                                    <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Valor (R$)</label>
+                                    <input type="text" id="fc_val_${item.id}" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-gray-700 text-center w-full" placeholder="R$ Valor" value="${fc.valor}" oninput="this.value=mascaraMoeda(this.value)">
+                                </div>
+                                <div>
+                                    <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Prazo</label>
+                                    <input type="text" id="fc_prazo_${item.id}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Dias" value="${fc.prazo}">
+                                </div>
+                                <div>
+                                    <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Cód. Cotação</label>
+                                    <input type="text" id="fc_cod_${item.id}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Cód/Nº" value="${fc.codigo}">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    formHtml += `<button id="btnSalvarCot_${item.id}" onclick="salvarCotacoesHistorico('${item.id}')" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold py-2 rounded shadow transition"><i class="fa-solid fa-floppy-disk mr-1"></i> SALVAR VALORES</button>
+                    </div>`;
 
                     lista.innerHTML += `
                         <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm flex flex-col overflow-hidden transition-all">
                             <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-600">
                                 <div class="flex-grow w-full cursor-pointer select-none" onclick="togglePrevia('${item.id}')">
-                                    <div class="flex items-center flex-wrap gap-y-2">
+                                    <div class="flex items-center">
                                         <i id="icone-${item.id}" class="fa-solid fa-chevron-right text-gray-400 mr-3 w-3 text-center transition-transform duration-200"></i>
-                                        <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded border border-yellow-200 mr-3">${item.id}</span>
-                                        <span class="text-xs text-gray-500 dark:text-gray-400 mr-3"><i class="fa-regular fa-calendar mr-1"></i> ${item.data}</span>
-                                        <span class="text-xs text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/40 px-2 py-1 rounded"><i class="fa-solid fa-user-tie mr-1"></i> ${item.usuario || 'Desconhecido'}</span>
+                                        <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded border border-yellow-200">${item.id}</span>
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 ml-3"><i class="fa-regular fa-calendar mr-1"></i> ${item.data}</span>
                                     </div>
-                                    <p class="text-sm font-bold text-gray-700 dark:text-gray-200 mt-2 ml-6"><i class="fa-regular fa-building mr-1"></i> Dest.: ${item.destinatario}</p>
+                                    <p class="text-sm font-bold text-gray-700 dark:text-gray-200 mt-2 ml-6"><i class="fa-regular fa-user mr-1"></i> Dest.: ${item.destinatario}</p>
                                 </div>
                                 <div class="flex gap-2">
                                     <button onclick="apagarCotacaoHistorico('${item.id}')" class="bg-red-50 dark:bg-red-900 hover:bg-red-100 dark:hover:bg-red-800 text-red-500 dark:text-red-300 px-3 py-2 rounded font-bold transition shadow-sm" title="Apagar Cotação">
@@ -1288,8 +1301,6 @@
                 }
 
                 let cotacoesParaSalvar = {};
-                
-                // Salvar Primárias
                 primarias.forEach((t, idx) => {
                     const valInput = document.getElementById(`val_${idCotacao}_${idx}`);
                     const prazoInput = document.getElementById(`prazo_${idCotacao}_${idx}`);
@@ -1300,27 +1311,27 @@
                         const prazo = prazoInput.value.trim();
                         const codigo = codInput.value.trim();
                         
+                        // Só salva se pelo menos um dos campos estiver preenchido
                         if(valor || prazo || codigo) {
                             cotacoesParaSalvar[t] = { valor, prazo, codigo };
                         }
                     }
                 });
 
-                // Salvar FreteClick Manual
-                const nomeManualInput = document.getElementById(`nome_${idCotacao}_manual`);
-                const valManualInput = document.getElementById(`val_${idCotacao}_manual`);
-                const prazoManualInput = document.getElementById(`prazo_${idCotacao}_manual`);
-                const codManualInput = document.getElementById(`cod_${idCotacao}_manual`);
-                
-                if(nomeManualInput && valManualInput && prazoManualInput && codManualInput) {
-                    const nomeTransp = nomeManualInput.value.trim();
-                    const valor = valManualInput.value.trim();
-                    const prazo = prazoManualInput.value.trim();
-                    const codigo = codManualInput.value.trim();
-                    
-                    // Só grava a secção manual se pelo menos algo além do nome estiver preenchido, ou se tiver o nome.
-                    if(nomeTransp || valor || prazo || codigo) {
-                         cotacoesParaSalvar['FreteClick_Manual'] = { nomeTransp, valor, prazo, codigo };
+                // FRETECLICK (Salva os dados inseridos manualmente)
+                const fcNomeInput = document.getElementById(`fc_nome_${idCotacao}`);
+                const fcValInput = document.getElementById(`fc_val_${idCotacao}`);
+                const fcPrazoInput = document.getElementById(`fc_prazo_${idCotacao}`);
+                const fcCodInput = document.getElementById(`fc_cod_${idCotacao}`);
+
+                if(fcNomeInput && fcValInput && fcPrazoInput && fcCodInput) {
+                    const nome = fcNomeInput.value.trim();
+                    const valor = fcValInput.value.trim();
+                    const prazo = fcPrazoInput.value.trim();
+                    const codigo = fcCodInput.value.trim();
+
+                    if(nome || valor || prazo || codigo) {
+                        cotacoesParaSalvar["FreteClick"] = { nome, valor, prazo, codigo };
                     }
                 }
 
@@ -1333,6 +1344,8 @@
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
+            // O botão voltará ao normal quase imediatamente porque a atualização em tempo real
+            // do Firebase vai acionar a reconstrução da lista HTML, trazendo os novos valores salvos!
         }
 
         function togglePrevia(id) {
@@ -1379,32 +1392,6 @@
             return v;
         }
 
-        function mascaraFrete(v) {
-            v = v.replace(/\D/g, "");
-            if(v === "") return "";
-            v = (v/100).toFixed(2) + "";
-            v = v.replace(".", ",");
-            v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-            return "R$ " + v;
-        }
-
-        function formatarPrazo(v) {
-            v = v.trim();
-            // Se estiver vazio ou já contiver a palavra 'dia', não altera para não duplicar.
-            if(!v || v.toLowerCase().includes('dia')) return v;
-            return v + " dias úteis";
-        }
-
-        // Função para remover códigos/SKUs (que contenham números) do início ou final do nome do produto
-        function limparNomeProduto(nome) {
-            if (!nome) return "";
-            // Remove código do início contendo pelo menos um número (ex: "12345 - Geladeira" ou "PE11B - Geladeira")
-            let limpo = nome.replace(/^[a-zA-Z0-9]*\d[a-zA-Z0-9]*\s*-\s*/, '');
-            // Remove código do final contendo pelo menos um número (ex: "Geladeira - 12345")
-            limpo = limpo.replace(/\s*-\s*[a-zA-Z0-9]*\d[a-zA-Z0-9]*$/, '');
-            return limpo.trim();
-        }
-
         function mascaraCNPJ(v) {
             v = v.replace(/\D/g, "");
             v = v.replace(/^(\d{2})(\d)/, "$1.$2");
@@ -1439,6 +1426,279 @@
             { nome: "TODO BRASIL", ufs: ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"] },
             { nome: "TRANSWELLS", ufs: ["SP", "RJ"] }
         ];
+
+        // --- SISTEMA DE LEITURA INTELIGENTE DE PDF ---
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        async function iniciarLeituraPDF(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.type !== "application/pdf") {
+                showToast("Por favor, selecione um arquivo PDF.", "error");
+                return;
+            }
+
+            const lbl = document.getElementById('lblPdfUpload');
+            const originalHTML = lbl.innerHTML;
+            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> LENDO...';
+            lbl.classList.add('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
+
+            try {
+                const fileReader = new FileReader();
+                fileReader.onload = async function() {
+                    try {
+                        const typedarray = new Uint8Array(this.result);
+                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                        let fullText = "";
+                        
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map(item => item.str).join(" ");
+                            fullText += pageText + " ";
+                        }
+                        
+                        analisarTextoPDF(fullText);
+                    } catch (error) {
+                        console.error("Erro ao processar PDF:", error);
+                        showToast("Erro ao ler o PDF. Tente preencher manualmente.", "error");
+                    } finally {
+                        lbl.innerHTML = originalHTML;
+                        lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
+                        event.target.value = ''; // Reset do input
+                    }
+                };
+                fileReader.readAsArrayBuffer(file);
+            } catch (err) {
+                lbl.innerHTML = originalHTML;
+                lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
+            }
+        }
+
+        function analisarTextoPDF(texto) {
+            // 1. Identificar Empresa Remetente (Fazemos primeiro para não confundir os CNPJs)
+            if (texto.toUpperCase().includes('PRIME2P') || texto.toUpperCase().includes('PRIME 2P')) {
+                document.getElementById('empresaRemetente').value = "P";
+            } else if (texto.toUpperCase().includes('PRIMEXD') || texto.toUpperCase().includes('PRIME XD')) {
+                document.getElementById('empresaRemetente').value = "XD";
+            } else if (texto.toUpperCase().includes('PRIMEXCORP') || texto.toUpperCase().includes('PRIME XCORP')) {
+                document.getElementById('empresaRemetente').value = "XC";
+            }
+
+            // 2. Achar Pedido (Ignorando CNPJs, procurando número de pedido específico)
+            let matchPedido = texto.match(/pedido\s+(\d+)/i) || texto.match(/PEDIDO\s*-\s*OP\s*(\d+)/i) || texto.match(/(\d+)-/);
+            if (matchPedido) {
+                let p = matchPedido[1];
+                if(p.length >= 4 && p.length <= 8) document.getElementById('pedido').value = p;
+            }
+
+            // 3. Achar Valor NF (Busca pelo formato R$ 00,00)
+            let matchValor = texto.match(/R\$\s*([\d\.,]+)/i);
+            if (matchValor) {
+                document.getElementById('valorNf').value = mascaraMoeda(matchValor[1]);
+            }
+
+            // 4. Achar CNPJ Cliente (ignorando os CNPJs das empresas do Grupo Prime)
+            let cnpjs = texto.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}|\b\d{14}\b/g);
+            if (cnpjs) {
+                let cnpjCliente = "";
+                cnpjs = cnpjs.map(c => c.replace(/\D/g, ''));
+                const cnpjsPrime = ["11259196000150", "43391624000190", "49123568000199"];
+                cnpjCliente = cnpjs.find(c => !cnpjsPrime.includes(c));
+                
+                if (cnpjCliente) {
+                    let el = document.getElementById('destCnpj');
+                    el.value = mascaraCNPJ(cnpjCliente);
+                    buscarCNPJ(el.value, 'destNome', 'loadDestCnpj');
+                }
+            }
+
+            // 5. Achar CEP Cliente (ignorando o CEP padrão do Grupo Prime)
+            let ceps = texto.match(/CEP\s*[:]?\s*(\d{5}-?\d{3})|\b\d{8}\b/gi);
+            if (ceps) {
+                let cepCliente = "";
+                ceps = ceps.map(c => c.replace(/\D/g, ''));
+                const cepsPrime = ["03511050"];
+                cepCliente = ceps.find(c => !cepsPrime.includes(c));
+                
+                if (cepCliente) {
+                    let el = document.getElementById('destCep');
+                    el.value = mascaraCEP(cepCliente);
+                    buscarCEP(el.value, 'destCidade', 'loadDestCep');
+                }
+            }
+
+            // 6. Tentar extrair Nomes dos Produtos do Pedido Prime
+            let inicioItens = texto.toUpperCase().indexOf("SUBTOTAL");
+            let fimItens = texto.toUpperCase().indexOf("TOTAL", inicioItens + 8);
+            
+            if (inicioItens !== -1 && fimItens !== -1) {
+                let blocoItens = texto.substring(inicioItens + 8, fimItens).trim();
+                // O padrão costuma ser: [Num] [Nome do Produto...] [Qtd] R$ [Valor]
+                // Modificado para capturar a quantidade (\d+) antes do R$
+                let regexItem = /\b\d+\s+([A-Za-zÀ-ÿ0-9\s\-\.\,\(\)\/]+?)\s+(\d+)\s+R\$/gi;
+                let matchItem;
+                
+                // Limpa a tabela atual se encontrar itens
+                let encontrouAlgo = false;
+                let gridSalva = document.getElementById('containerItens').innerHTML;
+
+                while ((matchItem = regexItem.exec(blocoItens)) !== null) {
+                    if(!encontrouAlgo) {
+                        document.getElementById('containerItens').innerHTML = '';
+                        contadorItens = 0;
+                    }
+                    encontrouAlgo = true;
+                    let descProduto = matchItem[1].trim();
+                    let qtdProduto = matchItem[2] ? matchItem[2].trim() : "1";
+                    
+                    adicionarItem(); // Adiciona linha
+                    let rows = document.querySelectorAll('.item-row');
+                    let inputs = rows[rows.length - 1].querySelectorAll('input');
+                    
+                    inputs[0].value = qtdProduto; // Puxa a quantidade de volumes
+                    inputs[1].value = descProduto;
+                    
+                    try {
+                        verificarMemoriaProduto(inputs[1]); // Puxa medidas da nuvem automaticamente!
+                    } catch (e) {
+                        console.warn("Aviso na memória do produto: ", e);
+                    }
+                }
+                
+                if(!encontrouAlgo) {
+                    document.getElementById('containerItens').innerHTML = gridSalva;
+                }
+            }
+
+            dadosAlterados();
+            showToast('Dados e itens extraídos com sucesso!', 'success');
+        }
+
+        // --- LÓGICA DO CATÁLOGO DE PRODUTOS ---
+        function atualizarDataListProdutos() {
+            let dl = document.getElementById('dlProdutos');
+            if(!dl) {
+                dl = document.createElement('datalist');
+                dl.id = 'dlProdutos';
+                document.body.appendChild(dl);
+            }
+            dl.innerHTML = '';
+            for(let key in catalogoProdutos) {
+                let opt = document.createElement('option');
+                opt.value = catalogoProdutos[key].desc;
+                dl.appendChild(opt);
+            }
+        }
+
+        function verificarMemoriaProduto(inputDesc) {
+            const row = inputDesc.closest('.item-row');
+            if (!row) return; // Escudo de segurança
+            const inputs = row.querySelectorAll('input');
+            const desc = inputDesc.value.trim().toUpperCase();
+            
+            let produtoEncontrado = null;
+            for(let key in catalogoProdutos) {
+                let prod = catalogoProdutos[key];
+                // Escudo de segurança para evitar erro "toUpperCase of undefined"
+                if(prod && prod.desc && prod.desc.toUpperCase() === desc) {
+                    produtoEncontrado = prod;
+                    break;
+                }
+            }
+
+            // Se encontrou na memória, preenche e pinta o fundo de verde
+            if(produtoEncontrado) {
+                // Compatibilidade com formato antigo (1 volume) ou novo formato Multi-Volume
+                let parts = produtoEncontrado.parts;
+                if(!parts) {
+                    parts = [{
+                        comp: produtoEncontrado.comp,
+                        larg: produtoEncontrado.larg,
+                        alt: produtoEncontrado.alt,
+                        peso: produtoEncontrado.peso
+                    }];
+                }
+
+                // Preenche a linha atual com a Parte 1
+                inputs[2].value = parts[0].comp || "";
+                inputs[3].value = parts[0].larg || "";
+                inputs[4].value = parts[0].alt || "";
+                inputs[5].value = parts[0].peso || "";
+                inputDesc.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+
+                // Se o produto tiver mais partes (Multi-Volume) e ainda não tivermos gerado as linhas extras
+                if(parts.length > 1 && !inputDesc.dataset.spawned) {
+                    inputDesc.dataset.spawned = "true"; // Marca para não ficar a criar linhas infinitamente
+                    
+                    for(let i = 1; i < parts.length; i++) {
+                        adicionarItem(); // Cria uma nova linha em baixo
+                        
+                        let allRows = document.querySelectorAll('.item-row');
+                        let newRow = allRows[allRows.length - 1];
+                        let newInputs = newRow.querySelectorAll('input');
+                        
+                        newInputs[0].value = parts[i].vol || "1";
+                        newInputs[1].value = produtoEncontrado.desc; // Mantém o mesmo nome
+                        newInputs[2].value = parts[i].comp || "";
+                        newInputs[3].value = parts[i].larg || "";
+                        newInputs[4].value = parts[i].alt || "";
+                        newInputs[5].value = parts[i].peso || "";
+                        
+                        newInputs[1].classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                        newInputs[1].dataset.spawned = "true"; // O filho também já nasce marcado
+                    }
+                    
+                    showToast(`Produto Multi-Volume! ${parts.length} partes adicionadas.`, 'info');
+                }
+
+            } else {
+                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                delete inputDesc.dataset.spawned;
+            }
+        }
+
+        async function salvarMemoriaProdutos() {
+            const rows = document.querySelectorAll('.item-row');
+            let grouped = {};
+
+            // 1. Agrupa as linhas que têm o mesmo nome
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const vol = inputs[0].value.trim();
+                const desc = inputs[1].value.trim();
+                const comp = inputs[2].value.trim();
+                const larg = inputs[3].value.trim();
+                const alt = inputs[4].value.trim();
+                const peso = inputs[5].value.trim();
+
+                // Só grava/atualiza se tiver descrição e pelo menos 1 medida preenchida
+                if (desc && (comp || larg || alt || peso)) {
+                    // Firebase não aceita . # $ [ ] em chaves. Vamos limpar.
+                    const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
+                    
+                    if(!grouped[safeKey]) {
+                        grouped[safeKey] = { desc: desc, parts: [] };
+                    }
+                    
+                    // Adiciona as medidas como uma "parte" deste produto
+                    grouped[safeKey].parts.push({
+                        vol: vol || "1",
+                        comp: comp,
+                        larg: larg,
+                        alt: alt,
+                        peso: peso
+                    });
+                }
+            });
+
+            // 2. Grava na nuvem (se tiver 2 partes, grava o Array de partes)
+            let promises = [];
+            for(let key in grouped) {
+                promises.push(database.ref('produtos/' + key).set(grouped[key]));
+            }
+            return Promise.all(promises);
+        }
 
         // Função utilitária para extrair apenas as Primárias da UF
         function getTransportadorasPrimariasPorUF(uf) {
@@ -1527,383 +1787,6 @@
             }
         }
 
-        // --- SISTEMA DE LEITURA INTELIGENTE DE PDF ---
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-        async function iniciarLeituraPDF(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            if (file.type !== "application/pdf") {
-                showToast("Por favor, selecione um arquivo PDF.", "error");
-                return;
-            }
-
-            const lbl = document.getElementById('lblPdfUpload');
-            const originalHTML = lbl.innerHTML;
-            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> LENDO...';
-            lbl.classList.add('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
-
-            try {
-                const fileReader = new FileReader();
-                fileReader.onload = async function() {
-                    try {
-                        const typedarray = new Uint8Array(this.result);
-                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                        let fullText = "";
-                        
-                        for (let i = 1; i <= pdf.numPages; i++) {
-                            const page = await pdf.getPage(i);
-                            const textContent = await page.getTextContent();
-                            const pageText = textContent.items.map(item => item.str).join(" ");
-                            fullText += pageText + " ";
-                        }
-                        
-                        analisarTextoPDF(fullText);
-                    } catch (error) {
-                        console.error("Erro ao processar PDF:", error);
-                        showToast("Erro ao ler o PDF. Tente preencher manualmente.", "error");
-                    } finally {
-                        lbl.innerHTML = originalHTML;
-                        lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
-                        event.target.value = ''; // Reset do input
-                    }
-                };
-                fileReader.readAsArrayBuffer(file);
-            } catch (err) {
-                lbl.innerHTML = originalHTML;
-                lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
-            }
-        }
-
-        function analisarTextoPDF(texto) {
-            // 1. Identificar Empresa Remetente
-            if (texto.toUpperCase().includes('PRIME2P') || texto.toUpperCase().includes('PRIME 2P')) {
-                document.getElementById('empresaRemetente').value = "P";
-            } else if (texto.toUpperCase().includes('PRIMEXD') || texto.toUpperCase().includes('PRIME XD')) {
-                document.getElementById('empresaRemetente').value = "XD";
-            } else if (texto.toUpperCase().includes('PRIMEXCORP') || texto.toUpperCase().includes('PRIME XCORP')) {
-                document.getElementById('empresaRemetente').value = "XC";
-            }
-
-            // 2. Achar Pedido
-            let matchPedido = texto.match(/pedido\s+(\d+)/i) || texto.match(/PEDIDO\s*-\s*OP\s*(\d+)/i) || texto.match(/(\d+)-/);
-            if (matchPedido) {
-                let p = matchPedido[1];
-                if(p.length >= 4 && p.length <= 8) document.getElementById('pedido').value = p;
-            }
-
-            // 3. Achar Valor NF (Busca Inteligente pelo Total)
-            // Procura especificamente pelo valor que vem após a palavra "TOTAL"
-            let matchTotal = texto.match(/\bTOTAL\b[\s\S]{0,40}?R\$\s*([\d\.,]+)/i);
-            if (matchTotal) {
-                document.getElementById('valorNf').value = mascaraMoeda(matchTotal[1]);
-            } else {
-                // Fallback: pega o último valor em R$ do documento se não achar a palavra TOTAL
-                let matches = [...texto.matchAll(/R\$\s*([\d\.,]+)/gi)];
-                if (matches.length > 0) {
-                    document.getElementById('valorNf').value = mascaraMoeda(matches[matches.length - 1][1]);
-                }
-            }
-
-            // 4. Achar CNPJ Cliente
-            let cnpjs = texto.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}|\b\d{14}\b/g);
-            if (cnpjs) {
-                let cnpjCliente = "";
-                cnpjs = cnpjs.map(c => c.replace(/\D/g, ''));
-                const cnpjsPrime = ["11259196000150", "43391624000190", "49123568000199"];
-                cnpjCliente = cnpjs.find(c => !cnpjsPrime.includes(c));
-                
-                if (cnpjCliente) {
-                    let el = document.getElementById('destCnpj');
-                    el.value = mascaraCNPJ(cnpjCliente);
-                    buscarCNPJ(el.value, 'destNome', 'loadDestCnpj');
-                }
-            }
-
-            // 5. Achar CEP Cliente
-            let ceps = texto.match(/CEP\s*[:]?\s*(\d{5}-?\d{3})|\b\d{8}\b/gi);
-            if (ceps) {
-                let cepCliente = "";
-                ceps = ceps.map(c => c.replace(/\D/g, ''));
-                const cepsPrime = ["03511050"];
-                cepCliente = ceps.find(c => !cepsPrime.includes(c));
-                
-                if (cepCliente) {
-                    let el = document.getElementById('destCep');
-                    el.value = mascaraCEP(cepCliente);
-                    buscarCEP(el.value, 'destCidade', 'loadDestCep');
-                }
-            }
-
-            // 6. Tentar extrair Nomes dos Produtos do Pedido Prime
-            let inicioItens = texto.toUpperCase().indexOf("SUBTOTAL");
-            let fimItens = texto.toUpperCase().indexOf("TOTAL", inicioItens + 8);
-            
-            if (inicioItens !== -1 && fimItens !== -1) {
-                let blocoItens = texto.substring(inicioItens + 8, fimItens).trim();
-                
-                // Nova fórmula super robusta: usa os "R$" do Valor Unitário e Subtotal como âncoras infalíveis
-                let regexItem = /(?:\b\d+\s+|^)(.+?)\s+(\d+(?:,\d+)?)\s+R\$\s*[\d\.,]+\s+R\$\s*[\d\.,]+/gi;
-                let matchItem;
-                
-                let encontrouAlgo = false;
-                let gridSalva = document.getElementById('containerItens').innerHTML;
-
-                while ((matchItem = regexItem.exec(blocoItens)) !== null) {
-                    if(!encontrouAlgo) {
-                        document.getElementById('containerItens').innerHTML = '';
-                        contadorItens = 0;
-                    }
-                    encontrouAlgo = true;
-                    
-                    // Extrai o nome e já limpa os SKUs numéricos para manter só a descrição
-                    let descProduto = limparNomeProduto(matchItem[1].trim());
-                    let qtdProduto = matchItem[2] ? matchItem[2].split(',')[0].trim() : "1";
-                    
-                    adicionarItem(); 
-                    let rows = document.querySelectorAll('.item-row');
-                    let inputs = rows[rows.length - 1].querySelectorAll('input');
-                    
-                    inputs[0].value = qtdProduto;
-                    inputs[1].value = descProduto;
-                    
-                    try {
-                        verificarMemoriaProduto(inputs[1]);
-                    } catch (e) {
-                        console.warn("Aviso na memória do produto: ", e);
-                    }
-                }
-                
-                if(!encontrouAlgo) {
-                    document.getElementById('containerItens').innerHTML = gridSalva;
-                }
-            }
-
-            dadosAlterados();
-            if(!document.querySelector('.toastNotification')) {
-                showToast('Dados extraídos do PDF com sucesso!', 'success');
-            }
-        }
-
-        // --- LÓGICA DO CATÁLOGO DE PRODUTOS ---
-        function atualizarDataListProdutos() {
-            let dl = document.getElementById('dlProdutos');
-            if(!dl) {
-                dl = document.createElement('datalist');
-                dl.id = 'dlProdutos';
-                document.body.appendChild(dl);
-            }
-            dl.innerHTML = '';
-            for(let key in catalogoProdutos) {
-                let opt = document.createElement('option');
-                opt.value = catalogoProdutos[key].desc;
-                dl.appendChild(opt);
-            }
-        }
-
-        function verificarMemoriaProduto(inputDesc) {
-            const row = inputDesc.closest('.item-row');
-            if (!row) return; 
-            const inputs = row.querySelectorAll('input');
-            
-            // Limpa o termo buscado (remove SKUs que o usuário possa ter colado)
-            const descOriginal = inputDesc.value.trim();
-            const desc = limparNomeProduto(descOriginal).toUpperCase();
-            
-            if(!desc) {
-                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                return;
-            }
-            
-            let produtoEncontrado = null;
-            
-            // 1. Tenta Busca Exata
-            for(let key in catalogoProdutos) {
-                let prod = catalogoProdutos[key];
-                if(prod && prod.desc && prod.desc.toUpperCase() === desc) {
-                    produtoEncontrado = prod;
-                    break;
-                }
-            }
-
-            // 2. Tenta Busca Aproximada (Fuzzy) - Procura se as palavras que digitou estão no nome do catálogo
-            if(!produtoEncontrado && desc.length > 3) {
-                const palavrasDigitadas = desc.split(' ').filter(p => p.length > 2); // ignora "de", "com", etc.
-                
-                for(let key in catalogoProdutos) {
-                    let prod = catalogoProdutos[key];
-                    if(!prod || !prod.desc) continue;
-                    
-                    const nomeCatalogo = prod.desc.toUpperCase();
-                    if(palavrasDigitadas.length > 0) {
-                        const contemTodas = palavrasDigitadas.every(p => nomeCatalogo.includes(p));
-                        if(contemTodas) {
-                            produtoEncontrado = prod;
-                            // Corrige o campo para o nome completo oficial
-                            inputDesc.value = prod.desc; 
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if(produtoEncontrado) {
-                let parts = produtoEncontrado.parts;
-                if(!parts) {
-                    parts = [{
-                        comp: produtoEncontrado.comp,
-                        larg: produtoEncontrado.larg,
-                        alt: produtoEncontrado.alt,
-                        peso: produtoEncontrado.peso
-                    }];
-                }
-
-                inputs[2].value = parts[0].comp || "";
-                inputs[3].value = parts[0].larg || "";
-                inputs[4].value = parts[0].alt || "";
-                inputs[5].value = parts[0].peso || "";
-                inputDesc.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-
-                if(parts.length > 1 && !inputDesc.dataset.spawned) {
-                    inputDesc.dataset.spawned = "true";
-                    
-                    for(let i = 1; i < parts.length; i++) {
-                        adicionarItem(); 
-                        
-                        let allRows = document.querySelectorAll('.item-row');
-                        let newRow = allRows[allRows.length - 1];
-                        let newInputs = newRow.querySelectorAll('input');
-                        
-                        newInputs[0].value = parts[i].vol || "1";
-                        newInputs[1].value = produtoEncontrado.desc; 
-                        newInputs[2].value = parts[i].comp || "";
-                        newInputs[3].value = parts[i].larg || "";
-                        newInputs[4].value = parts[i].alt || "";
-                        newInputs[5].value = parts[i].peso || "";
-                        
-                        newInputs[1].classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                        newInputs[1].dataset.spawned = "true"; 
-                    }
-                    
-                    showToast(`Produto Multi-Volume! ${parts.length} partes adicionadas.`, 'info');
-                }
-
-            } else {
-                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                delete inputDesc.dataset.spawned;
-            }
-        }
-
-        async function salvarMemoriaProdutos() {
-            const rows = document.querySelectorAll('.item-row');
-            let grouped = {};
-
-            rows.forEach(row => {
-                const inputs = row.querySelectorAll('input');
-                const vol = inputs[0].value.trim();
-                // Limpa o nome do produto para salvar no Firebase sem os dígitos do SKU
-                const desc = limparNomeProduto(inputs[1].value.trim());
-                const comp = inputs[2].value.trim();
-                const larg = inputs[3].value.trim();
-                const alt = inputs[4].value.trim();
-                const peso = inputs[5].value.trim();
-
-                if (desc && (comp || larg || alt || peso)) {
-                    const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
-                    
-                    if(!grouped[safeKey]) {
-                        grouped[safeKey] = { desc: desc, parts: [] };
-                    }
-                    
-                    grouped[safeKey].parts.push({
-                        vol: vol || "1",
-                        comp: comp,
-                        larg: larg,
-                        alt: alt,
-                        peso: peso
-                    });
-                }
-            });
-
-            let promises = [];
-            for(let key in grouped) {
-                promises.push(database.ref('produtos/' + key).set(grouped[key]));
-            }
-            return Promise.all(promises);
-        }
-
-        // --- SISTEMA DE IMPORTAÇÃO DE PLANILHA CSV ---
-        async function importarCSVSKUs(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const lbl = document.getElementById('lblCsvUpload');
-            const originalHTML = lbl.innerHTML;
-            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> LENDO...';
-            lbl.classList.add('opacity-70', 'cursor-not-allowed');
-
-            try {
-                const text = await file.text();
-                const lines = text.split('\n');
-                let count = 0;
-                let grouped = {};
-
-                // Inicia no índice 2 para pular as duas primeiras linhas de cabeçalho da sua planilha
-                for (let i = 2; i < lines.length; i++) { 
-                    let line = lines[i].trim();
-                    if (!line) continue;
-
-                    // Divide as colunas pela vírgula, ignorando as vírgulas dentro de aspas
-                    let cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    
-                    if (cols.length >= 3) {
-                        let descBruta = cols[0].replace(/^"|"$/g, '').trim();
-                        // Limpa a descrição removendo SKUs (ex: "12345 - ") para manter o catálogo impecável
-                        let desc = limparNomeProduto(descBruta);
-                        let medidas = cols[1].replace(/^"|"$/g, '').trim(); // A*L*P
-                        let peso = cols[2].replace(/^"|"$/g, '').trim();
-
-                        if (desc && medidas && medidas.includes('*')) {
-                            let partesMedida = medidas.split('*');
-                            let alt = partesMedida[0] ? partesMedida[0].trim() : "";
-                            let larg = partesMedida[1] ? partesMedida[1].trim() : "";
-                            let comp = partesMedida[2] ? partesMedida[2].trim() : "";
-
-                            const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
-                            
-                            grouped[safeKey] = {
-                                desc: desc,
-                                parts: [{
-                                    vol: "1",
-                                    comp: comp, // Comprimento (Profundidade)
-                                    larg: larg, // Largura
-                                    alt: alt,   // Altura
-                                    peso: peso  // Peso
-                                }]
-                            };
-                            count++;
-                        }
-                    }
-                }
-
-                // Salva todos os produtos massivamente no Firebase
-                let promises = [];
-                for(let key in grouped) {
-                    promises.push(database.ref('produtos/' + key).set(grouped[key]));
-                }
-                await Promise.all(promises);
-
-                showToast(`${count} produtos importados para a memória!`, 'success');
-            } catch (error) {
-                console.error("Erro no CSV:", error);
-                showToast('Erro ao importar a planilha. Verifique o formato.', 'error');
-            } finally {
-                lbl.innerHTML = originalHTML;
-                lbl.classList.remove('opacity-70', 'cursor-not-allowed');
-                event.target.value = ''; // Reseta o input
-            }
-        }
-
         function toggleDarkMode() {
             const body = document.body;
             const icone = document.getElementById('iconeTema');
@@ -1920,8 +1803,10 @@
         }
 
         window.onload = async () => {
+            // Mostra a tela de conexão com a Nuvem
             document.getElementById('telaCarregamento').style.display = 'flex';
             
+            // Conecta e sincroniza
             await conectarFirebase();
             checarEstadoLogin();
             
@@ -1931,72 +1816,7 @@
             if(localStorage.getItem('primeTema') === 'dark') {
                 toggleDarkMode();
             }
-
-            // --- CONTROLE DE INATIVIDADE DA SESSÃO (1 HORA) ---
-            const TEMPO_EXPIRACAO = 60 * 60 * 1000; // 1 hora em milissegundos
-            let timeoutAtividade = null;
-            
-            // Função para registrar a última vez que o usuário mexeu no sistema
-            const atualizarAtividade = () => {
-                if(localStorage.getItem('primeLogado') === 'true') {
-                    // Para não sobrecarregar o navegador, atualiza o LocalStorage a cada 5 segundos no máximo
-                    if(!timeoutAtividade) {
-                        timeoutAtividade = setTimeout(() => {
-                            localStorage.setItem('primeUltimaAtividade', Date.now().toString());
-                            timeoutAtividade = null;
-                        }, 5000); 
-                    }
-                }
-            };
-
-            // Função que roda de tempos em tempos para verificar se o tempo estourou
-            const verificarInatividade = () => {
-                const ultima = localStorage.getItem('primeUltimaAtividade');
-                if(localStorage.getItem('primeLogado') === 'true' && ultima) {
-                    if(Date.now() - parseInt(ultima) > TEMPO_EXPIRACAO) {
-                        localStorage.removeItem('primeLogado');
-                        localStorage.removeItem('primeUsuarioAtual');
-                        localStorage.removeItem('primeUltimaAtividade');
-                        checarEstadoLogin(); // Força a exibir a tela de login
-                        showDialog('Sua sessão expirou devido a 1 hora de inatividade. Por favor, faça login novamente.', 'alert');
-                    }
-                }
-            };
-
-            // "Escuta" as interações do usuário na tela (mouse, teclado, cliques e rolar página)
-        window.addEventListener('mousemove', atualizarAtividade);
-        window.addEventListener('keydown', atualizarAtividade);
-        window.addEventListener('click', atualizarAtividade);
-        window.addEventListener('scroll', atualizarAtividade);
-
-        // Verifica a inatividade a cada 1 minuto automaticamente
-        setInterval(verificarInatividade, 60000);
-
-        // --- PROTEÇÃO DO CÓDIGO-FONTE (Anti-Inspeção e Anti-Cópia) ---
-        // 1. Bloqueia o botão direito do mouse
-        document.addEventListener('contextmenu', event => {
-            event.preventDefault();
-        });
-
-        // 2. Bloqueia atalhos de desenvolvedor no teclado
-        document.addEventListener('keydown', event => {
-            // Bloqueia F12 (Inspecionar Elemento)
-            if (event.key === 'F12') {
-                event.preventDefault();
-                return false;
-            }
-            // Bloqueia Ctrl + Shift + I / J / C (Ferramentas de Desenvolvedor)
-            if (event.ctrlKey && event.shiftKey && (event.key === 'I' || event.key === 'J' || event.key === 'C' || event.key === 'i' || event.key === 'j' || event.key === 'c')) {
-                event.preventDefault();
-                return false;
-            }
-            // Bloqueia Ctrl + U (Ver Código Fonte)
-            if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) {
-                event.preventDefault();
-                return false;
-            }
-        });
-    };
-</script>
+        };
+    </script>
 </body>
 </html>

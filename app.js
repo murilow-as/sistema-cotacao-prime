@@ -1031,15 +1031,27 @@
     function toggleDarkMode() {
         const body = document.body;
         const icone = document.getElementById('iconeTema');
-        body.classList.toggle('dark');
+        const temaAtual = localStorage.getItem('primeTema') || 'light';
+        let novoTema = 'light';
 
-        if (body.classList.contains('dark')) {
+        // Ciclo: light → dark → amoled → light
+        if (temaAtual === 'light') {
+            novoTema = 'dark';
+            body.classList.remove('amoled');
+            body.classList.add('dark');
             icone.classList.replace('fa-moon', 'fa-sun');
-            localStorage.setItem('primeTema', 'dark');
-        } else {
-            icone.classList.replace('fa-sun', 'fa-moon');
-            localStorage.setItem('primeTema', 'light');
+        } else if (temaAtual === 'dark') {
+            novoTema = 'amoled';
+            body.classList.remove('dark');
+            body.classList.add('amoled');
+            icone.classList.replace('fa-sun', 'fa-lightbulb');
+        } else if (temaAtual === 'amoled') {
+            novoTema = 'light';
+            body.classList.remove('amoled', 'dark');
+            icone.classList.replace('fa-lightbulb', 'fa-moon');
         }
+
+        localStorage.setItem('primeTema', novoTema);
     }
 
     function getTransportadorasPrimariasPorUF(uf) {
@@ -1238,8 +1250,13 @@
         adicionarItem();
         gerarPreviaTexto();
 
-        if (localStorage.getItem('primeTema') === 'dark') {
-            toggleDarkMode();
+        const temaArmazenado = localStorage.getItem('primeTema');
+        if (temaArmazenado === 'dark') {
+            document.body.classList.add('dark');
+            document.getElementById('iconeTema').className = 'fa-solid fa-sun';
+        } else if (temaArmazenado === 'amoled') {
+            document.body.classList.add('amoled');
+            document.getElementById('iconeTema').className = 'fa-solid fa-lightbulb';
         }
     };
 
