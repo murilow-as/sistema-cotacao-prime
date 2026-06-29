@@ -8,7 +8,6 @@
 html, body {
     margin: 0;
     padding: 0;
-    height: 100%;
 }
 
 body {
@@ -157,52 +156,4 @@ body.dark .text-red-500 {
 .animate-loader {
     animation: fillBar 1.5s infinite alternate ease-in-out;
     transform-origin: left;
-}
-
-/* Otimizações de Layout e Enquadramento */
-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0;
-}
-
-/* Container wrapper para melhor controle */
-main {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    padding: 1.5rem 1rem;
-    margin: 0 auto;
-    width: 100%;
-    max-width: 100%;
-}
-
-/* Dispositivos maiores */
-@media (min-width: 768px) {
-    main {
-        padding: 2rem;
-        gap: 2rem;
-    }
-}
-
-/* Otimização de overflow e scroll */
-div[style*="max-height"] {
-    overflow-y: auto;
-    scroll-behavior: smooth;
-}
-
-/* Melhoria de responsividade geral */
-@media (max-width: 640px) {
-    .max-w-6xl {
-        width: 100%;
-        padding: 0;
-    }
-    
-    /* Melhor espaçamento em dispositivos móveis */
-    div.mx-2 {
-        margin-left: 0.5rem;
-        margin-right: 0.5rem;
-    }
 }

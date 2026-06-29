@@ -26,7 +26,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 
-<body class="font-sans text-gray-800 relative">
+<body class="p-4 md:p-8 font-sans text-gray-800 relative">
 
     <!-- TELA DE CARREGAMENTO DO SERVIDOR (FIREBASE) -->
     <div id="telaCarregamento" class="fixed inset-0 z-[500] bg-gray-900 flex flex-col items-center justify-center transition-opacity duration-300">
@@ -147,7 +147,7 @@
         <span id="toastMessage"></span>
     </div>
 
-    <div class="max-w-6xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center gap-4 px-2 md:px-0">
+    <div class="max-w-6xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div class="flex items-center">
             <div class="mr-4 flex-shrink-0">
                 <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" alt="Logo Grupo Prime B2B" class="h-12 w-12 object-contain rounded-full">
@@ -157,7 +157,7 @@
                 <p class="text-sm text-gray-500">Sistema Gerador de Cotações <span id="nomeUsuarioLogado" class="ml-2 bg-blue-100 text-blue-800 text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded hidden"></span></p>
             </div>
         </div>
-        <div class="flex gap-2 w-full sm:w-auto flex-wrap justify-center sm:justify-start">
+        <div class="flex gap-2 w-full sm:w-auto">
             <button onclick="toggleDarkMode()" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-yellow-400 px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Alternar Tema">
                 <i id="iconeTema" class="fa-solid fa-moon"></i>
             </button>
@@ -171,14 +171,14 @@
     </div>
 
     <!-- AVISO ADMIN - VISÍVEL APENAS PARA O ADMINISTRADOR -->
-    <div id="avisoAdmin" class="max-w-6xl mx-auto mb-4 bg-red-100 dark:bg-red-900/40 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative hidden shadow-sm flex items-center justify-center mx-2 md:mx-0">
+    <div id="avisoAdmin" class="max-w-6xl mx-auto mb-4 bg-red-100 dark:bg-red-900/40 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative hidden shadow-sm flex items-center justify-center">
         <strong class="font-bold uppercase tracking-wide text-sm"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Perfil Admin: </strong>
         <span class="block sm:inline ml-2 text-sm font-medium">Necessário efetuar login com perfil de utilizador para gerar cotações.</span>
     </div>
 
-    <div class="max-w-6xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row mx-2 md:mx-0 md:min-h-[calc(100vh-300px)]">
+    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row">
         
-        <div class="w-full md:w-1/2 p-4 md:p-6 overflow-y-auto" style="max-height: 85vh;">
+        <div class="w-full md:w-1/2 p-6 overflow-y-auto" style="max-height: 85vh;">
             
             <!-- ÁREA DE IMPORTAÇÃO DE PDF -->
             <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -313,7 +313,7 @@
 
         </div>
 
-        <div class="w-full md:w-1/2 bg-gray-50 dark:bg-gray-700 p-4 md:p-6 border-l border-gray-200 dark:border-gray-600 flex flex-col relative md:min-h-[85vh]">
+        <div class="w-full md:w-1/2 bg-gray-50 p-6 border-l border-gray-200 flex flex-col relative">
             <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center justify-between">
                 <span><i class="fa-regular fa-file-lines mr-2"></i> Resultado Final</span>
                 <span id="badgeCodigo" class="bg-yellow-200 text-yellow-800 text-xs px-2 py-1 rounded font-bold hidden"></span>
