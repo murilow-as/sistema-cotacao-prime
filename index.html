@@ -44,7 +44,7 @@
         .modal { display: none; background-color: rgba(0,0,0,0.5); }
         .modal.active { display: flex; }
 
-        /* Estilos do Dark Mode */
+        /* Estilos do Dark Mode (Cinza) */
         body.dark { background-color: #111827; color: #f9fafb; }
         body.dark .bg-white { background-color: #1f2937; }
         body.dark .bg-gray-50 { background-color: #111827; }
@@ -62,6 +62,15 @@
         body.dark .text-blue-700 { color: #93c5fd; }
         body.dark .bg-red-50 { background-color: #7f1d1d; }
         body.dark .text-red-500 { color: #fca5a5; }
+
+        /* Estilos do Tema AMOLED (Preto Absoluto) */
+        body.dark.amoled { background-color: #000000; }
+        body.dark.amoled .bg-white, body.dark.amoled .bg-gray-50, body.dark.amoled .bg-gray-100 { background-color: #000000; border-color: #1a1a1a; }
+        body.dark.amoled .bg-gray-800, body.dark.amoled .bg-gray-900 { background-color: #050505; border-color: #222; }
+        body.dark.amoled .input-field { background-color: #000000; border-color: #333; }
+        body.dark.amoled .border-gray-200, body.dark.amoled .border-gray-300, body.dark.amoled .border-gray-700 { border-color: #1a1a1a; }
+        body.dark.amoled .shadow-lg, body.dark.amoled .shadow-2xl { box-shadow: 0 0 15px rgba(255, 255, 255, 0.05); }
+        body.dark.amoled .bg-blue-50 { background-color: #000510; border-color: #001020; }
 
         @keyframes fillBar {
             0% { transform: scaleX(0); }
@@ -205,7 +214,7 @@
         </div>
         <div class="flex gap-2 w-full sm:w-auto">
             <button onclick="toggleDarkMode()" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-yellow-400 px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Alternar Tema">
-                <i id="iconeTema" class="fa-solid fa-moon"></i>
+                <i id="iconeTema" class="fa-solid fa-sun"></i>
             </button>
             <button onclick="abrirHistorico()" class="bg-gray-800 hover:bg-gray-900 dark:bg-gray-600 dark:hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0">
                 <i class="fa-solid fa-cloud mr-2"></i> Histórico na Nuvem
@@ -1878,90 +1887,25 @@
             return Promise.all(promises);
         }
 
-        // --- SISTEMA DE IMPORTAÇÃO DE PLANILHA CSV ---
-        async function importarCSVSKUs(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const lbl = document.getElementById('lblCsvUpload');
-            const originalHTML = lbl.innerHTML;
-            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> LENDO...';
-            lbl.classList.add('opacity-70', 'cursor-not-allowed');
-
-            try {
-                const text = await file.text();
-                const lines = text.split('\n');
-                let count = 0;
-                let grouped = {};
-
-                // Inicia no índice 2 para pular as duas primeiras linhas de cabeçalho da sua planilha
-                for (let i = 2; i < lines.length; i++) { 
-                    let line = lines[i].trim();
-                    if (!line) continue;
-
-                    // Divide as colunas pela vírgula, ignorando as vírgulas dentro de aspas
-                    let cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    
-                    if (cols.length >= 3) {
-                        let descBruta = cols[0].replace(/^"|"$/g, '').trim();
-                        // Limpa a descrição removendo SKUs (ex: "12345 - ") para manter o catálogo impecável
-                        let desc = limparNomeProduto(descBruta);
-                        let medidas = cols[1].replace(/^"|"$/g, '').trim(); // A*L*P
-                        let peso = cols[2].replace(/^"|"$/g, '').trim();
-
-                        if (desc && medidas && medidas.includes('*')) {
-                            let partesMedida = medidas.split('*');
-                            let alt = partesMedida[0] ? partesMedida[0].trim() : "";
-                            let larg = partesMedida[1] ? partesMedida[1].trim() : "";
-                            let comp = partesMedida[2] ? partesMedida[2].trim() : "";
-
-                            const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
-                            
-                            grouped[safeKey] = {
-                                desc: desc,
-                                parts: [{
-                                    vol: "1",
-                                    comp: comp, // Comprimento (Profundidade)
-                                    larg: larg, // Largura
-                                    alt: alt,   // Altura
-                                    peso: peso  // Peso
-                                }]
-                            };
-                            count++;
-                        }
-                    }
-                }
-
-                // Salva todos os produtos massivamente no Firebase
-                let promises = [];
-                for(let key in grouped) {
-                    promises.push(database.ref('produtos/' + key).set(grouped[key]));
-                }
-                await Promise.all(promises);
-
-                showToast(`${count} produtos importados para a memória!`, 'success');
-            } catch (error) {
-                console.error("Erro no CSV:", error);
-                showToast('Erro ao importar a planilha. Verifique o formato.', 'error');
-            } finally {
-                lbl.innerHTML = originalHTML;
-                lbl.classList.remove('opacity-70', 'cursor-not-allowed');
-                event.target.value = ''; // Reseta o input
-            }
-        }
-
         function toggleDarkMode() {
             const body = document.body;
             const icone = document.getElementById('iconeTema');
             
-            body.classList.toggle('dark');
-            
-            if (body.classList.contains('dark')) {
-                icone.classList.replace('fa-moon', 'fa-sun');
-                localStorage.setItem('primeTema', 'dark');
-            } else {
-                icone.classList.replace('fa-sun', 'fa-moon');
+            if (body.classList.contains('amoled')) {
+                // Está no AMOLED -> Vai para o CLARO
+                body.classList.remove('dark', 'amoled');
+                icone.className = 'fa-solid fa-sun';
                 localStorage.setItem('primeTema', 'light');
+            } else if (body.classList.contains('dark')) {
+                // Está no Escuro -> Vai para AMOLED
+                body.classList.add('amoled');
+                icone.className = 'fa-solid fa-moon'; // Ícone Lua Cheia conforme o pedido
+                localStorage.setItem('primeTema', 'amoled');
+            } else {
+                // Está no Claro -> Vai para Escuro
+                body.classList.add('dark');
+                icone.className = 'fa-solid fa-circle-half-stroke';
+                localStorage.setItem('primeTema', 'dark');
             }
         }
 
@@ -1974,8 +1918,15 @@
             adicionarItem();
             gerarPreviaTexto();
             
-            if(localStorage.getItem('primeTema') === 'dark') {
-                toggleDarkMode();
+            const temaSalvo = localStorage.getItem('primeTema');
+            if(temaSalvo === 'amoled') {
+                document.body.classList.add('dark', 'amoled');
+                document.getElementById('iconeTema').className = 'fa-solid fa-moon';
+            } else if(temaSalvo === 'dark') {
+                document.body.classList.add('dark');
+                document.getElementById('iconeTema').className = 'fa-solid fa-circle-half-stroke';
+            } else {
+                document.getElementById('iconeTema').className = 'fa-solid fa-sun';
             }
 
             // --- CONTROLE DE INATIVIDADE DA SESSÃO (1 HORA) ---
@@ -2010,39 +1961,39 @@
             };
 
             // "Escuta" as interações do usuário na tela (mouse, teclado, cliques e rolar página)
-        window.addEventListener('mousemove', atualizarAtividade);
-        window.addEventListener('keydown', atualizarAtividade);
-        window.addEventListener('click', atualizarAtividade);
-        window.addEventListener('scroll', atualizarAtividade);
+            window.addEventListener('mousemove', atualizarAtividade);
+            window.addEventListener('keydown', atualizarAtividade);
+            window.addEventListener('click', atualizarAtividade);
+            window.addEventListener('scroll', atualizarAtividade);
 
-        // Verifica a inatividade a cada 1 minuto automaticamente
-        setInterval(verificarInatividade, 60000);
+            // Verifica a inatividade a cada 1 minuto automaticamente
+            setInterval(verificarInatividade, 60000);
 
-        // --- PROTEÇÃO DO CÓDIGO-FONTE (Anti-Inspeção e Anti-Cópia) ---
-        // 1. Bloqueia o botão direito do mouse
-        document.addEventListener('contextmenu', event => {
-            event.preventDefault();
-        });
+            // --- PROTEÇÃO DO CÓDIGO-FONTE (Anti-Inspeção e Anti-Cópia) ---
+            // 1. Bloqueia o botão direito do mouse
+            document.addEventListener('contextmenu', event => {
+                event.preventDefault();
+            });
 
-        // 2. Bloqueia atalhos de desenvolvedor no teclado
-        document.addEventListener('keydown', event => {
-            // Bloqueia F12 (Inspecionar Elemento)
-            if (event.key === 'F12') {
-                event.preventDefault();
-                return false;
-            }
-            // Bloqueia Ctrl + Shift + I / J / C (Ferramentas de Desenvolvedor)
-            if (event.ctrlKey && event.shiftKey && (event.key === 'I' || event.key === 'J' || event.key === 'C' || event.key === 'i' || event.key === 'j' || event.key === 'c')) {
-                event.preventDefault();
-                return false;
-            }
-            // Bloqueia Ctrl + U (Ver Código Fonte)
-            if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) {
-                event.preventDefault();
-                return false;
-            }
-        });
-    };
-</script>
+            // 2. Bloqueia atalhos de desenvolvedor no teclado
+            document.addEventListener('keydown', event => {
+                // Bloqueia F12 (Inspecionar Elemento)
+                if (event.key === 'F12') {
+                    event.preventDefault();
+                    return false;
+                }
+                // Bloqueia Ctrl + Shift + I / J / C (Ferramentas de Desenvolvedor)
+                if (event.ctrlKey && event.shiftKey && (event.key === 'I' || event.key === 'J' || event.key === 'C' || event.key === 'i' || event.key === 'j' || event.key === 'c')) {
+                    event.preventDefault();
+                    return false;
+                }
+                // Bloqueia Ctrl + U (Ver Código Fonte)
+                if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+        };
+    </script>
 </body>
 </html>
