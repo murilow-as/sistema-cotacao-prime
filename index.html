@@ -420,6 +420,28 @@
         </div>
     </div>
 
+    <!-- MODAL DE UPLOAD DE NOTA FISCAL (NF-e) PARA IMPRESSÃO -->
+    <div id="modalUploadNF" class="modal fixed inset-0 z-[70] items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-md flex flex-col items-center border border-gray-200 dark:border-gray-700">
+            <div class="bg-blue-100 text-blue-600 p-3 rounded-full mb-4">
+                <i class="fa-solid fa-file-invoice text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2 text-center">Validação de Nota Fiscal</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Para gerar as etiquetas do <strong class="text-blue-600 dark:text-blue-400">Pedido <span id="lblPedidoAlvo"></span></strong>, envie o arquivo <b>XML</b> ou <b>PDF</b> (DANFE) correspondente.</p>
+            
+            <div class="w-full mb-4 bg-gray-50 dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center relative hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                <input type="file" id="nfUploadInput" accept=".xml, .pdf" onchange="processarUploadNF(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
+                <p class="text-xs font-bold text-gray-600 dark:text-gray-300">Clique ou arraste a Nota Fiscal (XML/PDF)</p>
+                <p id="lblStatusNF" class="text-[10px] text-blue-500 font-bold mt-2 h-4"></p>
+            </div>
+            
+            <button onclick="fecharModalUploadNF()" class="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg transition duration-200">
+                Cancelar e Voltar
+            </button>
+        </div>
+    </div>
+
     <!-- MODAL CUSTOMIZADO (ALERT/CONFIRM) -->
     <div id="customDialog" class="modal fixed inset-0 z-[60] items-center justify-center">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-11/12 max-w-sm p-6 transform transition-all border border-gray-200 dark:border-gray-700">
@@ -971,7 +993,6 @@
             return true;
         }
 
-        // --- CAIXA DE ITENS INTELIGENTE COM BOTÃO DE PESQUISA EXATA ---
         function adicionarItem() {
             contadorItens++;
             const div = document.createElement('div');
@@ -981,9 +1002,9 @@
             div.innerHTML = `
                 <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 items-center">
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center font-bold" placeholder="0" oninput="dadosAlterados()">
-                    <div class="relative w-full flex items-center">
+                    <div class="relative w-full">
                         <input type="text" list="dlProdutos" class="input-field m-0 py-1.5 pl-2 pr-[60px] font-medium transition-colors w-full" placeholder="Ex: Caixa de Parafusos..." oninput="verificarMemoriaProduto(this); dadosAlterados()" title="Nome do Produto">
-                        <button onclick="abrirPesquisaWeb(this)" style="display: none;" class="absolute right-1 bg-blue-600 hover:bg-blue-700 text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded shadow transition flex items-center gap-1" title="Pesquisar na Web"><i class="fa-solid fa-globe"></i> WEB</button>
+                        <button onclick="abrirPesquisaWeb(this)" class="absolute right-1 top-[5px] bg-blue-600 hover:bg-blue-700 text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded shadow transition flex items-center gap-1" style="display: none;" title="Pesquisar na Web"><i class="fa-solid fa-globe"></i> WEB</button>
                     </div>
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
@@ -1003,7 +1024,6 @@
             const nomeProduto = inputDesc.value.trim();
             if(!nomeProduto) return;
             
-            // Pesquisa exatamente o que o utilizador escreveu
             const query = encodeURIComponent(nomeProduto);
             window.open(`https://www.google.com/search?q=${query}`, '_blank');
         }
@@ -1118,7 +1138,6 @@
             const desc = limparNomeProduto(descOriginal).toUpperCase();
             const btnWeb = inputDesc.nextElementSibling;
             
-            // Fica neutro e esconde botão se estiver vazio
             if(!desc) {
                 inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
                 inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
@@ -1128,7 +1147,6 @@
             
             let produtoEncontrado = null;
             
-            // SOMENTE BUSCA EXATA: O nome digitado tem que ser exatamente igual ao que está guardado
             for(let key in catalogoProdutos) {
                 let prod = catalogoProdutos[key];
                 if(prod && prod.desc && prod.desc.toUpperCase() === desc) {
@@ -1156,7 +1174,6 @@
                 inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
                 inputDesc.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
 
-                // Encontrou localmente, esconde a IA!
                 if(btnWeb) btnWeb.style.display = 'none';
 
                 if(parts.length > 1 && !inputDesc.dataset.spawned) {
@@ -1187,15 +1204,11 @@
                 }
 
             } else {
-                // Se NÃO encontrou exatamente o produto, volta ao aspeto normal
                 inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
                 delete inputDesc.dataset.spawned;
                 
-                // Exibe o botão mágico da IA a partir da 4ª letra (Para não disparar em siglas de 1 letra)
                 if(descOriginal.length > 3) {
-                    if(btnWeb) {
-                        btnWeb.style.display = 'flex';
-                    }
+                    if(btnWeb) btnWeb.style.display = 'flex';
                 } else {
                     if(btnWeb) btnWeb.style.display = 'none';
                 }
@@ -1215,7 +1228,6 @@
                 const alt = inputs[4].value.trim();
                 const peso = inputs[5].value.trim();
 
-                // Guarda sempre que tiver a descrição e pelo menos uma das medidas preenchidas
                 if (desc && (comp || larg || alt || peso)) {
                     const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
                     
@@ -1456,7 +1468,7 @@
                             <button onclick="baixarCotacaoPdf('${item.id}')" class="bg-purple-100 dark:bg-purple-900 hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-700 dark:text-purple-300 px-4 py-2 rounded font-bold transition whitespace-nowrap shadow-sm" title="Baixar PDF Oficial">
                                 <i class="fa-solid fa-file-pdf mr-1"></i> Baixar PDF
                             </button>
-                            <button onclick="imprimirEtiquetas('${item.id}')" class="bg-gray-800 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-gray-600 text-white px-4 py-2 rounded font-bold transition whitespace-nowrap shadow-sm ml-2" title="Imprimir Etiquetas (Elgin L42 Pro)">
+                            <button onclick="iniciarImpressaoEtiquetas('${item.id}')" class="bg-gray-800 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-gray-600 text-white px-4 py-2 rounded font-bold transition whitespace-nowrap shadow-sm ml-2" title="Imprimir Etiquetas (Elgin L42 Pro)">
                                 <i class="fa-solid fa-print mr-1"></i> Etiquetas
                             </button>
                         `;
@@ -1677,12 +1689,116 @@
             });
         }
 
-        // --- NOVA LÓGICA: Impressão de Etiquetas (Elgin L42 Pro / Térmico Direto) ---
-        function imprimirEtiquetas(id) {
+        // --- NOVA LÓGICA: Validação de NF e Impressão de Etiquetas ---
+        let cotaParaImprimir = null;
+        let pedidoAlvoParaImprimir = "";
+
+        function iniciarImpressaoEtiquetas(id) {
             let item = historicoNuvem.find(i => i.id === id);
             if(!item) return;
+            cotaParaImprimir = item;
 
-            // 1. Achar a transportadora vencedora
+            const t = item.texto;
+            const pedidoMatch = t.match(/PEDIDO\s+([^\.]+)/);
+            pedidoAlvoParaImprimir = pedidoMatch ? pedidoMatch[1].trim() : item.id;
+
+            document.getElementById('lblPedidoAlvo').innerText = pedidoAlvoParaImprimir;
+            document.getElementById('nfUploadInput').value = '';
+            document.getElementById('lblStatusNF').innerHTML = '';
+            document.getElementById('modalUploadNF').classList.add('active');
+        }
+
+        function fecharModalUploadNF() {
+            document.getElementById('modalUploadNF').classList.remove('active');
+        }
+
+        async function processarUploadNF(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const lbl = document.getElementById('lblStatusNF');
+            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Lendo e Validando Nota Fiscal...';
+
+            try {
+                let numeroNF = "";
+                let pedidoNF = "";
+                let textoArquivo = "";
+
+                // 1. Extração de Dados via XML (Recomendado / Rápido e Seguro)
+                if (file.name.toLowerCase().endsWith('.xml')) {
+                    const text = await file.text();
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(text, "text/xml");
+
+                    const nNFNode = xmlDoc.getElementsByTagName("nNF")[0];
+                    if (nNFNode) numeroNF = nNFNode.textContent;
+
+                    const xPedNode = xmlDoc.getElementsByTagName("xPed")[0];
+                    const infCplNode = xmlDoc.getElementsByTagName("infCpl")[0];
+
+                    if (xPedNode) pedidoNF += xPedNode.textContent + " ";
+                    if (infCplNode) pedidoNF += infCplNode.textContent + " ";
+
+                // 2. Extração de Dados via PDF (DANFE)
+                } else if (file.name.toLowerCase().endsWith('.pdf')) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument(new Uint8Array(arrayBuffer)).promise;
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        textoArquivo += textContent.items.map(item => item.str).join(" ") + " ";
+                    }
+
+                    // Regex para localizar o Nº da NF no DANFE
+                    const matchNF = textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})\s+SÉRIE/i) || textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})/i);
+                    if (matchNF) numeroNF = matchNF[1];
+
+                    // Regex para localizar o Pedido no DANFE
+                    const matchPed = textoArquivo.match(/Pedidos?\s*N[º°:]?\s*(\d+)/i) || textoArquivo.match(/Ordem de Compra[^\d]*(\d+)/i) || textoArquivo.match(/PEDIDO[^\d]*(\d+)/i);
+                    if (matchPed) pedidoNF = matchPed[1];
+                    
+                    // Concatena todo o texto para a validação agressiva (fallback)
+                    pedidoNF += " " + textoArquivo;
+                }
+
+                // Proteção 1: Garante que encontrou o número da Nota
+                if (!numeroNF) {
+                     showToast(`Não foi possível localizar o número da NF no arquivo.`, 'error');
+                     lbl.innerHTML = '<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation"></i> NF NÃO DETETADA</span>';
+                     return;
+                }
+
+                // Proteção 2: Validação Cruzada do Pedido
+                const targetDigits = pedidoAlvoParaImprimir.replace(/\D/g, '');
+                let pedidoValidado = false;
+
+                if (pedidoNF.includes(pedidoAlvoParaImprimir)) {
+                    pedidoValidado = true;
+                } else if (targetDigits.length > 2 && pedidoNF.replace(/\D/g, '').includes(targetDigits)) {
+                    pedidoValidado = true;
+                }
+
+                if (!pedidoValidado) {
+                     showToast(`A NF enviada não corresponde ao Pedido ${pedidoAlvoParaImprimir}. Envie a NF correta!`, 'error');
+                     lbl.innerHTML = '<span class="text-red-500"><i class="fa-solid fa-ban"></i> NF INCOMPATÍVEL COM O PEDIDO</span>';
+                     return;
+                }
+
+                // Se passou em todas as seguranças, gera a etiqueta
+                fecharModalUploadNF();
+                showToast(`NF ${numeroNF} validada com sucesso! Gerando etiquetas...`, 'success');
+                gerarJanelaImpressao(cotaParaImprimir, pedidoAlvoParaImprimir, numeroNF);
+
+            } catch (error) {
+                console.error(error);
+                showToast("Erro ao processar o arquivo da NF.", "error");
+                lbl.innerHTML = '<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation"></i> ARQUIVO CORROMPIDO OU INVÁLIDO</span>';
+            } finally {
+                event.target.value = ''; // Limpa o input file
+            }
+        }
+
+        function gerarJanelaImpressao(item, pedido, numeroNF) {
             let transpsPreenchidas = [];
             if (item.cotacoes) {
                 for (let k in item.cotacoes) {
@@ -1700,11 +1816,7 @@
             transpsPreenchidas.sort((a, b) => a.v - b.v);
             let vencedor = transpsPreenchidas.length > 0 ? transpsPreenchidas[0].nome : "Transportadora Pendente";
 
-            // 2. Extrair dados do Remetente e Destinatário
             const t = item.texto;
-            const pedidoMatch = t.match(/PEDIDO\s+([^\.]+)/);
-            const pedido = pedidoMatch ? pedidoMatch[1] : item.id;
-            
             const destMatch = t.match(/INFORMAÇÕES DO DESTINATÁRIO:\n+NOME:\s*(.*?)\.\nCNPJ:\s*(.*?)\.\nCEP DESTINATÁRIO:\s*(.*?)\n/);
             let destNome = "", destCnpj = "", destCep = "";
             if (destMatch) {
@@ -1716,7 +1828,6 @@
             const remetMatch = t.match(/INFORMAÇÕES DO REMETENTE:\n+NOME:\s*(.*?)\.\n/);
             const remetNome = remetMatch ? remetMatch[1] : "Grupo Prime B2B";
 
-            // 3. Fatiar os Volumes
             const itensTexto = t.split('VOLUME(S) E PESO(S) DO(S) ITEM(NS):')[1] || "";
             const linhas = itensTexto.split('\n').map(l => l.trim()).filter(l => l.includes('vol. -'));
             
@@ -1725,25 +1836,19 @@
                 const match = linha.match(/^(\d+)\s+vol\.\s+-\s+(.*?)\s+\|\s+(.*?)\s+-\s+(.*) un/);
                 if(match) {
                     const qtd = parseInt(match[1]);
-                    const desc = match[2];
-                    const dim = match[3];
-                    const peso = match[4];
-                    for(let i=0; i<qtd; i++) {
-                        volumesTotais.push({desc, dim, peso});
-                    }
+                    for(let i=0; i<qtd; i++) { volumesTotais.push({}); }
                 }
             });
 
-            if(volumesTotais.length === 0) volumesTotais.push({desc: "Volumes Diversos", dim: "-", peso: "-"});
+            if(volumesTotais.length === 0) volumesTotais.push({});
 
-            // 4. Montar a Janela de Impressão Otimizada
             const printWindow = window.open('', '_blank');
             let html = `
             <!DOCTYPE html>
             <html>
             <head>
                 <meta charset="UTF-8">
-                <title>Imprimir Etiquetas - ${pedido}</title>
+                <title>Imprimir Etiquetas - NF ${numeroNF}</title>
                 <style>
                     @media print {
                         @page { size: 101.7mm 150mm; margin: 0; }
@@ -1769,16 +1874,13 @@
                     .label:last-child { page-break-after: auto; }
                     
                     .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 3mm; margin-bottom: 3mm; }
-                    .header h1 { font-size: 18px; margin: 0; text-transform: uppercase; font-weight: 900; }
-                    .header h2 { font-size: 16px; margin: 2mm 0 0 0; font-weight: bold; }
+                    .header h1 { font-size: 20px; margin: 0; text-transform: uppercase; font-weight: 900; }
                     
-                    /* ESTILO BARTENDER: Linhas grossas e sólidas, fontes maiores */
                     .section { margin-bottom: 3mm; border-bottom: 2px solid #000; padding-bottom: 3mm; }
                     .section.no-border { border-bottom: none; }
                     .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 2mm; color: #000; }
                     
                     .text-xxl { font-size: 26px; font-weight: 900; line-height: 1.1; word-break: break-word; text-transform: uppercase; }
-                    .text-xl { font-size: 20px; font-weight: 900; line-height: 1.2; word-break: break-word; }
                     .text-md { font-size: 14px; font-weight: bold; margin-top: 1.5mm; }
                     .text-sm { font-size: 12px; margin-top: 1mm; font-weight: bold; }
                     
@@ -1796,10 +1898,15 @@
                 html += `
                 <div class="label">
                     <div class="header">
-                        <h1 style="font-size: 22px;">GRUPO PRIME B2B</h1>
-                        <h2 style="font-size: 18px;">PEDIDO: ${pedido}</h2>
+                        <h1>GRUPO PRIME B2B</h1>
                     </div>
                     
+                    <!-- NOVO DESTAQUE: SOMENTE NOTA FISCAL GIGANTE E CENTRALIZADA -->
+                    <div class="section" style="text-align: center;">
+                        <div class="section-title">Nota Fiscal</div>
+                        <div style="font-size: 42px; font-weight: 900; line-height: 1; letter-spacing: 2px;">${numeroNF}</div>
+                    </div>
+
                     <div class="section">
                         <div class="section-title">Remetente</div>
                         <div class="text-sm">${remetNome}</div>
@@ -1814,10 +1921,8 @@
 
                     <div class="section no-border">
                         <div class="section-title">Transportadora Oficial</div>
-                        <div class="text-xl" style="text-transform: uppercase; font-size: 24px;">${vencedor}</div>
+                        <div style="text-transform: uppercase; font-size: 24px; font-weight: 900;">${vencedor}</div>
                     </div>
-                    
-                    <!-- Secção de Detalhes do Volume removida conforme solicitado -->
 
                     <div class="footer">
                         <div id="qrcode-${idx}" class="qr-code"></div>
@@ -1856,7 +1961,7 @@
             printWindow.document.write(html);
             printWindow.document.close();
             
-            showToast('A enviar etiquetas para a fila de impressão...', 'info');
+            showToast('Preparando tela de impressão...', 'info');
         }
 
         function togglePrevia(id) {
@@ -2039,7 +2144,9 @@
             }
         }
 
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        }
 
         async function iniciarLeituraPDF(event) {
             const inputElement = event.target;
@@ -2204,148 +2311,6 @@
             }
         }
 
-        function verificarMemoriaProduto(inputDesc) {
-            const row = inputDesc.closest('.item-row');
-            if (!row) return; 
-            const inputs = row.querySelectorAll('input');
-            
-            const descOriginal = inputDesc.value.trim();
-            const desc = limparNomeProduto(descOriginal).toUpperCase();
-            const btnWeb = inputDesc.nextElementSibling;
-            
-            if(!desc) {
-                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
-                if(btnWeb) btnWeb.style.display = 'none';
-                return;
-            }
-            
-            let produtoEncontrado = null;
-            
-            for(let key in catalogoProdutos) {
-                let prod = catalogoProdutos[key];
-                if(prod && prod.desc && prod.desc.toUpperCase() === desc) {
-                    produtoEncontrado = prod;
-                    break;
-                }
-            }
-
-            if(!produtoEncontrado && desc.length > 3) {
-                const palavrasDigitadas = desc.split(' ').filter(p => p.length > 2); 
-                
-                for(let key in catalogoProdutos) {
-                    let prod = catalogoProdutos[key];
-                    if(!prod || !prod.desc) continue;
-                    
-                    const nomeCatalogo = prod.desc.toUpperCase();
-                    if(palavrasDigitadas.length > 0) {
-                        const contemTodas = palavrasDigitadas.every(p => nomeCatalogo.includes(p));
-                        if(contemTodas) {
-                            produtoEncontrado = prod;
-                            inputDesc.value = prod.desc; 
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if(produtoEncontrado) {
-                let parts = produtoEncontrado.parts;
-                if(!parts) {
-                    parts = [{
-                        comp: produtoEncontrado.comp,
-                        larg: produtoEncontrado.larg,
-                        alt: produtoEncontrado.alt,
-                        peso: produtoEncontrado.peso
-                    }];
-                }
-
-                inputs[2].value = parts[0].comp || "";
-                inputs[3].value = parts[0].larg || "";
-                inputs[4].value = parts[0].alt || "";
-                inputs[5].value = parts[0].peso || "";
-                
-                inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
-                inputDesc.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-
-                if(btnWeb) btnWeb.style.display = 'none';
-
-                if(parts.length > 1 && !inputDesc.dataset.spawned) {
-                    inputDesc.dataset.spawned = "true";
-                    
-                    for(let i = 1; i < parts.length; i++) {
-                        adicionarItem(); 
-                        
-                        let allRows = document.querySelectorAll('.item-row');
-                        let newRow = allRows[allRows.length - 1];
-                        let newInputs = newRow.querySelectorAll('input');
-                        
-                        newInputs[0].value = parts[i].vol || "1";
-                        newInputs[1].value = produtoEncontrado.desc; 
-                        newInputs[2].value = parts[i].comp || "";
-                        newInputs[3].value = parts[i].larg || "";
-                        newInputs[4].value = parts[i].alt || "";
-                        newInputs[5].value = parts[i].peso || "";
-                        
-                        newInputs[1].classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
-                        newInputs[1].classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                        newInputs[1].dataset.spawned = "true"; 
-                        
-                        const newBtnWeb = newInputs[1].nextElementSibling;
-                        if(newBtnWeb) newBtnWeb.style.display = 'none';
-                    }
-                    showToast(`Produto Multi-Volume! ${parts.length} partes adicionadas.`, 'info');
-                }
-
-            } else {
-                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                delete inputDesc.dataset.spawned;
-                
-                if(descOriginal.length > 3) {
-                    if(btnWeb) btnWeb.style.display = 'flex';
-                } else {
-                    if(btnWeb) btnWeb.style.display = 'none';
-                }
-            }
-        }
-
-        async function salvarMemoriaProdutos() {
-            const rows = document.querySelectorAll('.item-row');
-            let grouped = {};
-
-            rows.forEach(row => {
-                const inputs = row.querySelectorAll('input');
-                const vol = inputs[0].value.trim();
-                const desc = limparNomeProduto(inputs[1].value.trim());
-                const comp = inputs[2].value.trim();
-                const larg = inputs[3].value.trim();
-                const alt = inputs[4].value.trim();
-                const peso = inputs[5].value.trim();
-
-                if (desc && (comp || larg || alt || peso)) {
-                    const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
-                    
-                    if(!grouped[safeKey]) {
-                        grouped[safeKey] = { desc: desc, parts: [] };
-                    }
-                    
-                    grouped[safeKey].parts.push({
-                        vol: vol || "1",
-                        comp: comp,
-                        larg: larg,
-                        alt: alt,
-                        peso: peso
-                    });
-                }
-            });
-
-            let promises = [];
-            for(let key in grouped) {
-                promises.push(database.ref('produtos/' + key).set(grouped[key]));
-            }
-            return Promise.all(promises);
-        }
-
         function toggleDarkMode() {
             const body = document.body;
             const icone = document.getElementById('iconeTema');
@@ -2368,6 +2333,7 @@
         window.onload = async () => {
             document.getElementById('telaCarregamento').style.display = 'flex';
             
+            // Failsafe contra travamentos na inicialização
             setTimeout(() => {
                 const tela = document.getElementById('telaCarregamento');
                 if (tela && tela.style.display !== 'none') {
