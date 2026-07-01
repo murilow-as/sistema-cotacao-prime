@@ -968,8 +968,8 @@
                 <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 items-center">
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center font-bold" placeholder="0" oninput="dadosAlterados()">
                     <div class="relative w-full">
-                        <input type="text" list="dlProdutos" class="input-field m-0 py-1.5 pl-2 pr-[80px] font-medium transition-colors w-full" placeholder="Ex: Caixa de Parafusos..." oninput="verificarMemoriaProduto(this); dadosAlterados()" title="Nome do Produto">
-                        <button onclick="buscarMedidasWeb(this)" class="absolute right-1 top-[4px] bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded shadow-lg transition hidden flex items-center gap-1 animate-pulse" title="Pesquisar na Web com Inteligência Artificial"><i class="fa-solid fa-robot"></i> IA BOT</button>
+                        <input type="text" list="dlProdutos" class="input-field m-0 py-1.5 pl-2 pr-[60px] font-medium transition-colors w-full" placeholder="Ex: Caixa de Parafusos..." oninput="verificarMemoriaProduto(this); dadosAlterados()" title="Nome do Produto">
+                        <button onclick="abrirPesquisaWeb(this)" class="absolute right-1 top-[5px] bg-blue-600 hover:bg-blue-700 text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded shadow transition flex items-center gap-1" style="display: none;" title="Pesquisar na Web"><i class="fa-solid fa-globe"></i> WEB</button>
                     </div>
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
@@ -984,99 +984,13 @@
             dadosAlterados();
         }
 
-        async function buscarMedidasWeb(btn) {
+        function abrirPesquisaWeb(btn) {
             const inputDesc = btn.previousElementSibling;
             const nomeProduto = inputDesc.value.trim();
-            const row = btn.closest('.item-row');
-            const inputs = row.querySelectorAll('input');
-            
             if(!nomeProduto) return;
-
-            let apiKey = localStorage.getItem('primeGeminiKey');
-            if (!apiKey && window.location.hostname !== "localhost" && !window.location.hostname.includes("googleusercontent")) {
-                apiKey = prompt("🤖 CÉREBRO LOGÍSTICO (IA):\n\nPara a Inteligência Artificial pesquisar na web, insira a sua Chave API do Google Gemini (obtenha gratuitamente em aistudio.google.com):");
-                if (!apiKey) {
-                    showToast("Chave da API necessária para a IA funcionar.", "error");
-                    return;
-                }
-                localStorage.setItem('primeGeminiKey', apiKey);
-            } else if (!apiKey) {
-                 apiKey = ""; 
-            }
-
-            const originalIcon = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            btn.disabled = true;
-
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                
-                const prompt = `Você é um assistente de logística. Pesquise na web as dimensões de embalagem (Comprimento, Largura, Altura em cm) e peso (em kg) do produto: "${nomeProduto}". Se não encontrar as medidas exatas, estime de forma realista. Retorne ESTRITAMENTE em formato JSON com chaves: 'comp', 'larg', 'alt', 'peso'. Use apenas números (ex: "45", "1.5").`;
-
-                const payload = {
-                    contents: [{ parts: [{ text: prompt }] }],
-                    tools: [{ google_search: {} }],
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                comp: { type: "STRING" },
-                                larg: { type: "STRING" },
-                                alt: { type: "STRING" },
-                                peso: { type: "STRING" }
-                            }
-                        }
-                    }
-                };
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    if (response.status === 400 || response.status === 403) {
-                        localStorage.removeItem('primeGeminiKey');
-                        throw new Error("Chave da API inválida ou expirada.");
-                    }
-                    throw new Error(`Erro HTTP: ${response.status}`);
-                }
-
-                const result = await response.json();
-                const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                
-                if(textResponse) {
-                    const dados = JSON.parse(textResponse);
-                    const formatarMedida = (v) => v ? Math.round(parseFloat(v.replace(',', '.'))) || "" : "";
-                    const formatarPeso = (v) => v ? parseFloat(v.replace(',', '.')).toFixed(1).replace('.', ',') : "";
-
-                    inputs[2].value = formatarMedida(dados.comp);
-                    inputs[3].value = formatarMedida(dados.larg);
-                    inputs[4].value = formatarMedida(dados.alt);
-                    inputs[5].value = formatarPeso(dados.peso);
-                    
-                    dadosAlterados();
-                    showToast('Medidas importadas pela IA com sucesso!', 'success');
-                    
-                    inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                    inputDesc.classList.add('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
-                } else {
-                    showToast('A IA não conseguiu encontrar as medidas.', 'error');
-                }
-
-            } catch (err) {
-                console.error(err);
-                if (err.message && err.message.includes("inválida")) {
-                    showToast('Chave da API inválida. Tente novamente.', 'error');
-                } else {
-                    showToast('Falha de conexão com o motor de busca.', 'error');
-                }
-            } finally {
-                btn.innerHTML = originalIcon;
-                btn.disabled = false;
-            }
+            
+            const query = encodeURIComponent(nomeProduto);
+            window.open(`https://www.google.com/search?q=${query}`, '_blank');
         }
 
         function atualizarBotoesItens() {
@@ -1180,7 +1094,93 @@
             return texto; 
         }
 
-        async function processarECopiar() {
+        function verificarMemoriaProduto(inputDesc) {
+            const row = inputDesc.closest('.item-row');
+            if (!row) return; 
+            const inputs = row.querySelectorAll('input');
+            
+            const descOriginal = inputDesc.value.trim();
+            const desc = limparNomeProduto(descOriginal).toUpperCase();
+            const btnWeb = inputDesc.nextElementSibling;
+            
+            if(!desc) {
+                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+                if(btnWeb) btnWeb.style.display = 'none';
+                return;
+            }
+            
+            let produtoEncontrado = null;
+            
+            for(let key in catalogoProdutos) {
+                let prod = catalogoProdutos[key];
+                if(prod && prod.desc && prod.desc.toUpperCase() === desc) {
+                    produtoEncontrado = prod;
+                    break;
+                }
+            }
+
+            if(produtoEncontrado) {
+                let parts = produtoEncontrado.parts;
+                if(!parts) {
+                    parts = [{
+                        comp: produtoEncontrado.comp,
+                        larg: produtoEncontrado.larg,
+                        alt: produtoEncontrado.alt,
+                        peso: produtoEncontrado.peso
+                    }];
+                }
+
+                inputs[2].value = parts[0].comp || "";
+                inputs[3].value = parts[0].larg || "";
+                inputs[4].value = parts[0].alt || "";
+                inputs[5].value = parts[0].peso || "";
+                
+                inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+                inputDesc.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+
+                if(btnWeb) btnWeb.style.display = 'none';
+
+                if(parts.length > 1 && !inputDesc.dataset.spawned) {
+                    inputDesc.dataset.spawned = "true";
+                    
+                    for(let i = 1; i < parts.length; i++) {
+                        adicionarItem(); 
+                        
+                        let allRows = document.querySelectorAll('.item-row');
+                        let newRow = allRows[allRows.length - 1];
+                        let newInputs = newRow.querySelectorAll('input');
+                        
+                        newInputs[0].value = parts[i].vol || "1";
+                        newInputs[1].value = produtoEncontrado.desc; 
+                        newInputs[2].value = parts[i].comp || "";
+                        newInputs[3].value = parts[i].larg || "";
+                        newInputs[4].value = parts[i].alt || "";
+                        newInputs[5].value = parts[i].peso || "";
+                        
+                        newInputs[1].classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+                        newInputs[1].classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                        newInputs[1].dataset.spawned = "true"; 
+                        
+                        const newBtnWeb = newInputs[1].nextElementSibling;
+                        if(newBtnWeb) newBtnWeb.style.display = 'none';
+                    }
+                    showToast(`Produto Multi-Volume! ${parts.length} partes adicionadas.`, 'info');
+                }
+
+            } else {
+                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                delete inputDesc.dataset.spawned;
+                
+                if(descOriginal.length > 3) {
+                    if(btnWeb) btnWeb.style.display = 'flex';
+                } else {
+                    if(btnWeb) btnWeb.style.display = 'none';
+                }
+            }
+        }
+
+        async function salvarMemoriaProdutos() {
             if(document.getElementById('btnCopiar').disabled) return; 
 
             const prefixo = document.getElementById('empresaRemetente').value;
