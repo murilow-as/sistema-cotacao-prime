@@ -983,7 +983,7 @@
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center font-bold" placeholder="0" oninput="dadosAlterados()">
                     <div class="relative w-full flex items-center">
                         <input type="text" list="dlProdutos" class="input-field m-0 py-1.5 pl-2 pr-[60px] font-medium transition-colors w-full" placeholder="Ex: Caixa de Parafusos..." oninput="verificarMemoriaProduto(this); dadosAlterados()" title="Nome do Produto">
-                        <button onclick="buscarMedidasWeb(this)" style="display: none;" class="absolute right-1 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded shadow-lg transition items-center gap-1 animate-pulse" title="Pesquisar na Web com Inteligência Artificial"><i class="fa-solid fa-robot"></i> IA BOT</button>
+                        <button onclick="abrirPesquisaWeb(this)" style="display: none;" class="absolute right-1 bg-blue-600 hover:bg-blue-700 text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded shadow transition flex items-center gap-1" title="Pesquisar na Web"><i class="fa-solid fa-globe"></i> WEB</button>
                     </div>
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
@@ -998,99 +998,14 @@
             dadosAlterados();
         }
 
-        async function buscarMedidasWeb(btn) {
+        function abrirPesquisaWeb(btn) {
             const inputDesc = btn.previousElementSibling;
             const nomeProduto = inputDesc.value.trim();
-            const row = btn.closest('.item-row');
-            const inputs = row.querySelectorAll('input');
-            
             if(!nomeProduto) return;
-
-            let apiKey = localStorage.getItem('primeGeminiKey');
-            if (!apiKey && window.location.hostname !== "localhost" && !window.location.hostname.includes("googleusercontent")) {
-                apiKey = prompt("🤖 CÉREBRO LOGÍSTICO (IA):\n\nPara a Inteligência Artificial pesquisar na web, insira a sua Chave API do Google Gemini (obtenha gratuitamente em aistudio.google.com):");
-                if (!apiKey) {
-                    showToast("Chave da API necessária para a IA funcionar.", "error");
-                    return;
-                }
-                localStorage.setItem('primeGeminiKey', apiKey);
-            } else if (!apiKey) {
-                 apiKey = ""; 
-            }
-
-            const originalIcon = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            btn.disabled = true;
-
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                
-                const prompt = `Você é um assistente de logística. Pesquise na web as dimensões de embalagem (Comprimento, Largura, Altura em cm) e peso (em kg) do produto: "${nomeProduto}". Se não encontrar as medidas exatas, estime de forma realista. Retorne ESTRITAMENTE em formato JSON com chaves: 'comp', 'larg', 'alt', 'peso'. Use apenas números (ex: "45", "1.5").`;
-
-                const payload = {
-                    contents: [{ parts: [{ text: prompt }] }],
-                    tools: [{ google_search: {} }],
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                comp: { type: "STRING" },
-                                larg: { type: "STRING" },
-                                alt: { type: "STRING" },
-                                peso: { type: "STRING" }
-                            }
-                        }
-                    }
-                };
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    if (response.status === 400 || response.status === 403) {
-                        localStorage.removeItem('primeGeminiKey');
-                        throw new Error("Chave da API inválida ou expirada.");
-                    }
-                    throw new Error(`Erro HTTP: ${response.status}`);
-                }
-
-                const result = await response.json();
-                const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                
-                if(textResponse) {
-                    const dados = JSON.parse(textResponse);
-                    const formatarMedida = (v) => v ? Math.round(parseFloat(v.replace(',', '.'))) || "" : "";
-                    const formatarPeso = (v) => v ? parseFloat(v.replace(',', '.')).toFixed(1).replace('.', ',') : "";
-
-                    inputs[2].value = formatarMedida(dados.comp);
-                    inputs[3].value = formatarMedida(dados.larg);
-                    inputs[4].value = formatarMedida(dados.alt);
-                    inputs[5].value = formatarPeso(dados.peso);
-                    
-                    dadosAlterados();
-                    showToast('Medidas importadas pela IA com sucesso!', 'success');
-                    
-                    inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                    inputDesc.classList.add('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
-                } else {
-                    showToast('A IA não conseguiu encontrar as medidas.', 'error');
-                }
-
-            } catch (err) {
-                console.error(err);
-                if (err.message && err.message.includes("inválida")) {
-                    showToast('Chave da API inválida. Tente novamente.', 'error');
-                } else {
-                    showToast('Falha de conexão com o motor de busca.', 'error');
-                }
-            } finally {
-                btn.innerHTML = originalIcon;
-                btn.disabled = false;
-            }
+            
+            // Pesquisa exatamente o que o utilizador escreveu
+            const query = encodeURIComponent(nomeProduto);
+            window.open(`https://www.google.com/search?q=${query}`, '_blank');
         }
 
         function atualizarBotoesItens() {
