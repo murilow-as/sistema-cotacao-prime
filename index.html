@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -399,7 +399,7 @@
 
     <!-- MODAL DE HISTÓRICO -->
     <div id="modalHistorico" class="modal fixed inset-0 z-50 items-center justify-center">
-        <div class="bg-white dark:bg-gray-800 w-11/12 max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[85vh] border border-gray-200 dark:border-gray-700">
+        <div class="bg-white dark:bg-gray-800 w-11/12 max-w-6xl rounded-xl shadow-2xl flex flex-col max-h-[85vh] border border-gray-200 dark:border-gray-700">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-xl">
                 <h2 class="text-xl font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-cloud mr-2 text-blue-500"></i> Histórico Sincronizado</h2>
                 <button onclick="fecharHistorico()" class="text-gray-500 hover:text-red-500 text-2xl transition"><i class="fa-solid fa-xmark"></i></button>
@@ -860,7 +860,7 @@
         const dadosRemetentes = {
             "P": {
                 nome: "PRIME2P SOLUCOES EM TI E REPRESENTACAO COMERCIAL LTDA",
-                cnpj: "11.259.196/0001-50", 
+                cnpj: "11.259.196/00001-50", 
                 cep: "03511-050",
                 cidade: "São Paulo / SP"
             },
@@ -1456,6 +1456,9 @@
                             <button onclick="baixarCotacaoPdf('${item.id}')" class="bg-purple-100 dark:bg-purple-900 hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-700 dark:text-purple-300 px-4 py-2 rounded font-bold transition whitespace-nowrap shadow-sm" title="Baixar PDF Oficial">
                                 <i class="fa-solid fa-file-pdf mr-1"></i> Baixar PDF
                             </button>
+                            <button onclick="imprimirEtiquetas('${item.id}')" class="bg-gray-800 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-gray-600 text-white px-4 py-2 rounded font-bold transition whitespace-nowrap shadow-sm ml-2" title="Imprimir Etiquetas (Elgin L42 Pro)">
+                                <i class="fa-solid fa-print mr-1"></i> Etiquetas
+                            </button>
                         `;
                     }
 
@@ -1672,6 +1675,188 @@
                 console.error(err);
                 showToast('Erro ao gerar o PDF.', 'error');
             });
+        }
+
+        // --- NOVA LÓGICA: Impressão de Etiquetas (Elgin L42 Pro / Térmico Direto) ---
+        function imprimirEtiquetas(id) {
+            let item = historicoNuvem.find(i => i.id === id);
+            if(!item) return;
+
+            // 1. Achar a transportadora vencedora
+            let transpsPreenchidas = [];
+            if (item.cotacoes) {
+                for (let k in item.cotacoes) {
+                    let c = item.cotacoes[k];
+                    if (c && c.valor && c.valor.trim() !== '') {
+                        let limpo = c.valor.replace(/[^\d,]/g, '').replace(',', '.');
+                        let v = parseFloat(limpo);
+                        transpsPreenchidas.push({
+                            nome: k === 'FreteClick_Manual' ? (c.nomeTransp || 'FreteClick') : k,
+                            v: isNaN(v) ? Infinity : v
+                        });
+                    }
+                }
+            }
+            transpsPreenchidas.sort((a, b) => a.v - b.v);
+            let vencedor = transpsPreenchidas.length > 0 ? transpsPreenchidas[0].nome : "Transportadora Pendente";
+
+            // 2. Extrair dados do Remetente e Destinatário
+            const t = item.texto;
+            const pedidoMatch = t.match(/PEDIDO\s+([^\.]+)/);
+            const pedido = pedidoMatch ? pedidoMatch[1] : item.id;
+            
+            const destMatch = t.match(/INFORMAÇÕES DO DESTINATÁRIO:\n+NOME:\s*(.*?)\.\nCNPJ:\s*(.*?)\.\nCEP DESTINATÁRIO:\s*(.*?)\n/);
+            let destNome = "", destCnpj = "", destCep = "";
+            if (destMatch) {
+                destNome = destMatch[1];
+                destCnpj = destMatch[2];
+                destCep = destMatch[3];
+            }
+
+            const remetMatch = t.match(/INFORMAÇÕES DO REMETENTE:\n+NOME:\s*(.*?)\.\n/);
+            const remetNome = remetMatch ? remetMatch[1] : "Grupo Prime B2B";
+
+            // 3. Fatiar os Volumes
+            const itensTexto = t.split('VOLUME(S) E PESO(S) DO(S) ITEM(NS):')[1] || "";
+            const linhas = itensTexto.split('\n').map(l => l.trim()).filter(l => l.includes('vol. -'));
+            
+            let volumesTotais = [];
+            linhas.forEach(linha => {
+                const match = linha.match(/^(\d+)\s+vol\.\s+-\s+(.*?)\s+\|\s+(.*?)\s+-\s+(.*) un/);
+                if(match) {
+                    const qtd = parseInt(match[1]);
+                    const desc = match[2];
+                    const dim = match[3];
+                    const peso = match[4];
+                    for(let i=0; i<qtd; i++) {
+                        volumesTotais.push({desc, dim, peso});
+                    }
+                }
+            });
+
+            if(volumesTotais.length === 0) volumesTotais.push({desc: "Volumes Diversos", dim: "-", peso: "-"});
+
+            // 4. Montar a Janela de Impressão Otimizada
+            const printWindow = window.open('', '_blank');
+            let html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Imprimir Etiquetas - ${pedido}</title>
+                <style>
+                    @media print {
+                        @page { size: 101.7mm 150mm; margin: 0; }
+                        body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    }
+                    body { 
+                        font-family: 'Arial', sans-serif; 
+                        margin: 0; 
+                        padding: 0; 
+                        background: #fff; 
+                        color: #000; 
+                    }
+                    .label { 
+                        width: 101.7mm; 
+                        height: 148mm; 
+                        padding: 5mm; 
+                        box-sizing: border-box; 
+                        page-break-after: always; 
+                        display: flex; 
+                        flex-direction: column; 
+                        overflow: hidden;
+                    }
+                    .label:last-child { page-break-after: auto; }
+                    
+                    .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 3mm; margin-bottom: 3mm; }
+                    .header h1 { font-size: 18px; margin: 0; text-transform: uppercase; font-weight: 900; }
+                    .header h2 { font-size: 16px; margin: 2mm 0 0 0; font-weight: bold; }
+                    
+                    /* ESTILO BARTENDER: Linhas grossas e sólidas, fontes maiores */
+                    .section { margin-bottom: 3mm; border-bottom: 2px solid #000; padding-bottom: 3mm; }
+                    .section.no-border { border-bottom: none; }
+                    .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 2mm; color: #000; }
+                    
+                    .text-xxl { font-size: 26px; font-weight: 900; line-height: 1.1; word-break: break-word; text-transform: uppercase; }
+                    .text-xl { font-size: 20px; font-weight: 900; line-height: 1.2; word-break: break-word; }
+                    .text-md { font-size: 14px; font-weight: bold; margin-top: 1.5mm; }
+                    .text-sm { font-size: 12px; margin-top: 1mm; font-weight: bold; }
+                    
+                    .footer { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; padding-top: 3mm; border-top: 3px solid #000; }
+                    .qr-code { width: 32mm; height: 32mm; }
+                    .vol-info { text-align: right; }
+                    .vol-info h3 { font-size: 48px; margin: 0; font-weight: 900; letter-spacing: -2px; }
+                </style>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+            </head>
+            <body>
+            `;
+            
+            volumesTotais.forEach((vol, idx) => {
+                html += `
+                <div class="label">
+                    <div class="header">
+                        <h1 style="font-size: 22px;">GRUPO PRIME B2B</h1>
+                        <h2 style="font-size: 18px;">PEDIDO: ${pedido}</h2>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">Remetente</div>
+                        <div class="text-sm">${remetNome}</div>
+                    </div>
+
+                    <div class="section" style="flex-grow: 1;">
+                        <div class="section-title">Destinatário</div>
+                        <div class="text-xxl">${destNome}</div>
+                        <div class="text-md">CNPJ: ${destCnpj}</div>
+                        <div class="text-md">CEP: ${destCep}</div>
+                    </div>
+
+                    <div class="section no-border">
+                        <div class="section-title">Transportadora Oficial</div>
+                        <div class="text-xl" style="text-transform: uppercase; font-size: 24px;">${vencedor}</div>
+                    </div>
+                    
+                    <!-- Secção de Detalhes do Volume removida conforme solicitado -->
+
+                    <div class="footer">
+                        <div id="qrcode-${idx}" class="qr-code"></div>
+                        <div class="vol-info">
+                            <div class="text-sm" style="font-size: 14px;">VOLUME</div>
+                            <h3>${idx + 1} / ${volumesTotais.length}</h3>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+
+            html += `
+                <script>
+                    window.onload = function() {
+                        const url = "https://grupoprimeb2b.com.br";
+                        ${volumesTotais.map((_, idx) => `
+                            new QRCode(document.getElementById("qrcode-${idx}"), {
+                                text: url,
+                                width: 110,
+                                height: 110,
+                                colorDark : "#000000",
+                                colorLight : "#ffffff",
+                                correctLevel : QRCode.CorrectLevel.L
+                            });
+                        `).join('')}
+                        
+                        setTimeout(() => {
+                            window.print();
+                        }, 800);
+                    };
+                <\/script>
+            </body>
+            </html>
+            `;
+            printWindow.document.write(html);
+            printWindow.document.close();
+            
+            showToast('A enviar etiquetas para a fila de impressão...', 'info');
         }
 
         function togglePrevia(id) {
