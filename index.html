@@ -24,8 +24,10 @@
     <!-- Script do PDF.js (Leitura de PDF) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
+    <!-- Script para Geração de PDF Oficial (Exportação) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
-        /* Transições suaves para o Dark Mode */
         body, div, input, textarea, select { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
         
         body { background-color: #f3f4f6; }
@@ -44,7 +46,6 @@
         .modal { display: none; background-color: rgba(0,0,0,0.5); }
         .modal.active { display: flex; }
 
-        /* Estilos do Dark Mode (Cinza) */
         body.dark { background-color: #111827; color: #f9fafb; }
         body.dark .bg-white { background-color: #1f2937; }
         body.dark .bg-gray-50 { background-color: #111827; }
@@ -58,12 +59,11 @@
         body.dark .shadow-lg, body.dark .shadow-2xl { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25); }
         body.dark .bg-yellow-100 { background-color: #78350f; color: #fef3c7; border-color: #92400e; }
         body.dark .text-yellow-800 { color: #fde68a; }
-        body.dark .bg-blue-100 { background-color: #1e3a8a; color: #bfdbfe; }
-        body.dark .text-blue-700 { color: #93c5fd; }
+        body.dark .bg-blue-100 { background-color: #1e3a8a; color: #bfdbfe; border-color: #1e40af; }
+        body.dark .text-blue-800 { color: #93c5fd; }
         body.dark .bg-red-50 { background-color: #7f1d1d; }
         body.dark .text-red-500 { color: #fca5a5; }
 
-        /* Estilos do Tema AMOLED (Preto Absoluto) */
         body.dark.amoled { background-color: #000000; }
         body.dark.amoled .bg-white, body.dark.amoled .bg-gray-50, body.dark.amoled .bg-gray-100 { background-color: #000000; border-color: #1a1a1a; }
         body.dark.amoled .bg-gray-800, body.dark.amoled .bg-gray-900 { background-color: #050505; border-color: #222; }
@@ -71,6 +71,7 @@
         body.dark.amoled .border-gray-200, body.dark.amoled .border-gray-300, body.dark.amoled .border-gray-700 { border-color: #1a1a1a; }
         body.dark.amoled .shadow-lg, body.dark.amoled .shadow-2xl { box-shadow: 0 0 15px rgba(255, 255, 255, 0.05); }
         body.dark.amoled .bg-blue-50 { background-color: #000510; border-color: #001020; }
+        body.dark.amoled .bg-blue-100 { background-color: #001530; border-color: #002550; }
 
         @keyframes fillBar {
             0% { transform: scaleX(0); }
@@ -349,7 +350,7 @@
                 <p class="text-[10px] text-gray-500 mt-1"><i class="fa-solid fa-circle-info"></i> Preencha as medidas e clique no botão <strong class="text-purple-600">+</strong> ao final da linha para adicionar outro item.</p>
             </div>
             
-            <!-- CABEÇALHO DA TABELA E CONTAINER COM SCROLL HORIZONTAL -->
+            <!-- CABEÇALHO DA TABELA -->
             <div class="w-full overflow-x-auto pb-2">
                 <div class="min-w-[650px]">
                     <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 mb-2 px-2 text-[10px] font-bold text-gray-500 uppercase items-center">
@@ -385,7 +386,6 @@
 
     </div>
 
-    <!-- MODAL DE HISTÓRICO -->
     <div id="modalHistorico" class="modal fixed inset-0 z-50 items-center justify-center">
         <div class="bg-white dark:bg-gray-800 w-11/12 max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[85vh] border border-gray-200 dark:border-gray-700">
             <div class="flex justify-between items-center p-5 border-b border-gray-200 bg-gray-50 rounded-t-xl">
@@ -423,9 +423,6 @@
     </div>
 
     <script>
-        // ===================================================================
-        // FIREBASE E CONFIGURAÇÕES GLOBAIS
-        // ===================================================================
         const firebaseConfig = {
             apiKey: "AIzaSyDhrqD3K9BdIZCLui282igMLfv4gcgQv6I",
             authDomain: "prime-b2b-2a71b.firebaseapp.com",
@@ -440,8 +437,8 @@
 
         let contadorItens = 0;
         let idCotacaoSessao = null;
-        let historicoNuvem = []; // Guarda o histórico em tempo real
-        let catalogoProdutos = {}; // GUARDA A MEMÓRIA DOS PRODUTOS (NOVO)
+        let historicoNuvem = []; 
+        let catalogoProdutos = {}; 
 
         // ===================================================================
         // EMAILJS CONFIG
@@ -466,7 +463,6 @@
 
         async function conectarFirebase() {
             try {
-                // 1. Prepara Usuários
                 let snapUsuarios = await database.ref('usuarios').once('value');
                 if (!snapUsuarios.exists()) {
                     await database.ref('usuarios').set(USUARIOS_INICIAIS);
@@ -483,20 +479,17 @@
                     if (atualizou) await database.ref('usuarios').set(dbUsers);
                 }
 
-                // 2. Prepara Contadores (Se não existirem)
                 let snapContadores = await database.ref('contadores').once('value');
                 if (!snapContadores.exists()) {
                     await database.ref('contadores').set({ "P": 0, "XD": 0, "XC": 0 });
                 }
 
-                // 3. Ouvinte de Histórico em Tempo Real
                 database.ref('historico').on('value', (snapshot) => {
                     const dados = snapshot.val();
                     let array = [];
                     for(let key in dados) {
                         array.push(dados[key]);
                     }
-                    // Ordena do mais recente para o mais antigo
                     array.sort((a,b) => b.timestamp - a.timestamp);
                     historicoNuvem = array;
                     
@@ -505,21 +498,23 @@
                     }
                 });
 
-                // 4. Ouvinte do Catálogo Inteligente (Memória de Produtos)
                 database.ref('produtos').on('value', (snapshot) => {
                     catalogoProdutos = snapshot.val() || {};
                     atualizarDataListProdutos();
                 });
 
-                // Remove a tela de carregamento suavemente
-                setTimeout(() => {
-                    document.getElementById('telaCarregamento').style.opacity = '0';
-                    setTimeout(() => document.getElementById('telaCarregamento').style.display = 'none', 300);
-                }, 800);
-
             } catch (err) {
                 console.error("Erro ao conectar ao Firebase:", err);
-                showToast("Erro de conexão. Verifique a internet.", "error");
+                showToast("Erro de conexão com a Nuvem. Algumas funções podem falhar.", "error");
+            } finally {
+                // Failsafe que garante a remoção da tela preta de carregamento
+                setTimeout(() => {
+                    const tela = document.getElementById('telaCarregamento');
+                    if (tela) {
+                        tela.style.opacity = '0';
+                        setTimeout(() => tela.style.display = 'none', 300);
+                    }
+                }, 800);
             }
         }
 
@@ -540,9 +535,8 @@
             const usuarioAtual = localStorage.getItem('primeUsuarioAtual');
             const ultimaAtividade = localStorage.getItem('primeUltimaAtividade');
 
-            // Verifica inatividade logo ao abrir/checar o estado
             if (logado === 'true' && ultimaAtividade) {
-                const TEMPO_EXPIRACAO = 60 * 60 * 1000; // 1 hora em milissegundos
+                const TEMPO_EXPIRACAO = 60 * 60 * 1000; 
                 if(Date.now() - parseInt(ultimaAtividade) > TEMPO_EXPIRACAO) {
                     localStorage.removeItem('primeLogado');
                     localStorage.removeItem('primeUsuarioAtual');
@@ -555,7 +549,7 @@
                     document.getElementById('avisoAdmin').classList.add('hidden');
                     
                     showDialog('Sua sessão expirou devido a 1 hora de inatividade. Por favor, faça login novamente.', 'alert');
-                    return; // Interrompe para forçar login
+                    return; 
                 }
             }
 
@@ -656,7 +650,7 @@
         function efetuarLogin(user) {
             localStorage.setItem('primeLogado', 'true');
             localStorage.setItem('primeUsuarioAtual', user);
-            localStorage.setItem('primeUltimaAtividade', Date.now().toString()); // Marca o tempo zero da sessão
+            localStorage.setItem('primeUltimaAtividade', Date.now().toString());
             checarEstadoLogin();
         }
 
@@ -676,13 +670,12 @@
             });
         }
 
-        // --- SISTEMA DE TOAST (AVISO PEQUENO FLUTUANTE) ---
         function showToast(mensagem, tipo = 'success') {
             const toast = document.getElementById('toastNotification');
             const msg = document.getElementById('toastMessage');
             const icon = document.getElementById('toastIcon');
 
-            msg.innerText = mensagem;
+            msg.innerText = mensagem; // Alterado para PT para não dar erro
             toast.className = 'fixed top-5 right-5 z-[200] transform transition-all duration-300 flex items-center px-4 py-3 rounded-lg shadow-xl text-white font-bold text-sm pointer-events-none';
 
             if(tipo === 'success') {
@@ -700,7 +693,6 @@
             setTimeout(() => toast.classList.add('translate-x-full', 'opacity-0'), 4000);
         }
 
-        // --- SISTEMA DE RECUPERAÇÃO DE SENHA (COM ENVIO REAL) ---
         let codigoRecuperacaoAtual = null;
 
         function abrirRecuperacao() {
@@ -819,7 +811,6 @@
             }
         }
 
-        // --- SISTEMA DE DIALOG CUSTOMIZADO (Substitui alert e confirm) ---
         let callbackConfirmDialog = null;
 
         function showDialog(mensagem, tipo = 'alert', callback = null) {
@@ -856,7 +847,7 @@
         const dadosRemetentes = {
             "P": {
                 nome: "PRIME2P SOLUCOES EM TI E REPRESENTACAO COMERCIAL LTDA",
-                cnpj: "11.259.196/0001-50", 
+                cnpj: "11.259.196/00001-50", 
                 cep: "03511-050",
                 cidade: "São Paulo / SP"
             },
@@ -967,27 +958,125 @@
             return true;
         }
 
-        // --- SISTEMA DE ITENS ERP INTELIGENTE ---
         function adicionarItem() {
             contadorItens++;
             const div = document.createElement('div');
-            // Formato de grade alinhado com o novo cabeçalho
-            div.className = 'grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 bg-gray-50 dark:bg-gray-700 p-2 rounded-lg border border-gray-200 dark:border-gray-600 items-center item-row';
+            div.className = 'flex flex-col gap-1 bg-gray-50 dark:bg-gray-700 p-2 rounded-lg border border-gray-200 dark:border-gray-600 item-row';
             div.id = `item-${contadorItens}`;
             
             div.innerHTML = `
-                <input type="text" class="input-field m-0 py-1.5 px-2 text-center font-bold" placeholder="0" oninput="dadosAlterados()">
-                <input type="text" list="dlProdutos" class="input-field m-0 py-1.5 px-2 font-medium transition-colors" placeholder="Ex: Caixa de Parafusos..." oninput="verificarMemoriaProduto(this); dadosAlterados()" title="Nome do Produto">
-                <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
-                <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
-                <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
-                <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="kg" oninput="dadosAlterados()">
-                <div class="btn-container flex justify-center gap-1"></div>
+                <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 items-center">
+                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center font-bold" placeholder="0" oninput="dadosAlterados()">
+                    <div class="relative w-full">
+                        <input type="text" list="dlProdutos" class="input-field m-0 py-1.5 pl-2 pr-[80px] font-medium transition-colors w-full" placeholder="Ex: Caixa de Parafusos..." oninput="verificarMemoriaProduto(this); dadosAlterados()" title="Nome do Produto">
+                        <button onclick="buscarMedidasWeb(this)" class="absolute right-1 top-[4px] bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded shadow-lg transition hidden flex items-center gap-1 animate-pulse" title="Pesquisar na Web com Inteligência Artificial"><i class="fa-solid fa-robot"></i> IA BOT</button>
+                    </div>
+                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
+                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
+                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
+                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="kg" oninput="dadosAlterados()">
+                    <div class="btn-container flex justify-center gap-1"></div>
+                </div>
             `;
             document.getElementById('containerItens').appendChild(div);
             
             atualizarBotoesItens();
             dadosAlterados();
+        }
+
+        async function buscarMedidasWeb(btn) {
+            const inputDesc = btn.previousElementSibling;
+            const nomeProduto = inputDesc.value.trim();
+            const row = btn.closest('.item-row');
+            const inputs = row.querySelectorAll('input');
+            
+            if(!nomeProduto) return;
+
+            let apiKey = localStorage.getItem('primeGeminiKey');
+            if (!apiKey && window.location.hostname !== "localhost" && !window.location.hostname.includes("googleusercontent")) {
+                apiKey = prompt("🤖 CÉREBRO LOGÍSTICO (IA):\n\nPara a Inteligência Artificial pesquisar na web, insira a sua Chave API do Google Gemini (obtenha gratuitamente em aistudio.google.com):");
+                if (!apiKey) {
+                    showToast("Chave da API necessária para a IA funcionar.", "error");
+                    return;
+                }
+                localStorage.setItem('primeGeminiKey', apiKey);
+            } else if (!apiKey) {
+                 apiKey = ""; 
+            }
+
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                
+                const prompt = `Você é um assistente de logística. Pesquise na web as dimensões de embalagem (Comprimento, Largura, Altura em cm) e peso (em kg) do produto: "${nomeProduto}". Se não encontrar as medidas exatas, estime de forma realista. Retorne ESTRITAMENTE em formato JSON com chaves: 'comp', 'larg', 'alt', 'peso'. Use apenas números (ex: "45", "1.5").`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    tools: [{ google_search: {} }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                comp: { type: "STRING" },
+                                larg: { type: "STRING" },
+                                alt: { type: "STRING" },
+                                peso: { type: "STRING" }
+                            }
+                        }
+                    }
+                };
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    if (response.status === 400 || response.status === 403) {
+                        localStorage.removeItem('primeGeminiKey');
+                        throw new Error("Chave da API inválida ou expirada.");
+                    }
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if(textResponse) {
+                    const dados = JSON.parse(textResponse);
+                    const formatarMedida = (v) => v ? Math.round(parseFloat(v.replace(',', '.'))) || "" : "";
+                    const formatarPeso = (v) => v ? parseFloat(v.replace(',', '.')).toFixed(1).replace('.', ',') : "";
+
+                    inputs[2].value = formatarMedida(dados.comp);
+                    inputs[3].value = formatarMedida(dados.larg);
+                    inputs[4].value = formatarMedida(dados.alt);
+                    inputs[5].value = formatarPeso(dados.peso);
+                    
+                    dadosAlterados();
+                    showToast('Medidas importadas pela IA com sucesso!', 'success');
+                    
+                    inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                    inputDesc.classList.add('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+                } else {
+                    showToast('A IA não conseguiu encontrar as medidas.', 'error');
+                }
+
+            } catch (err) {
+                console.error(err);
+                if (err.message && err.message.includes("inválida")) {
+                    showToast('Chave da API inválida. Tente novamente.', 'error');
+                } else {
+                    showToast('Falha de conexão com o motor de busca.', 'error');
+                }
+            } finally {
+                btn.innerHTML = originalIcon;
+                btn.disabled = false;
+            }
         }
 
         function atualizarBotoesItens() {
@@ -1091,7 +1180,6 @@
             return texto; 
         }
 
-        // --- SISTEMA DE GERAÇÃO E CÓPIA NA NUVEM ---
         async function processarECopiar() {
             if(document.getElementById('btnCopiar').disabled) return; 
 
@@ -1107,15 +1195,12 @@
                 btn.disabled = true;
 
                 try {
-                    // APRENDIZADO DE PRODUTOS: Salva as medidas na memória antes de gerar
                     await salvarMemoriaProdutos();
 
-                    // 1. Puxa e atualiza o contador do servidor na hora!
                     let snapContador = await database.ref('contadores/' + prefixo).once('value');
                     let atual = snapContador.val() || 0;
                     let novoNumero = atual + 1;
                     
-                    // Atualiza no banco
                     await database.ref('contadores/' + prefixo).set(novoNumero);
                     
                     let numFormatado = novoNumero.toString().padStart(4, '0');
@@ -1127,27 +1212,24 @@
 
                     let textoComId = gerarPreviaTexto(idCotacaoSessao);
                     
-                    // Resgata as transportadoras primárias para salvar na nuvem
                     let ufDestino = "";
                     if (destCidade.includes('/')) {
                         ufDestino = destCidade.split('/')[1].trim();
                     }
                     let primarias = getTransportadorasPrimariasPorUF(ufDestino);
                     
-                    // 2. Salva no Histórico do Servidor
                     await database.ref('historico/' + idCotacaoSessao).set({
                         id: idCotacaoSessao,
                         data: new Date().toLocaleString('pt-BR'),
                         timestamp: Date.now(),
                         destinatario: destinatarioFinal || "Sem Destinatário",
-                        usuario: localStorage.getItem('primeUsuarioAtual') || "Desconhecido", // <--- ADICIONADO AQUI: Guarda o responsável
+                        usuario: localStorage.getItem('primeUsuarioAtual') || "Desconhecido", 
                         texto: textoComId,
                         uf: ufDestino,
                         primarias: primarias,
                         cotacoes: {}
                     });
 
-                    // 3. Efetua a cópia
                     textarea.value = textoComId;
                     textarea.removeAttribute('readonly');
                     textarea.select();
@@ -1167,7 +1249,6 @@
                     btn.disabled = false;
                 }
             } else {
-                // Já gerou, só copia de novo
                 textarea.removeAttribute('readonly');
                 textarea.select();
                 document.execCommand('copy');
@@ -1188,7 +1269,6 @@
         }
 
         function renderizarListaHistorico() {
-            // Guarda quais abas estão abertas para não fechá-las ao atualizar
             let openItems = [];
             document.querySelectorAll('[id^="previa-"]').forEach(el => {
                 if (!el.classList.contains('hidden')) {
@@ -1209,7 +1289,7 @@
                     (item.destinatario && item.destinatario.toLowerCase().includes(termoBusca)) ||
                     (item.data && item.data.toLowerCase().includes(termoBusca)) ||
                     (item.texto && item.texto.toLowerCase().includes(termoBusca)) ||
-                    (item.usuario && item.usuario.toLowerCase().includes(termoBusca)) // Permite buscar pelo usuário
+                    (item.usuario && item.usuario.toLowerCase().includes(termoBusca)) 
                 );
             }
             
@@ -1218,7 +1298,21 @@
             } else {
                 historicoFiltrado.forEach((item) => {
                     
-                    // Recupera as primárias ou tenta extrair do texto (para cotações antigas)
+                    let transpsPreenchidas = [];
+                    if (item.cotacoes) {
+                        for (let k in item.cotacoes) {
+                            let c = item.cotacoes[k];
+                            if (c && c.valor && c.valor.trim() !== '') {
+                                let limpo = c.valor.replace(/[^\d,]/g, '').replace(',', '.');
+                                let v = parseFloat(limpo);
+                                if(!isNaN(v)) transpsPreenchidas.push({ k, v });
+                            }
+                        }
+                    }
+                    let temMinimoDuas = transpsPreenchidas.length >= 2;
+                    let valorMinimo = temMinimoDuas ? Math.min(...transpsPreenchidas.map(x => x.v)) : Infinity;
+                    let melhoresTransps = transpsPreenchidas.filter(x => x.v === valorMinimo).map(x => x.k);
+
                     let primarias = item.primarias || [];
                     if (primarias.length === 0 && item.texto) {
                         const match = item.texto.match(/CEP DESTINATÁRIO:.*\/ ([A-Z]{2})/);
@@ -1235,46 +1329,60 @@
                         
                         primarias.forEach((t, idx) => {
                             let c = (item.cotacoes && item.cotacoes[t]) ? item.cotacoes[t] : { valor: '', prazo: '', codigo: '' };
+                            
+                            let isMelhor = temMinimoDuas && melhoresTransps.includes(t);
+                            let rowClass = isMelhor ? "bg-green-50 dark:bg-green-900/40 border-green-400 shadow-md transform scale-[1.01] transition-transform" : "bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-600 shadow-sm";
+                            let labelDestaque = isMelhor ? `<span class="bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 animate-pulse"><i class="fa-solid fa-trophy"></i> Melhor Preço</span>` : "";
+                            let inputClass = isMelhor ? "bg-green-100/50 dark:bg-green-800/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-600 font-extrabold" : "text-gray-700 dark:text-gray-300";
+
                             formHtml += `
-                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mb-2 items-center bg-white dark:bg-gray-800 p-2 rounded shadow-sm border border-gray-100 dark:border-gray-600">
-                                    <div class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 truncate" title="${t}">${t}</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mb-2 items-center p-2 rounded border ${rowClass}">
+                                    <div class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 truncate flex items-center" title="${t}">
+                                        ${isMelhor ? '<i class="fa-solid fa-trophy text-yellow-500 mr-1"></i>' : ''}${t} ${labelDestaque}
+                                    </div>
                                     <div>
                                         <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Valor (R$)</label>
-                                        <input type="text" id="val_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-gray-700 text-center w-full" placeholder="R$ Valor" value="${c.valor}" oninput="this.value=mascaraFrete(this.value)">
+                                        <input type="text" id="val_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="R$ Valor" value="${c.valor}" oninput="this.value=mascaraFrete(this.value)">
                                     </div>
                                     <div>
                                         <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Prazo</label>
-                                        <input type="text" id="prazo_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Ex: 5" value="${c.prazo}" onblur="this.value=formatarPrazo(this.value)">
+                                        <input type="text" id="prazo_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="Ex: 5" value="${c.prazo}" onblur="this.value=formatarPrazo(this.value)">
                                     </div>
                                     <div>
                                         <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Cód. Cotação</label>
-                                        <input type="text" id="cod_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Cód/Nº" value="${c.codigo}">
+                                        <input type="text" id="cod_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="Cód/Nº" value="${c.codigo}">
                                     </div>
                                 </div>
                             `;
                         });
                         
-                        // BLOCO EXTRA: FreteClick (Opção Manual)
                         let manualKey = 'FreteClick_Manual';
                         let cManual = (item.cotacoes && item.cotacoes[manualKey]) ? item.cotacoes[manualKey] : { nomeTransp: '', valor: '', prazo: '', codigo: '' };
+                        let isMelhorManual = temMinimoDuas && melhoresTransps.includes(manualKey);
                         
+                        let rowClassManual = isMelhorManual ? "bg-green-50 dark:bg-green-900/40 border-green-400 shadow-md transform scale-[1.01] transition-transform" : "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 shadow-sm";
+                        let labelDestaqueManual = isMelhorManual ? `<span class="bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 animate-pulse"><i class="fa-solid fa-trophy"></i> Melhor Preço</span>` : "";
+                        let inputClassManual = isMelhorManual ? "bg-green-100/50 dark:bg-green-800/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-600 font-extrabold" : "text-gray-700 dark:text-gray-300";
+
                         formHtml += `
-                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mt-4 items-center bg-orange-50 dark:bg-orange-900/20 p-2 rounded shadow-sm border border-orange-200 dark:border-orange-800">
+                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mt-4 items-center p-2 rounded border ${rowClassManual}">
                                     <div>
-                                        <label class="text-[8px] font-bold text-orange-500 uppercase block mb-0.5"><i class="fa-solid fa-computer-mouse"></i> FreteClick (Alternativa)</label>
-                                        <input type="text" id="nome_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-orange-700 w-full" placeholder="Nome da Transportadora" value="${cManual.nomeTransp}">
+                                        <label class="text-[8px] font-bold ${isMelhorManual ? 'text-green-600' : 'text-orange-500'} uppercase block mb-0.5 flex items-center">
+                                            <i class="fa-solid fa-computer-mouse mr-1"></i> FreteClick (Alternativa) ${labelDestaqueManual}
+                                        </label>
+                                        <input type="text" id="nome_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold ${isMelhorManual ? 'text-green-800 dark:text-green-300' : 'text-orange-700'} w-full" placeholder="Nome da Transportadora" value="${cManual.nomeTransp}">
                                     </div>
                                     <div class="sm:mt-[14px]">
                                         <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Valor (R$)</label>
-                                        <input type="text" id="val_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold text-gray-700 text-center w-full" placeholder="R$ Valor" value="${cManual.valor}" oninput="this.value=mascaraFrete(this.value)">
+                                        <input type="text" id="val_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClassManual}" placeholder="R$ Valor" value="${cManual.valor}" oninput="this.value=mascaraFrete(this.value)">
                                     </div>
                                     <div class="sm:mt-[14px]">
                                         <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Prazo</label>
-                                        <input type="text" id="prazo_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Ex: 5" value="${cManual.prazo}" onblur="this.value=formatarPrazo(this.value)">
+                                        <input type="text" id="prazo_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClassManual}" placeholder="Ex: 5" value="${cManual.prazo}" onblur="this.value=formatarPrazo(this.value)">
                                     </div>
                                     <div class="sm:mt-[14px]">
                                         <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Cód. Cotação</label>
-                                        <input type="text" id="cod_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full" placeholder="Cód/Nº" value="${cManual.codigo}">
+                                        <input type="text" id="cod_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClassManual}" placeholder="Cód/Nº" value="${cManual.codigo}">
                                     </div>
                                 </div>
                         `;
@@ -1283,6 +1391,15 @@
                         </div>`;
                     } else {
                          formHtml += `<div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-[10px] text-gray-500 text-center"><i class="fa-solid fa-circle-info mr-1"></i> Nenhuma transportadora primária sugerida para o destino desta cotação.</div>`
+                    }
+
+                    let btnDownload = '';
+                    if (temMinimoDuas) {
+                        btnDownload = `
+                            <button onclick="baixarCotacaoPdf('${item.id}')" class="bg-purple-100 dark:bg-purple-900 hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-700 dark:text-purple-300 px-4 py-2 rounded font-bold transition whitespace-nowrap shadow-sm" title="Baixar PDF Oficial">
+                                <i class="fa-solid fa-file-pdf mr-1"></i> Baixar PDF
+                            </button>
+                        `;
                     }
 
                     lista.innerHTML += `
@@ -1298,6 +1415,7 @@
                                     <p class="text-sm font-bold text-gray-700 dark:text-gray-200 mt-2 ml-6"><i class="fa-regular fa-building mr-1"></i> Dest.: ${item.destinatario}</p>
                                 </div>
                                 <div class="flex gap-2">
+                                    ${btnDownload}
                                     <button onclick="apagarCotacaoHistorico('${item.id}')" class="bg-red-50 dark:bg-red-900 hover:bg-red-100 dark:hover:bg-red-800 text-red-500 dark:text-red-300 px-3 py-2 rounded font-bold transition shadow-sm" title="Apagar Cotação">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
@@ -1315,7 +1433,6 @@
                 });
             }
 
-            // Restaura as abas que estavam abertas
             openItems.forEach(id => {
                 let previa = document.getElementById(`previa-${id}`);
                 let icone = document.getElementById(`icone-${id}`);
@@ -1344,7 +1461,6 @@
 
                 let cotacoesParaSalvar = {};
                 
-                // Salvar Primárias
                 primarias.forEach((t, idx) => {
                     const valInput = document.getElementById(`val_${idCotacao}_${idx}`);
                     const prazoInput = document.getElementById(`prazo_${idCotacao}_${idx}`);
@@ -1361,7 +1477,6 @@
                     }
                 });
 
-                // Salvar FreteClick Manual
                 const nomeManualInput = document.getElementById(`nome_${idCotacao}_manual`);
                 const valManualInput = document.getElementById(`val_${idCotacao}_manual`);
                 const prazoManualInput = document.getElementById(`prazo_${idCotacao}_manual`);
@@ -1373,21 +1488,133 @@
                     const prazo = prazoManualInput.value.trim();
                     const codigo = codManualInput.value.trim();
                     
-                    // Só grava a secção manual se pelo menos algo além do nome estiver preenchido, ou se tiver o nome.
                     if(nomeTransp || valor || prazo || codigo) {
                          cotacoesParaSalvar['FreteClick_Manual'] = { nomeTransp, valor, prazo, codigo };
                     }
                 }
 
-                // Salva diretamente na Nuvem da cotação específica
                 await database.ref('historico/' + idCotacao + '/cotacoes').set(cotacoesParaSalvar);
                 showToast('Valores de frete registrados com sucesso!', 'success');
             } catch (err) {
                 console.error(err);
                 showToast('Erro ao salvar retornos.', 'error');
+            } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
+        }
+
+        function baixarCotacaoPdf(id) {
+            let item = historicoNuvem.find(i => i.id === id);
+            if(!item) return;
+
+            let transpsPreenchidas = [];
+            if (item.cotacoes) {
+                for (let k in item.cotacoes) {
+                    let c = item.cotacoes[k];
+                    if (c && c.valor && c.valor.trim() !== '') {
+                        let limpo = c.valor.replace(/[^\d,]/g, '').replace(',', '.');
+                        let v = parseFloat(limpo);
+                        transpsPreenchidas.push({
+                            nome: k === 'FreteClick_Manual' ? (c.nomeTransp || 'FreteClick') : k,
+                            valor: c.valor,
+                            prazo: c.prazo,
+                            codigo: c.codigo,
+                            v: isNaN(v) ? Infinity : v
+                        });
+                    }
+                }
+            }
+
+            transpsPreenchidas.sort((a, b) => a.v - b.v);
+
+            const container = document.createElement('div');
+            container.innerHTML = `
+                <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
+                    
+                    <div style="border-bottom: 2px solid #3b82f6; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h1 style="color: #1e3a8a; margin: 0; font-size: 24px; font-weight: bold;">Relatório de Cotação de Frete</h1>
+                            <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">Grupo Prime B2B</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <h2 style="margin: 0; font-size: 20px; color: #3b82f6; font-weight: bold;">${item.id}</h2>
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #6b7280;">Data da Emissão: ${item.data}</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #374151; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; text-transform: uppercase;">Dados Gerais</h3>
+                        <table style="width: 100%; border: none; font-size: 13px; margin-top: 10px;">
+                            <tr>
+                                <td style="padding: 5px 0; width: 50%;"><strong>Destinatário:</strong> ${item.destinatario}</td>
+                                <td style="padding: 5px 0; width: 50%;"><strong>UF Destino:</strong> ${item.uf || '-'}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0;"><strong>Responsável Logística:</strong> ${item.usuario || 'Desconhecido'}</td>
+                                <td style="padding: 5px 0;"></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #374151; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; text-transform: uppercase;">Quadro Comparativo (Ranking)</h3>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; color: #374151;">
+                                    <th style="padding: 10px; border: 1px solid #d1d5db; text-align: left;">Classificação</th>
+                                    <th style="padding: 10px; border: 1px solid #d1d5db; text-align: left;">Transportadora</th>
+                                    <th style="padding: 10px; border: 1px solid #d1d5db; text-align: center;">Valor Estimado</th>
+                                    <th style="padding: 10px; border: 1px solid #d1d5db; text-align: center;">Prazo</th>
+                                    <th style="padding: 10px; border: 1px solid #d1d5db; text-align: center;">Cód. / Cotação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${transpsPreenchidas.map((t, i) => {
+                                    let isWinner = i === 0 && transpsPreenchidas.length >= 2;
+                                    let rowStyle = isWinner ? 'background-color: #ecfdf5;' : '';
+                                    let positionText = isWinner ? '⭐ 1º (VENCEDOR)' : `${i + 1}º`;
+                                    return `
+                                    <tr style="${rowStyle}">
+                                        <td style="padding: 10px; border: 1px solid #d1d5db; font-weight: ${isWinner ? 'bold' : 'normal'}; color: ${isWinner ? '#059669' : '#374151'};">${positionText}</td>
+                                        <td style="padding: 10px; border: 1px solid #d1d5db; font-weight: bold;">${t.nome}</td>
+                                        <td style="padding: 10px; border: 1px solid #d1d5db; text-align: center; font-weight: bold; color: ${isWinner ? '#059669' : '#374151'};">${t.valor}</td>
+                                        <td style="padding: 10px; border: 1px solid #d1d5db; text-align: center;">${t.prazo || '-'}</td>
+                                        <td style="padding: 10px; border: 1px solid #d1d5db; text-align: center;">${t.codigo || '-'}</td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #374151; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; text-transform: uppercase;">Detalhes Originais da Solicitação</h3>
+                        <pre style="background-color: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; border-radius: 5px; font-size: 11px; white-space: pre-wrap; font-family: monospace; color: #4b5563; line-height: 1.5;">\n${item.texto}</pre>
+                    </div>
+
+                    <div style="margin-top: 50px; text-align: center; color: #9ca3af; font-size: 10px; border-top: 1px solid #e5e7eb; padding-top: 10px;">
+                        Documento gerado automaticamente pelo Sistema Gerador de Cotações Logísticas - Grupo Prime B2B
+                    </div>
+                </div>
+            `;
+
+            showToast('A preparar o PDF oficial...', 'info');
+
+            const opt = {
+                margin:       0, 
+                filename:     `Resultado_Cotacao_${id}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(container).save().then(() => {
+                showToast('PDF oficial descarregado com sucesso!', 'success');
+            }).catch(err => {
+                console.error(err);
+                showToast('Erro ao gerar o PDF.', 'error');
+            });
         }
 
         function togglePrevia(id) {
@@ -1445,17 +1672,13 @@
 
         function formatarPrazo(v) {
             v = v.trim();
-            // Se estiver vazio ou já contiver a palavra 'dia', não altera para não duplicar.
             if(!v || v.toLowerCase().includes('dia')) return v;
             return v + " dias úteis";
         }
 
-        // Função para remover códigos/SKUs (que contenham números) do início ou final do nome do produto
         function limparNomeProduto(nome) {
             if (!nome) return "";
-            // Remove código do início contendo pelo menos um número (ex: "12345 - Geladeira" ou "PE11B - Geladeira")
             let limpo = nome.replace(/^[a-zA-Z0-9]*\d[a-zA-Z0-9]*\s*-\s*/, '');
-            // Remove código do final contendo pelo menos um número (ex: "Geladeira - 12345")
             limpo = limpo.replace(/\s*-\s*[a-zA-Z0-9]*\d[a-zA-Z0-9]*$/, '');
             return limpo.trim();
         }
@@ -1475,9 +1698,6 @@
             return v.substring(0, 9);
         }
 
-        /* -------------------------------------------------------------
-           INTELIGÊNCIA DE MAPEAMENTO DE TRANSPORTADORAS POR UF
-        ------------------------------------------------------------- */
         const transportadorasMap = [
             { nome: "BRASSPRESS", ufs: ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"] },
             { nome: "FORMATO", ufs: ["AL","BA","CE","MA","PB","PE","PI","RN","SE"] },
@@ -1488,14 +1708,12 @@
             { nome: "RANA EXPRESS", ufs: ["PR"] },
             { nome: "RÁPIDO FIGUEIREDO", ufs: ["AL","BA","CE","MA","PB","PE","PI","RN","SE"] },
             { nome: "RODOCARGAS", ufs: ["MA", "PI"] },
-            // Rodonaves: Nacional exceto Nordeste
             { nome: "RODONAVES", ufs: ["AC","AP","AM","DF","ES","GO","MT","MS","MG","PA","PR","RJ","RS","RO","RR","SC","SP","TO"] }, 
             { nome: "TADEX", ufs: ["SP", "RJ", "ES"] },
             { nome: "TODO BRASIL", ufs: ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"] },
             { nome: "TRANSWELLS", ufs: ["SP", "RJ"] }
         ];
 
-        // Função utilitária para extrair apenas as Primárias da UF
         function getTransportadorasPrimariasPorUF(uf) {
             if(!uf) return [];
             const recomendadas = transportadorasMap.filter(t => t.ufs.includes(uf.toUpperCase()));
@@ -1521,7 +1739,6 @@
             texto.innerHTML = `Com base no destino (<strong>Estado: ${uf.toUpperCase()}</strong>), indicamos as seguintes parceiras:`;
             lista.innerHTML = '';
 
-            // 1. Renderiza Transportadoras Primárias (Especialistas)
             let htmlPrimarias = '<div class="w-full flex flex-wrap gap-2">';
             if (primarias.length === 0) {
                 htmlPrimarias += '<span class="bg-white border border-indigo-200 text-indigo-700 text-xs px-3 py-1.5 rounded-lg font-bold shadow-sm">Nenhuma parceira regional primária mapeada.</span>';
@@ -1533,7 +1750,6 @@
             }
             htmlPrimarias += '</div>';
 
-            // 2. Renderiza Transportadoras Secundárias e FreteClick
             let htmlSecundarias = '<div class="w-full flex flex-wrap gap-2 items-center border-t border-indigo-200 dark:border-indigo-700/50 pt-2 mt-1">';
             htmlSecundarias += '<span class="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold uppercase mr-1">Secundárias:</span>';
             
@@ -1541,7 +1757,6 @@
                 htmlSecundarias += `<span class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-600 text-[11px] px-2 py-1 rounded-lg font-bold shadow-sm cursor-default">${t.nome}</span>`;
             });
 
-            // Opção Manual: FreteClick
             htmlSecundarias += `<span class="bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700 text-[11px] px-2 py-1 rounded-lg font-bold shadow-sm cursor-help flex items-center ml-auto" title="Cotar manualmente / Fora do catálogo"><i class="fa-solid fa-computer-mouse mr-1"></i> FreteClick</span>`;
             htmlSecundarias += '</div>';
 
@@ -1574,7 +1789,7 @@
                         let data = await response.json();
                         if (!data.erro) {
                             document.getElementById(cidadeId).value = `${data.localidade} / ${data.uf}`;
-                            sugerirTransportadora(data.uf); // Ativa o "Cérebro"
+                            sugerirTransportadora(data.uf); 
                             dadosAlterados();
                         }
                     }
@@ -1582,20 +1797,26 @@
             }
         }
 
-        // --- SISTEMA DE LEITURA INTELIGENTE DE PDF ---
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        // Failsafe do PDFjs
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        }
 
         async function iniciarLeituraPDF(event) {
-            const file = event.target.files[0];
+            const inputElement = event.target;
+            const file = inputElement.files[0];
+            
             if (!file) return;
+            
             if (file.type !== "application/pdf") {
                 showToast("Por favor, selecione um arquivo PDF.", "error");
+                inputElement.value = '';
                 return;
             }
 
             const lbl = document.getElementById('lblPdfUpload');
             const originalHTML = lbl.innerHTML;
-            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> LENDO...';
+            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> A LER...';
             lbl.classList.add('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
 
             try {
@@ -1620,18 +1841,18 @@
                     } finally {
                         lbl.innerHTML = originalHTML;
                         lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
-                        event.target.value = ''; // Reset do input
+                        inputElement.value = ''; 
                     }
                 };
                 fileReader.readAsArrayBuffer(file);
             } catch (err) {
                 lbl.innerHTML = originalHTML;
                 lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
+                inputElement.value = '';
             }
         }
 
         function analisarTextoPDF(texto) {
-            // 1. Identificar Empresa Remetente
             if (texto.toUpperCase().includes('PRIME2P') || texto.toUpperCase().includes('PRIME 2P')) {
                 document.getElementById('empresaRemetente').value = "P";
             } else if (texto.toUpperCase().includes('PRIMEXD') || texto.toUpperCase().includes('PRIME XD')) {
@@ -1640,27 +1861,22 @@
                 document.getElementById('empresaRemetente').value = "XC";
             }
 
-            // 2. Achar Pedido
             let matchPedido = texto.match(/pedido\s+(\d+)/i) || texto.match(/PEDIDO\s*-\s*OP\s*(\d+)/i) || texto.match(/(\d+)-/);
             if (matchPedido) {
                 let p = matchPedido[1];
                 if(p.length >= 4 && p.length <= 8) document.getElementById('pedido').value = p;
             }
 
-            // 3. Achar Valor NF (Busca Inteligente pelo Total)
-            // Procura especificamente pelo valor que vem após a palavra "TOTAL"
             let matchTotal = texto.match(/\bTOTAL\b[\s\S]{0,40}?R\$\s*([\d\.,]+)/i);
             if (matchTotal) {
                 document.getElementById('valorNf').value = mascaraMoeda(matchTotal[1]);
             } else {
-                // Fallback: pega o último valor em R$ do documento se não achar a palavra TOTAL
                 let matches = [...texto.matchAll(/R\$\s*([\d\.,]+)/gi)];
                 if (matches.length > 0) {
                     document.getElementById('valorNf').value = mascaraMoeda(matches[matches.length - 1][1]);
                 }
             }
 
-            // 4. Achar CNPJ Cliente
             let cnpjs = texto.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}|\b\d{14}\b/g);
             if (cnpjs) {
                 let cnpjCliente = "";
@@ -1675,7 +1891,6 @@
                 }
             }
 
-            // 5. Achar CEP Cliente
             let ceps = texto.match(/CEP\s*[:]?\s*(\d{5}-?\d{3})|\b\d{8}\b/gi);
             if (ceps) {
                 let cepCliente = "";
@@ -1690,14 +1905,12 @@
                 }
             }
 
-            // 6. Tentar extrair Nomes dos Produtos do Pedido Prime
             let inicioItens = texto.toUpperCase().indexOf("SUBTOTAL");
             let fimItens = texto.toUpperCase().indexOf("TOTAL", inicioItens + 8);
             
             if (inicioItens !== -1 && fimItens !== -1) {
                 let blocoItens = texto.substring(inicioItens + 8, fimItens).trim();
                 
-                // Nova fórmula super robusta: usa os "R$" do Valor Unitário e Subtotal como âncoras infalíveis
                 let regexItem = /(?:\b\d+\s+|^)(.+?)\s+(\d+(?:,\d+)?)\s+R\$\s*[\d\.,]+\s+R\$\s*[\d\.,]+/gi;
                 let matchItem;
                 
@@ -1711,7 +1924,6 @@
                     }
                     encontrouAlgo = true;
                     
-                    // Extrai o nome e já limpa os SKUs numéricos para manter só a descrição
                     let descProduto = limparNomeProduto(matchItem[1].trim());
                     let qtdProduto = matchItem[2] ? matchItem[2].split(',')[0].trim() : "1";
                     
@@ -1735,184 +1947,27 @@
             }
 
             dadosAlterados();
-            if(!document.querySelector('.toastNotification')) {
-                showToast('Dados extraídos do PDF com sucesso!', 'success');
-            }
-        }
-
-        // --- LÓGICA DO CATÁLOGO DE PRODUTOS ---
-        function atualizarDataListProdutos() {
-            let dl = document.getElementById('dlProdutos');
-            if(!dl) {
-                dl = document.createElement('datalist');
-                dl.id = 'dlProdutos';
-                document.body.appendChild(dl);
-            }
-            dl.innerHTML = '';
-            for(let key in catalogoProdutos) {
-                let opt = document.createElement('option');
-                opt.value = catalogoProdutos[key].desc;
-                dl.appendChild(opt);
-            }
-        }
-
-        function verificarMemoriaProduto(inputDesc) {
-            const row = inputDesc.closest('.item-row');
-            if (!row) return; 
-            const inputs = row.querySelectorAll('input');
-            
-            // Limpa o termo buscado (remove SKUs que o usuário possa ter colado)
-            const descOriginal = inputDesc.value.trim();
-            const desc = limparNomeProduto(descOriginal).toUpperCase();
-            
-            if(!desc) {
-                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                return;
-            }
-            
-            let produtoEncontrado = null;
-            
-            // 1. Tenta Busca Exata
-            for(let key in catalogoProdutos) {
-                let prod = catalogoProdutos[key];
-                if(prod && prod.desc && prod.desc.toUpperCase() === desc) {
-                    produtoEncontrado = prod;
-                    break;
-                }
-            }
-
-            // 2. Tenta Busca Aproximada (Fuzzy) - Procura se as palavras que digitou estão no nome do catálogo
-            if(!produtoEncontrado && desc.length > 3) {
-                const palavrasDigitadas = desc.split(' ').filter(p => p.length > 2); // ignora "de", "com", etc.
-                
-                for(let key in catalogoProdutos) {
-                    let prod = catalogoProdutos[key];
-                    if(!prod || !prod.desc) continue;
-                    
-                    const nomeCatalogo = prod.desc.toUpperCase();
-                    if(palavrasDigitadas.length > 0) {
-                        const contemTodas = palavrasDigitadas.every(p => nomeCatalogo.includes(p));
-                        if(contemTodas) {
-                            produtoEncontrado = prod;
-                            // Corrige o campo para o nome completo oficial
-                            inputDesc.value = prod.desc; 
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if(produtoEncontrado) {
-                let parts = produtoEncontrado.parts;
-                if(!parts) {
-                    parts = [{
-                        comp: produtoEncontrado.comp,
-                        larg: produtoEncontrado.larg,
-                        alt: produtoEncontrado.alt,
-                        peso: produtoEncontrado.peso
-                    }];
-                }
-
-                inputs[2].value = parts[0].comp || "";
-                inputs[3].value = parts[0].larg || "";
-                inputs[4].value = parts[0].alt || "";
-                inputs[5].value = parts[0].peso || "";
-                inputDesc.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-
-                if(parts.length > 1 && !inputDesc.dataset.spawned) {
-                    inputDesc.dataset.spawned = "true";
-                    
-                    for(let i = 1; i < parts.length; i++) {
-                        adicionarItem(); 
-                        
-                        let allRows = document.querySelectorAll('.item-row');
-                        let newRow = allRows[allRows.length - 1];
-                        let newInputs = newRow.querySelectorAll('input');
-                        
-                        newInputs[0].value = parts[i].vol || "1";
-                        newInputs[1].value = produtoEncontrado.desc; 
-                        newInputs[2].value = parts[i].comp || "";
-                        newInputs[3].value = parts[i].larg || "";
-                        newInputs[4].value = parts[i].alt || "";
-                        newInputs[5].value = parts[i].peso || "";
-                        
-                        newInputs[1].classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                        newInputs[1].dataset.spawned = "true"; 
-                    }
-                    
-                    showToast(`Produto Multi-Volume! ${parts.length} partes adicionadas.`, 'info');
-                }
-
-            } else {
-                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                delete inputDesc.dataset.spawned;
-            }
-        }
-
-        async function salvarMemoriaProdutos() {
-            const rows = document.querySelectorAll('.item-row');
-            let grouped = {};
-
-            rows.forEach(row => {
-                const inputs = row.querySelectorAll('input');
-                const vol = inputs[0].value.trim();
-                // Limpa o nome do produto para salvar no Firebase sem os dígitos do SKU
-                const desc = limparNomeProduto(inputs[1].value.trim());
-                const comp = inputs[2].value.trim();
-                const larg = inputs[3].value.trim();
-                const alt = inputs[4].value.trim();
-                const peso = inputs[5].value.trim();
-
-                if (desc && (comp || larg || alt || peso)) {
-                    const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
-                    
-                    if(!grouped[safeKey]) {
-                        grouped[safeKey] = { desc: desc, parts: [] };
-                    }
-                    
-                    grouped[safeKey].parts.push({
-                        vol: vol || "1",
-                        comp: comp,
-                        larg: larg,
-                        alt: alt,
-                        peso: peso
-                    });
-                }
-            });
-
-            let promises = [];
-            for(let key in grouped) {
-                promises.push(database.ref('produtos/' + key).set(grouped[key]));
-            }
-            return Promise.all(promises);
-        }
-
-        function toggleDarkMode() {
-            const body = document.body;
-            const icone = document.getElementById('iconeTema');
-            
-            if (body.classList.contains('amoled')) {
-                // Está no AMOLED -> Vai para o CLARO
-                body.classList.remove('dark', 'amoled');
-                icone.className = 'fa-solid fa-sun';
-                localStorage.setItem('primeTema', 'light');
-            } else if (body.classList.contains('dark')) {
-                // Está no Escuro -> Vai para AMOLED
-                body.classList.add('amoled');
-                icone.className = 'fa-solid fa-moon'; // Ícone Lua Cheia conforme o pedido
-                localStorage.setItem('primeTema', 'amoled');
-            } else {
-                // Está no Claro -> Vai para Escuro
-                body.classList.add('dark');
-                icone.className = 'fa-solid fa-circle-half-stroke';
-                localStorage.setItem('primeTema', 'dark');
-            }
+            showToast('Dados extraídos do PDF com sucesso!', 'success');
         }
 
         window.onload = async () => {
             document.getElementById('telaCarregamento').style.display = 'flex';
             
-            await conectarFirebase();
+            // Failsafe absoluto de 4 segundos
+            setTimeout(() => {
+                const tela = document.getElementById('telaCarregamento');
+                if (tela && tela.style.display !== 'none') {
+                    tela.style.opacity = '0';
+                    setTimeout(() => tela.style.display = 'none', 300);
+                }
+            }, 4000);
+
+            try {
+                await conectarFirebase();
+            } catch (err) {
+                console.warn(err);
+            }
+            
             checarEstadoLogin();
             
             adicionarItem();
@@ -1929,14 +1984,11 @@
                 document.getElementById('iconeTema').className = 'fa-solid fa-sun';
             }
 
-            // --- CONTROLE DE INATIVIDADE DA SESSÃO (1 HORA) ---
-            const TEMPO_EXPIRACAO = 60 * 60 * 1000; // 1 hora em milissegundos
+            const TEMPO_EXPIRACAO = 60 * 60 * 1000; 
             let timeoutAtividade = null;
             
-            // Função para registrar a última vez que o usuário mexeu no sistema
             const atualizarAtividade = () => {
                 if(localStorage.getItem('primeLogado') === 'true') {
-                    // Para não sobrecarregar o navegador, atualiza o LocalStorage a cada 5 segundos no máximo
                     if(!timeoutAtividade) {
                         timeoutAtividade = setTimeout(() => {
                             localStorage.setItem('primeUltimaAtividade', Date.now().toString());
@@ -1946,7 +1998,6 @@
                 }
             };
 
-            // Função que roda de tempos em tempos para verificar se o tempo estourou
             const verificarInatividade = () => {
                 const ultima = localStorage.getItem('primeUltimaAtividade');
                 if(localStorage.getItem('primeLogado') === 'true' && ultima) {
@@ -1954,40 +2005,32 @@
                         localStorage.removeItem('primeLogado');
                         localStorage.removeItem('primeUsuarioAtual');
                         localStorage.removeItem('primeUltimaAtividade');
-                        checarEstadoLogin(); // Força a exibir a tela de login
+                        checarEstadoLogin(); 
                         showDialog('Sua sessão expirou devido a 1 hora de inatividade. Por favor, faça login novamente.', 'alert');
                     }
                 }
             };
 
-            // "Escuta" as interações do usuário na tela (mouse, teclado, cliques e rolar página)
             window.addEventListener('mousemove', atualizarAtividade);
             window.addEventListener('keydown', atualizarAtividade);
             window.addEventListener('click', atualizarAtividade);
             window.addEventListener('scroll', atualizarAtividade);
 
-            // Verifica a inatividade a cada 1 minuto automaticamente
             setInterval(verificarInatividade, 60000);
 
-            // --- PROTEÇÃO DO CÓDIGO-FONTE (Anti-Inspeção e Anti-Cópia) ---
-            // 1. Bloqueia o botão direito do mouse
             document.addEventListener('contextmenu', event => {
                 event.preventDefault();
             });
 
-            // 2. Bloqueia atalhos de desenvolvedor no teclado
             document.addEventListener('keydown', event => {
-                // Bloqueia F12 (Inspecionar Elemento)
                 if (event.key === 'F12') {
                     event.preventDefault();
                     return false;
                 }
-                // Bloqueia Ctrl + Shift + I / J / C (Ferramentas de Desenvolvedor)
                 if (event.ctrlKey && event.shiftKey && (event.key === 'I' || event.key === 'J' || event.key === 'C' || event.key === 'i' || event.key === 'j' || event.key === 'c')) {
                     event.preventDefault();
                     return false;
                 }
-                // Bloqueia Ctrl + U (Ver Código Fonte)
                 if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) {
                     event.preventDefault();
                     return false;
