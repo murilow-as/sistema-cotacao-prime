@@ -12,6 +12,14 @@
     <link rel="preconnect" href="https://www.gstatic.com">
 
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- ATIVAÇÃO DO MODO ESCURO MANUAL NO TAILWIND -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <!-- Script do EmailJS -->
@@ -28,6 +36,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
+        /* Transições suaves para o Dark Mode */
         body, div, input, textarea, select { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
         
         body { background-color: #f3f4f6; }
@@ -46,6 +55,7 @@
         .modal { display: none; background-color: rgba(0,0,0,0.5); }
         .modal.active { display: flex; }
 
+        /* Estilos do Dark Mode (Cinza) */
         body.dark { background-color: #111827; color: #f9fafb; }
         body.dark .bg-white { background-color: #1f2937; }
         body.dark .bg-gray-50 { background-color: #111827; }
@@ -64,6 +74,7 @@
         body.dark .bg-red-50 { background-color: #7f1d1d; }
         body.dark .text-red-500 { color: #fca5a5; }
 
+        /* Estilos do Tema AMOLED (Preto Absoluto) */
         body.dark.amoled { background-color: #000000; }
         body.dark.amoled .bg-white, body.dark.amoled .bg-gray-50, body.dark.amoled .bg-gray-100 { background-color: #000000; border-color: #1a1a1a; }
         body.dark.amoled .bg-gray-800, body.dark.amoled .bg-gray-900 { background-color: #050505; border-color: #222; }
@@ -82,7 +93,7 @@
     </style>
 </head>
 
-<body class="p-4 md:p-8 font-sans text-gray-800 relative">
+<body class="p-4 md:p-8 font-sans text-gray-800 relative transition-colors duration-300">
 
     <!-- TELA DE CARREGAMENTO DO SERVIDOR (FIREBASE) -->
     <div id="telaCarregamento" class="fixed inset-0 z-[500] bg-gray-900 flex flex-col items-center justify-center transition-opacity duration-300">
@@ -209,8 +220,8 @@
                 <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" alt="Logo Grupo Prime B2B" class="h-12 w-12 object-contain rounded-full">
             </div>
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Grupo Prime B2B</h1>
-                <p class="text-sm text-gray-500">Sistema Gerador de Cotações <span id="nomeUsuarioLogado" class="ml-2 bg-blue-100 text-blue-800 text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded hidden"></span></p>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Grupo Prime B2B</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Sistema Gerador de Cotações <span id="nomeUsuarioLogado" class="ml-2 bg-blue-100 text-blue-800 text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded hidden"></span></p>
             </div>
         </div>
         <div class="flex gap-2 w-full sm:w-auto">
@@ -232,7 +243,7 @@
         <span class="block sm:inline ml-2 text-sm font-medium">Necessário efetuar login com perfil de utilizador para gerar cotações.</span>
     </div>
 
-    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row">
+    <div class="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row">
         
         <div class="w-full md:w-3/5 lg:w-2/3 p-6 overflow-y-auto" style="max-height: 85vh;">
             
@@ -252,42 +263,42 @@
 
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 uppercase">Nº do Pedido</label>
+                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Nº do Pedido</label>
                     <input type="text" id="pedido" class="input-field" placeholder="Ex: 12345" oninput="dadosAlterados()">
                 </div>
                 <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 uppercase">Modalidade de Frete</label>
-                    <select id="modalidade" class="input-field font-bold text-gray-700" onchange="dadosAlterados()">
+                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Modalidade de Frete</label>
+                    <select id="modalidade" class="input-field font-bold text-gray-700 dark:text-gray-200" onchange="dadosAlterados()">
                         <option value="CIF">CIF (Pago na Origem)</option>
                         <option value="FOB">FOB (Pago no Destino)</option>
                     </select>
                 </div>
                 <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 uppercase">Valor da NF (R$)</label>
+                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Valor da NF (R$)</label>
                     <input type="text" id="valorNf" class="input-field" placeholder="Ex: 1.500,00" oninput="this.value=mascaraMoeda(this.value); dadosAlterados()">
                 </div>
                 <div class="col-span-2 sm:col-span-1">
                     <div class="flex gap-2">
                         <div class="w-1/2">
-                            <label class="text-xs font-bold text-gray-600 uppercase">Total Vol.</label>
+                            <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Total Vol.</label>
                             <input type="text" id="qtdVolumes" class="input-field input-disabled text-center" readonly placeholder="0">
                         </div>
                         <div class="w-1/2">
-                            <label class="text-xs font-bold text-gray-600 uppercase">Total (kg)</label>
+                            <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Total (kg)</label>
                             <input type="text" id="pesoTotal" class="input-field input-disabled text-center" readonly placeholder="0.0">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <hr class="my-4 border-gray-200">
+            <hr class="my-4 border-gray-200 dark:border-gray-700">
 
-            <div class="grid grid-cols-2 gap-4 mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+            <div class="grid grid-cols-2 gap-4 mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
                 <div class="col-span-2 flex justify-between items-center">
                     <h3 class="text-sm font-bold text-blue-700 dark:text-blue-300 uppercase"><i class="fa-solid fa-building mr-2"></i>Empresa Remetente</h3>
                 </div>
                 <div class="col-span-2">
-                    <select id="empresaRemetente" class="input-field border-blue-300 font-bold text-blue-800 dark:text-blue-200" onchange="dadosAlterados()">
+                    <select id="empresaRemetente" class="input-field border-blue-300 dark:border-blue-600 font-bold text-blue-800 dark:text-blue-200" onchange="dadosAlterados()">
                         <option value="">-- Selecione a Empresa --</option>
                         <option value="P">Prime2P</option>
                         <option value="XD">PrimeXD</option>
@@ -295,36 +306,36 @@
                     </select>
                 </div>
                 <div class="col-span-2">
-                    <p class="text-[10px] text-gray-500 italic mt-1"><i class="fa-solid fa-circle-info"></i> O CNPJ, Nome e Endereço serão preenchidos automaticamente no texto final.</p>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 italic mt-1"><i class="fa-solid fa-circle-info"></i> O CNPJ, Nome e Endereço serão preenchidos automaticamente no texto final.</p>
                 </div>
             </div>
 
-            <hr class="my-4 border-gray-200">
+            <hr class="my-4 border-gray-200 dark:border-gray-700">
 
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="col-span-2">
-                    <h3 class="text-sm font-bold text-green-600 uppercase mb-2"><i class="fa-solid fa-map-location-dot mr-2"></i>Destinatário</h3>
+                    <h3 class="text-sm font-bold text-green-600 dark:text-green-400 uppercase mb-2"><i class="fa-solid fa-map-location-dot mr-2"></i>Destinatário</h3>
                 </div>
                 <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 uppercase">CNPJ</label>
+                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">CNPJ</label>
                     <div class="relative">
                         <input type="text" id="destCnpj" class="input-field pr-8" placeholder="00.000.000/0000-00" maxlength="18" oninput="this.value = mascaraCNPJ(this.value); dadosAlterados();" onblur="buscarCNPJ(this.value, 'destNome', 'loadDestCnpj')">
                         <span id="loadDestCnpj" class="absolute right-2 top-3 text-green-500 hidden"><i class="fas fa-spinner fa-spin"></i></span>
                     </div>
                 </div>
                 <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 uppercase">Nome</label>
+                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Nome</label>
                     <input type="text" id="destNome" class="input-field input-disabled" readonly placeholder="Busca automática via CNPJ" oninput="dadosAlterados()">
                 </div>
                 <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 uppercase">CEP</label>
+                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">CEP</label>
                     <div class="relative">
                         <input type="text" id="destCep" class="input-field pr-8" placeholder="00000-000" maxlength="9" oninput="this.value = mascaraCEP(this.value); dadosAlterados(); if(this.value.length < 9) { const box = document.getElementById('boxRecomendacao'); if(box) box.classList.add('hidden'); }" onblur="buscarCEP(this.value, 'destCidade', 'loadDestCep')">
                         <span id="loadDestCep" class="absolute right-2 top-3 text-green-500 hidden"><i class="fas fa-spinner fa-spin"></i></span>
                     </div>
                 </div>
                 <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 uppercase">Cidade / UF</label>
+                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Cidade / UF</label>
                     <input type="text" id="destCidade" class="input-field input-disabled" readonly placeholder="Busca automática via CEP" oninput="dadosAlterados()">
                 </div>
 
@@ -343,17 +354,17 @@
                 </div>
             </div>
 
-            <hr class="my-4 border-gray-200">
+            <hr class="my-4 border-gray-200 dark:border-gray-700">
 
             <div class="mb-4">
-                <h3 class="text-sm font-bold text-purple-600 uppercase"><i class="fa-solid fa-cubes mr-2"></i>Itens da Cotação</h3>
-                <p class="text-[10px] text-gray-500 mt-1"><i class="fa-solid fa-circle-info"></i> Preencha as medidas e clique no botão <strong class="text-purple-600">+</strong> ao final da linha para adicionar outro item.</p>
+                <h3 class="text-sm font-bold text-purple-600 dark:text-purple-400 uppercase"><i class="fa-solid fa-cubes mr-2"></i>Itens da Cotação</h3>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1"><i class="fa-solid fa-circle-info"></i> Preencha as medidas e clique no botão <strong class="text-purple-600 dark:text-purple-400">+</strong> ao final da linha para adicionar outro item.</p>
             </div>
             
             <!-- CABEÇALHO DA TABELA -->
             <div class="w-full overflow-x-auto pb-2">
                 <div class="min-w-[650px]">
-                    <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 mb-2 px-2 text-[10px] font-bold text-gray-500 uppercase items-center">
+                    <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 mb-2 px-2 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase items-center">
                         <div class="text-center">Vol</div>
                         <div>Descrição</div>
                         <div class="text-center">Comp</div>
@@ -369,14 +380,14 @@
 
         </div>
 
-        <div class="w-full md:w-2/5 lg:w-1/3 bg-gray-50 p-6 border-l border-gray-200 flex flex-col relative">
-            <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center justify-between">
+        <div class="w-full md:w-2/5 lg:w-1/3 bg-gray-50 dark:bg-gray-900 p-6 border-l border-gray-200 dark:border-gray-700 flex flex-col relative">
+            <h2 class="text-lg font-bold text-gray-700 dark:text-gray-200 mb-4 flex items-center justify-between">
                 <span><i class="fa-regular fa-file-lines mr-2"></i> Resultado Final</span>
                 <span id="badgeCodigo" class="bg-yellow-200 text-yellow-800 text-xs px-2 py-1 rounded font-bold hidden"></span>
             </h2>
             
             <div class="flex-grow">
-                <textarea id="textoFinal" readonly tabindex="-1" class="w-full h-full min-h-[400px] p-4 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-inner text-sm font-mono text-gray-500 dark:text-gray-400 resize-none focus:outline-none cursor-not-allowed select-none"></textarea>
+                <textarea id="textoFinal" readonly tabindex="-1" class="w-full h-full min-h-[400px] p-4 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-inner text-sm font-mono text-gray-500 dark:text-gray-400 resize-none focus:outline-none cursor-not-allowed select-none"></textarea>
             </div>
 
             <button onclick="processarECopiar()" id="btnCopiar" class="mt-4 w-full py-3 bg-red-500 text-white font-bold rounded-lg shadow-md transition duration-200 flex items-center justify-center text-lg opacity-60 cursor-not-allowed">
@@ -386,23 +397,24 @@
 
     </div>
 
+    <!-- MODAL DE HISTÓRICO -->
     <div id="modalHistorico" class="modal fixed inset-0 z-50 items-center justify-center">
         <div class="bg-white dark:bg-gray-800 w-11/12 max-w-3xl rounded-xl shadow-2xl flex flex-col max-h-[85vh] border border-gray-200 dark:border-gray-700">
-            <div class="flex justify-between items-center p-5 border-b border-gray-200 bg-gray-50 rounded-t-xl">
-                <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-cloud mr-2 text-blue-500"></i> Histórico Sincronizado</h2>
+            <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-xl">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-cloud mr-2 text-blue-500"></i> Histórico Sincronizado</h2>
                 <button onclick="fecharHistorico()" class="text-gray-500 hover:text-red-500 text-2xl transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
-            <div class="p-4 border-b border-gray-200 bg-white">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <div class="flex gap-2">
                     <div class="relative flex-grow">
                         <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
-                        <input type="text" id="inputBuscaHistorico" placeholder="Buscar por ID, destinatário ou data..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 input-field" oninput="renderizarListaHistorico()">
+                        <input type="text" id="inputBuscaHistorico" placeholder="Buscar por ID, destinatário ou data..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 input-field" oninput="renderizarListaHistorico()">
                     </div>
                 </div>
             </div>
 
-            <div class="p-6 overflow-y-auto flex-grow bg-gray-100">
+            <div class="p-6 overflow-y-auto flex-grow bg-gray-100 dark:bg-gray-900">
                 <div id="listaHistorico" class="space-y-3"></div>
             </div>
         </div>
@@ -423,6 +435,9 @@
     </div>
 
     <script>
+        // ===================================================================
+        // FIREBASE E CONFIGURAÇÕES GLOBAIS
+        // ===================================================================
         const firebaseConfig = {
             apiKey: "AIzaSyDhrqD3K9BdIZCLui282igMLfv4gcgQv6I",
             authDomain: "prime-b2b-2a71b.firebaseapp.com",
@@ -507,7 +522,6 @@
                 console.error("Erro ao conectar ao Firebase:", err);
                 showToast("Erro de conexão com a Nuvem. Algumas funções podem falhar.", "error");
             } finally {
-                // Failsafe que garante a remoção da tela preta de carregamento
                 setTimeout(() => {
                     const tela = document.getElementById('telaCarregamento');
                     if (tela) {
@@ -675,7 +689,7 @@
             const msg = document.getElementById('toastMessage');
             const icon = document.getElementById('toastIcon');
 
-            msg.innerText = mensagem; // Alterado para PT para não dar erro
+            msg.innerText = mensagem; 
             toast.className = 'fixed top-5 right-5 z-[200] transform transition-all duration-300 flex items-center px-4 py-3 rounded-lg shadow-xl text-white font-bold text-sm pointer-events-none';
 
             if(tipo === 'success') {
@@ -843,7 +857,6 @@
             if (callbackConfirmDialog) callbackConfirmDialog();
         });
 
-
         const dadosRemetentes = {
             "P": {
                 nome: "PRIME2P SOLUCOES EM TI E REPRESENTACAO COMERCIAL LTDA",
@@ -958,6 +971,7 @@
             return true;
         }
 
+        // --- CAIXA DE ITENS INTELIGENTE COM BOTÃO DE PESQUISA EXATA ---
         function adicionarItem() {
             contadorItens++;
             const div = document.createElement('div');
@@ -967,9 +981,9 @@
             div.innerHTML = `
                 <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 items-center">
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center font-bold" placeholder="0" oninput="dadosAlterados()">
-                    <div class="relative w-full">
+                    <div class="relative w-full flex items-center">
                         <input type="text" list="dlProdutos" class="input-field m-0 py-1.5 pl-2 pr-[60px] font-medium transition-colors w-full" placeholder="Ex: Caixa de Parafusos..." oninput="verificarMemoriaProduto(this); dadosAlterados()" title="Nome do Produto">
-                        <button onclick="abrirPesquisaWeb(this)" class="absolute right-1 top-[5px] bg-blue-600 hover:bg-blue-700 text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded shadow transition flex items-center gap-1" style="display: none;" title="Pesquisar na Web"><i class="fa-solid fa-globe"></i> WEB</button>
+                        <button onclick="buscarMedidasWeb(this)" style="display: none;" class="absolute right-1 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded shadow-lg transition items-center gap-1 animate-pulse" title="Pesquisar na Web com Inteligência Artificial"><i class="fa-solid fa-robot"></i> IA BOT</button>
                     </div>
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
                     <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
@@ -984,13 +998,99 @@
             dadosAlterados();
         }
 
-        function abrirPesquisaWeb(btn) {
+        async function buscarMedidasWeb(btn) {
             const inputDesc = btn.previousElementSibling;
             const nomeProduto = inputDesc.value.trim();
-            if(!nomeProduto) return;
+            const row = btn.closest('.item-row');
+            const inputs = row.querySelectorAll('input');
             
-            const query = encodeURIComponent(nomeProduto);
-            window.open(`https://www.google.com/search?q=${query}`, '_blank');
+            if(!nomeProduto) return;
+
+            let apiKey = localStorage.getItem('primeGeminiKey');
+            if (!apiKey && window.location.hostname !== "localhost" && !window.location.hostname.includes("googleusercontent")) {
+                apiKey = prompt("🤖 CÉREBRO LOGÍSTICO (IA):\n\nPara a Inteligência Artificial pesquisar na web, insira a sua Chave API do Google Gemini (obtenha gratuitamente em aistudio.google.com):");
+                if (!apiKey) {
+                    showToast("Chave da API necessária para a IA funcionar.", "error");
+                    return;
+                }
+                localStorage.setItem('primeGeminiKey', apiKey);
+            } else if (!apiKey) {
+                 apiKey = ""; 
+            }
+
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                
+                const prompt = `Você é um assistente de logística. Pesquise na web as dimensões de embalagem (Comprimento, Largura, Altura em cm) e peso (em kg) do produto: "${nomeProduto}". Se não encontrar as medidas exatas, estime de forma realista. Retorne ESTRITAMENTE em formato JSON com chaves: 'comp', 'larg', 'alt', 'peso'. Use apenas números (ex: "45", "1.5").`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    tools: [{ google_search: {} }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                comp: { type: "STRING" },
+                                larg: { type: "STRING" },
+                                alt: { type: "STRING" },
+                                peso: { type: "STRING" }
+                            }
+                        }
+                    }
+                };
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    if (response.status === 400 || response.status === 403) {
+                        localStorage.removeItem('primeGeminiKey');
+                        throw new Error("Chave da API inválida ou expirada.");
+                    }
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if(textResponse) {
+                    const dados = JSON.parse(textResponse);
+                    const formatarMedida = (v) => v ? Math.round(parseFloat(v.replace(',', '.'))) || "" : "";
+                    const formatarPeso = (v) => v ? parseFloat(v.replace(',', '.')).toFixed(1).replace('.', ',') : "";
+
+                    inputs[2].value = formatarMedida(dados.comp);
+                    inputs[3].value = formatarMedida(dados.larg);
+                    inputs[4].value = formatarMedida(dados.alt);
+                    inputs[5].value = formatarPeso(dados.peso);
+                    
+                    dadosAlterados();
+                    showToast('Medidas importadas pela IA com sucesso!', 'success');
+                    
+                    inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                    inputDesc.classList.add('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+                } else {
+                    showToast('A IA não conseguiu encontrar as medidas.', 'error');
+                }
+
+            } catch (err) {
+                console.error(err);
+                if (err.message && err.message.includes("inválida")) {
+                    showToast('Chave da API inválida. Tente novamente.', 'error');
+                } else {
+                    showToast('Falha de conexão com o motor de busca.', 'error');
+                }
+            } finally {
+                btn.innerHTML = originalIcon;
+                btn.disabled = false;
+            }
         }
 
         function atualizarBotoesItens() {
@@ -1103,6 +1203,7 @@
             const desc = limparNomeProduto(descOriginal).toUpperCase();
             const btnWeb = inputDesc.nextElementSibling;
             
+            // Fica neutro e esconde botão se estiver vazio
             if(!desc) {
                 inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
                 inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
@@ -1112,6 +1213,7 @@
             
             let produtoEncontrado = null;
             
+            // SOMENTE BUSCA EXATA: O nome digitado tem que ser exatamente igual ao que está guardado
             for(let key in catalogoProdutos) {
                 let prod = catalogoProdutos[key];
                 if(prod && prod.desc && prod.desc.toUpperCase() === desc) {
@@ -1139,6 +1241,7 @@
                 inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
                 inputDesc.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
 
+                // Encontrou localmente, esconde a IA!
                 if(btnWeb) btnWeb.style.display = 'none';
 
                 if(parts.length > 1 && !inputDesc.dataset.spawned) {
@@ -1169,11 +1272,15 @@
                 }
 
             } else {
+                // Se NÃO encontrou exatamente o produto, volta ao aspeto normal
                 inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
                 delete inputDesc.dataset.spawned;
                 
+                // Exibe o botão mágico da IA a partir da 4ª letra (Para não disparar em siglas de 1 letra)
                 if(descOriginal.length > 3) {
-                    if(btnWeb) btnWeb.style.display = 'flex';
+                    if(btnWeb) {
+                        btnWeb.style.display = 'flex';
+                    }
                 } else {
                     if(btnWeb) btnWeb.style.display = 'none';
                 }
@@ -1181,6 +1288,44 @@
         }
 
         async function salvarMemoriaProdutos() {
+            const rows = document.querySelectorAll('.item-row');
+            let grouped = {};
+
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const vol = inputs[0].value.trim();
+                const desc = limparNomeProduto(inputs[1].value.trim());
+                const comp = inputs[2].value.trim();
+                const larg = inputs[3].value.trim();
+                const alt = inputs[4].value.trim();
+                const peso = inputs[5].value.trim();
+
+                // Guarda sempre que tiver a descrição e pelo menos uma das medidas preenchidas
+                if (desc && (comp || larg || alt || peso)) {
+                    const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
+                    
+                    if(!grouped[safeKey]) {
+                        grouped[safeKey] = { desc: desc, parts: [] };
+                    }
+                    
+                    grouped[safeKey].parts.push({
+                        vol: vol || "1",
+                        comp: comp,
+                        larg: larg,
+                        alt: alt,
+                        peso: peso
+                    });
+                }
+            });
+
+            let promises = [];
+            for(let key in grouped) {
+                promises.push(database.ref('produtos/' + key).set(grouped[key]));
+            }
+            return Promise.all(promises);
+        }
+
+        async function processarECopiar() {
             if(document.getElementById('btnCopiar').disabled) return; 
 
             const prefixo = document.getElementById('empresaRemetente').value;
@@ -1297,7 +1442,6 @@
                 lista.innerHTML = '<p class="text-center text-gray-500 py-10">Nenhuma cotação encontrada no servidor.</p>';
             } else {
                 historicoFiltrado.forEach((item) => {
-                    
                     let transpsPreenchidas = [];
                     if (item.cotacoes) {
                         for (let k in item.cotacoes) {
@@ -1329,7 +1473,6 @@
                         
                         primarias.forEach((t, idx) => {
                             let c = (item.cotacoes && item.cotacoes[t]) ? item.cotacoes[t] : { valor: '', prazo: '', codigo: '' };
-                            
                             let isMelhor = temMinimoDuas && melhoresTransps.includes(t);
                             let rowClass = isMelhor ? "bg-green-50 dark:bg-green-900/40 border-green-400 shadow-md transform scale-[1.01] transition-transform" : "bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-600 shadow-sm";
                             let labelDestaque = isMelhor ? `<span class="bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 animate-pulse"><i class="fa-solid fa-trophy"></i> Melhor Preço</span>` : "";
@@ -1359,7 +1502,6 @@
                         let manualKey = 'FreteClick_Manual';
                         let cManual = (item.cotacoes && item.cotacoes[manualKey]) ? item.cotacoes[manualKey] : { nomeTransp: '', valor: '', prazo: '', codigo: '' };
                         let isMelhorManual = temMinimoDuas && melhoresTransps.includes(manualKey);
-                        
                         let rowClassManual = isMelhorManual ? "bg-green-50 dark:bg-green-900/40 border-green-400 shadow-md transform scale-[1.01] transition-transform" : "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 shadow-sm";
                         let labelDestaqueManual = isMelhorManual ? `<span class="bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 animate-pulse"><i class="fa-solid fa-trophy"></i> Melhor Preço</span>` : "";
                         let inputClassManual = isMelhorManual ? "bg-green-100/50 dark:bg-green-800/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-600 font-extrabold" : "text-gray-700 dark:text-gray-300";
@@ -1797,10 +1939,7 @@
             }
         }
 
-        // Failsafe do PDFjs
-        if (typeof pdfjsLib !== 'undefined') {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-        }
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         async function iniciarLeituraPDF(event) {
             const inputElement = event.target;
@@ -1816,7 +1955,7 @@
 
             const lbl = document.getElementById('lblPdfUpload');
             const originalHTML = lbl.innerHTML;
-            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> A LER...';
+            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> LENDO...';
             lbl.classList.add('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
 
             try {
@@ -1950,10 +2089,185 @@
             showToast('Dados extraídos do PDF com sucesso!', 'success');
         }
 
+        function atualizarDataListProdutos() {
+            let dl = document.getElementById('dlProdutos');
+            if(!dl) {
+                dl = document.createElement('datalist');
+                dl.id = 'dlProdutos';
+                document.body.appendChild(dl);
+            }
+            dl.innerHTML = '';
+            for(let key in catalogoProdutos) {
+                let opt = document.createElement('option');
+                opt.value = catalogoProdutos[key].desc;
+                dl.appendChild(opt);
+            }
+        }
+
+        function verificarMemoriaProduto(inputDesc) {
+            const row = inputDesc.closest('.item-row');
+            if (!row) return; 
+            const inputs = row.querySelectorAll('input');
+            
+            const descOriginal = inputDesc.value.trim();
+            const desc = limparNomeProduto(descOriginal).toUpperCase();
+            const btnWeb = inputDesc.nextElementSibling;
+            
+            if(!desc) {
+                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+                if(btnWeb) btnWeb.style.display = 'none';
+                return;
+            }
+            
+            let produtoEncontrado = null;
+            
+            for(let key in catalogoProdutos) {
+                let prod = catalogoProdutos[key];
+                if(prod && prod.desc && prod.desc.toUpperCase() === desc) {
+                    produtoEncontrado = prod;
+                    break;
+                }
+            }
+
+            if(!produtoEncontrado && desc.length > 3) {
+                const palavrasDigitadas = desc.split(' ').filter(p => p.length > 2); 
+                
+                for(let key in catalogoProdutos) {
+                    let prod = catalogoProdutos[key];
+                    if(!prod || !prod.desc) continue;
+                    
+                    const nomeCatalogo = prod.desc.toUpperCase();
+                    if(palavrasDigitadas.length > 0) {
+                        const contemTodas = palavrasDigitadas.every(p => nomeCatalogo.includes(p));
+                        if(contemTodas) {
+                            produtoEncontrado = prod;
+                            inputDesc.value = prod.desc; 
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if(produtoEncontrado) {
+                let parts = produtoEncontrado.parts;
+                if(!parts) {
+                    parts = [{
+                        comp: produtoEncontrado.comp,
+                        larg: produtoEncontrado.larg,
+                        alt: produtoEncontrado.alt,
+                        peso: produtoEncontrado.peso
+                    }];
+                }
+
+                inputs[2].value = parts[0].comp || "";
+                inputs[3].value = parts[0].larg || "";
+                inputs[4].value = parts[0].alt || "";
+                inputs[5].value = parts[0].peso || "";
+                
+                inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+                inputDesc.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+
+                if(btnWeb) btnWeb.style.display = 'none';
+
+                if(parts.length > 1 && !inputDesc.dataset.spawned) {
+                    inputDesc.dataset.spawned = "true";
+                    
+                    for(let i = 1; i < parts.length; i++) {
+                        adicionarItem(); 
+                        
+                        let allRows = document.querySelectorAll('.item-row');
+                        let newRow = allRows[allRows.length - 1];
+                        let newInputs = newRow.querySelectorAll('input');
+                        
+                        newInputs[0].value = parts[i].vol || "1";
+                        newInputs[1].value = produtoEncontrado.desc; 
+                        newInputs[2].value = parts[i].comp || "";
+                        newInputs[3].value = parts[i].larg || "";
+                        newInputs[4].value = parts[i].alt || "";
+                        newInputs[5].value = parts[i].peso || "";
+                        
+                        newInputs[1].classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+                        newInputs[1].classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                        newInputs[1].dataset.spawned = "true"; 
+                        
+                        const newBtnWeb = newInputs[1].nextElementSibling;
+                        if(newBtnWeb) newBtnWeb.style.display = 'none';
+                    }
+                    showToast(`Produto Multi-Volume! ${parts.length} partes adicionadas.`, 'info');
+                }
+
+            } else {
+                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                delete inputDesc.dataset.spawned;
+                
+                if(descOriginal.length > 3) {
+                    if(btnWeb) btnWeb.style.display = 'flex';
+                } else {
+                    if(btnWeb) btnWeb.style.display = 'none';
+                }
+            }
+        }
+
+        async function salvarMemoriaProdutos() {
+            const rows = document.querySelectorAll('.item-row');
+            let grouped = {};
+
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const vol = inputs[0].value.trim();
+                const desc = limparNomeProduto(inputs[1].value.trim());
+                const comp = inputs[2].value.trim();
+                const larg = inputs[3].value.trim();
+                const alt = inputs[4].value.trim();
+                const peso = inputs[5].value.trim();
+
+                if (desc && (comp || larg || alt || peso)) {
+                    const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
+                    
+                    if(!grouped[safeKey]) {
+                        grouped[safeKey] = { desc: desc, parts: [] };
+                    }
+                    
+                    grouped[safeKey].parts.push({
+                        vol: vol || "1",
+                        comp: comp,
+                        larg: larg,
+                        alt: alt,
+                        peso: peso
+                    });
+                }
+            });
+
+            let promises = [];
+            for(let key in grouped) {
+                promises.push(database.ref('produtos/' + key).set(grouped[key]));
+            }
+            return Promise.all(promises);
+        }
+
+        function toggleDarkMode() {
+            const body = document.body;
+            const icone = document.getElementById('iconeTema');
+            
+            if (body.classList.contains('amoled')) {
+                body.classList.remove('dark', 'amoled');
+                icone.className = 'fa-solid fa-sun';
+                localStorage.setItem('primeTema', 'light');
+            } else if (body.classList.contains('dark')) {
+                body.classList.add('amoled');
+                icone.className = 'fa-solid fa-moon'; 
+                localStorage.setItem('primeTema', 'amoled');
+            } else {
+                body.classList.add('dark');
+                icone.className = 'fa-solid fa-circle-half-stroke';
+                localStorage.setItem('primeTema', 'dark');
+            }
+        }
+
         window.onload = async () => {
             document.getElementById('telaCarregamento').style.display = 'flex';
             
-            // Failsafe absoluto de 4 segundos
             setTimeout(() => {
                 const tela = document.getElementById('telaCarregamento');
                 if (tela && tela.style.display !== 'none') {
@@ -1961,11 +2275,11 @@
                     setTimeout(() => tela.style.display = 'none', 300);
                 }
             }, 4000);
-
+            
             try {
                 await conectarFirebase();
             } catch (err) {
-                console.warn(err);
+                console.error(err);
             }
             
             checarEstadoLogin();
