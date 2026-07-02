@@ -1860,33 +1860,38 @@
                         padding: 0; 
                         background: #fff; 
                         color: #000; 
+                        text-align: center; /* FORÇA TUDO AO CENTRO */
                     }
                     .label { 
                         width: 101.7mm; 
-                        height: 148mm; 
+                        height: 145mm; 
                         padding: 5mm; 
                         box-sizing: border-box; 
                         page-break-after: always; 
                         display: flex; 
                         flex-direction: column; 
                         overflow: hidden;
+                        text-align: center; /* REFORÇO NO LABEL */
                     }
                     .label:last-child { page-break-after: auto; }
                     
-                    .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 3mm; margin-bottom: 3mm; }
+                    .header { border-bottom: 2px solid #000; padding-bottom: 3mm; margin-bottom: 3mm; }
                     .header h1 { font-size: 20px; margin: 0; text-transform: uppercase; font-weight: 900; }
                     
-                    .section { margin-bottom: 3mm; border-bottom: 2px solid #000; padding-bottom: 3mm; }
-                    .section.no-border { border-bottom: none; }
-                    .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 2mm; color: #000; }
+                    .section { margin-bottom: 3mm; border-bottom: 2px solid #000; padding-bottom: 3mm; width: 100%; }
+                    .section.no-border { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+                    .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 1mm; color: #000; }
                     
-                    .text-xxl { font-size: 26px; font-weight: 900; line-height: 1.1; word-break: break-word; text-transform: uppercase; }
+                    .text-dest { font-size: 18px; font-weight: 900; line-height: 1.1; word-break: break-word; text-transform: uppercase; }
                     .text-md { font-size: 14px; font-weight: bold; margin-top: 1.5mm; }
                     .text-sm { font-size: 12px; margin-top: 1mm; font-weight: bold; }
                     
-                    .footer { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; padding-top: 3mm; border-top: 3px solid #000; }
+                    .text-nf { font-size: 64px; font-weight: 900; line-height: 1; letter-spacing: 2px; text-align: center; width: 100%; display: block; }
+                    .text-transp { font-size: 36px; font-weight: 900; text-transform: uppercase; line-height: 1; margin: 0; text-align: center; width: 100%; display: block; }
+                    
+                    .footer { margin-top: auto; display: flex; justify-content: center; align-items: center; gap: 8mm; padding-top: 3mm; border-top: 3px solid #000; width: 100%; }
                     .qr-code { width: 32mm; height: 32mm; }
-                    .vol-info { text-align: right; }
+                    .vol-info { text-align: center; }
                     .vol-info h3 { font-size: 48px; margin: 0; font-weight: 900; letter-spacing: -2px; }
                 </style>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
@@ -1900,28 +1905,24 @@
                     <div class="header">
                         <h1>GRUPO PRIME B2B</h1>
                     </div>
-                    
-                    <!-- NOVO DESTAQUE: SOMENTE NOTA FISCAL GIGANTE E CENTRALIZADA -->
-                    <div class="section" style="text-align: center;">
-                        <div class="section-title">Nota Fiscal</div>
-                        <div style="font-size: 42px; font-weight: 900; line-height: 1; letter-spacing: 2px;">${numeroNF}</div>
-                    </div>
 
                     <div class="section">
                         <div class="section-title">Remetente</div>
                         <div class="text-sm">${remetNome}</div>
                     </div>
 
-                    <div class="section" style="flex-grow: 1;">
+                    <div class="section">
                         <div class="section-title">Destinatário</div>
-                        <div class="text-xxl">${destNome}</div>
-                        <div class="text-md">CNPJ: ${destCnpj}</div>
-                        <div class="text-md">CEP: ${destCep}</div>
+                        <div class="text-dest">${destNome}</div>
+                        <div class="text-sm" style="font-weight: normal; margin-top: 2mm;">CNPJ: ${destCnpj} &nbsp;|&nbsp; CEP: ${destCep}</div>
                     </div>
 
-                    <div class="section no-border">
-                        <div class="section-title">Transportadora Oficial</div>
-                        <div style="text-transform: uppercase; font-size: 24px; font-weight: 900;">${vencedor}</div>
+                    <div class="section" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                        <span class="text-nf">${numeroNF}</span>
+                    </div>
+
+                    <div class="section no-border" style="padding: 4mm 0;">
+                        <span class="text-transp">${vencedor}</span>
                     </div>
 
                     <div class="footer">
