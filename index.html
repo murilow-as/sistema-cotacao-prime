@@ -1938,116 +1938,35 @@
                         @page { size: 100mm 150mm; margin: 0; }
                         body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                     }
-                    body { 
-                        font-family: 'Arial', sans-serif; 
-                        margin: 0; 
-                        padding: 2mm; 
-                        background: #fff; 
-                        color: #000; 
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                    }
+                    body { font-family: 'Arial', sans-serif; margin: 0; padding: 2mm; background: #fff; color: #000; }
                     .label { 
-                        width: 96mm; 
-                        height: 146mm; 
-                        box-sizing: border-box; 
-                        page-break-after: always; 
-                        display: flex; 
-                        flex-direction: column; 
-                        border: 2px solid #000;
-                        overflow: hidden;
+                        width: 96mm; height: 146mm; border: 2px solid #000; 
+                        box-sizing: border-box; page-break-after: always; 
+                        display: flex; flex-direction: column; overflow: hidden; 
+                        margin: 0 auto;
                     }
                     .label:last-child { page-break-after: auto; }
                     
-                    .top-section {
-                        display: flex;
-                        height: 48mm;
-                        border-bottom: 2px solid #000;
-                        box-sizing: border-box;
-                    }
-                    .top-left {
-                        flex: 1;
-                        border-right: 2px solid #000;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                        padding: 1mm;
-                    }
-                    .top-right {
-                        flex: 1;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                        padding: 1mm;
-                    }
+                    .top-row { display: flex; height: 45mm; border-bottom: 2px solid #000; }
+                    .top-left { flex: 1; border-right: 2px solid #000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2mm; }
+                    .top-right { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2mm; }
                     
-                    .prime-text {
-                        font-family: 'Orbitron', sans-serif;
-                        font-weight: 900;
-                        font-size: 22px;
-                        line-height: 1;
-                        text-transform: uppercase;
-                    }
+                    .prime-text { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 900; line-height: 1; margin: 1mm 0; }
+                    .prime-logo { width: 28mm; height: 28mm; object-fit: contain; filter: grayscale(100%) contrast(1.5); }
                     
-                    .qr-text {
-                        font-size: 11px;
-                        font-weight: bold;
-                        text-align: center;
-                        margin-top: 1.5mm;
-                        line-height: 1.1;
-                    }
+                    .qr-code { width: 100%; height: 26mm; margin-bottom: 2mm; display: flex; justify-content: center; align-items: center; }
+                    .qr-text { font-size: 11px; font-weight: bold; text-align: center; line-height: 1.1; }
                     
-                    .black-bar {
-                        background: #000;
-                        color: #fff;
-                        font-size: 24px;
-                        font-weight: 900;
-                        font-style: italic;
-                        text-align: center;
-                        text-transform: uppercase;
-                        padding: 2mm 0;
-                    }
+                    .black-header { background: #000; color: #fff; text-align: center; padding: 1.5mm 0; border-bottom: 2px solid #000; }
+                    .black-header h2 { margin: 0; font-size: 22px; font-weight: 900; font-style: italic; text-transform: uppercase; }
                     
-                    .white-area-nf {
-                        font-size: 95px;
-                        font-weight: 900;
-                        text-align: center;
-                        padding: 4mm 0;
-                        line-height: 1;
-                        letter-spacing: -2px;
-                        border-bottom: 2px solid #000;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                    }
-
-                    .white-area-vol {
-                        font-size: 55px;
-                        font-weight: 900;
-                        text-align: center;
-                        padding: 2mm 0;
-                        line-height: 1;
-                        letter-spacing: -1px;
-                        border-bottom: 2px solid #000;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                    }
+                    .white-body { background: #fff; text-align: center; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #000; }
+                    .nf-text { font-size: 85px; font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: 2px; }
                     
-                    .envio-section {
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        padding: 0 4mm;
-                        font-size: 32px;
-                        font-weight: 900;
-                        text-transform: uppercase;
-                        flex-grow: 1;
-                        text-align: center;
-                    }
+                    .vol-text { font-size: 55px; font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: 2px; }
+                    
+                    .transport-body { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #fff; padding: 2mm; box-sizing: border-box; }
+                    .transport-text { font-size: 34px; font-weight: 900; text-transform: uppercase; margin: 0; text-align: center; line-height: 1.1; word-wrap: break-word; width: 100%; }
                 </style>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
             </head>
@@ -2055,29 +1974,37 @@
             `;
             
             volumesTotais.forEach((vol, idx) => {
-                let volStr = `${String(idx + 1).padStart(2, '0')} / ${String(volumesTotais.length).padStart(2, '0')}`;
-                
                 html += `
                 <div class="label">
-                    <div class="top-section">
+                    <div class="top-row">
                         <div class="top-left">
                             <div class="prime-text">GRUPO</div>
-                            <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" style="width: 28mm; height: 28mm; margin: 1mm 0; object-fit: contain; filter: grayscale(100%) contrast(1.5);">
+                            <img src="P_LOGO-removebg-preview.png" onerror="this.src='https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128'" class="prime-logo">
                             <div class="prime-text">PRIME</div>
                         </div>
                         <div class="top-right">
-                            <div id="qrcode-${idx}" style="width: 24mm; height: 24mm;"></div>
+                            <div id="qrcode-${idx}" class="qr-code"></div>
                             <div class="qr-text">Leia o QR-CODE<br>para conhecer<br>nosso site e<br>aproveite as<br>promoções!</div>
                         </div>
                     </div>
                     
-                    <div class="black-bar">NOTA FISCAL</div>
-                    <div class="white-area-nf">${numeroNF}</div>
+                    <div class="black-header">
+                        <h2>NOTA FISCAL</h2>
+                    </div>
+                    <div class="white-body" style="height: 32mm;">
+                        <h1 class="nf-text">${numeroNF}</h1>
+                    </div>
                     
-                    <div class="black-bar">VOLUMES:</div>
-                    <div class="white-area-vol">${volStr}</div>
+                    <div class="black-header">
+                        <h2>VOLUMES:</h2>
+                    </div>
+                    <div class="white-body" style="height: 22mm;">
+                        <h1 class="vol-text">${String(idx + 1).padStart(2, '0')} / ${String(volumesTotais.length).padStart(2, '0')}</h1>
+                    </div>
                     
-                    <div class="envio-section">${vencedor}</div>
+                    <div class="transport-body">
+                        <h2 class="transport-text">${vencedor}</h2>
+                    </div>
                 </div>
                 `;
             });
@@ -2089,8 +2016,8 @@
                         ${volumesTotais.map((_, idx) => `
                             new QRCode(document.getElementById("qrcode-${idx}"), {
                                 text: url,
-                                width: 80,
-                                height: 80,
+                                width: 90,
+                                height: 90,
                                 colorDark : "#000000",
                                 colorLight : "#ffffff",
                                 correctLevel : QRCode.CorrectLevel.L
@@ -2141,7 +2068,7 @@
                             <!-- Left Group (Logo + Text) -->
                             <div style="display: flex; align-items: center; gap: 6mm;">
                                 <div style="width: 32mm; height: 32mm; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                                    <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" style="width: 100%; height: 100%; object-fit: contain; filter: grayscale(100%) contrast(1.5) brightness(0.9);" alt="Logo">
+                                    <img src="P_LOGO-removebg-preview.png" onerror="this.src='https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128'" style="width: 100%; height: 100%; object-fit: contain; filter: grayscale(100%) contrast(1.5) brightness(0.9);" alt="Logo">
                                 </div>
                                 
                                 <div style="font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900; line-height: 1; text-align: left; color: #000; flex-shrink: 0; margin-top: 1mm;">
