@@ -152,7 +152,32 @@
             </div>
             
             <button id="btnSalvarSenha" onclick="salvarNovaSenha()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center">
-                <i class="fa-solid fa-check mr-2"></i> GUARDAR E ENTRAR
+                <i class="fa-solid fa-check mr-2"></i> GUARDAR SENHA
+            </button>
+        </div>
+    </div>
+
+    <!-- TELA DE CADASTRO DE E-MAILS (ATUALIZAÇÃO DE SEGURANÇA) -->
+    <div id="telaCadastroEmails" class="fixed inset-0 z-[112] bg-gray-900/95 hidden items-center justify-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
+            <div class="bg-blue-100 text-blue-600 p-3 rounded-full mb-4">
+                <i class="fa-solid fa-envelope-circle-check text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2 text-center">Atualização de Segurança</h2>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-6 text-center">Cadastre os seus e-mails para recuperação de senha. É obrigatório ter pelo menos o e-mail principal.</p>
+            
+            <div class="w-full mb-3">
+                <label class="text-[10px] font-bold text-gray-500 uppercase">E-mail Principal (Obrigatório)</label>
+                <input type="email" id="emailPrincipalCad" class="input-field w-full px-4 py-2 text-center text-sm font-bold" placeholder="exemplo@email.com">
+            </div>
+            <div class="w-full mb-6">
+                <label class="text-[10px] font-bold text-gray-500 uppercase">E-mail Alternativo (Opcional)</label>
+                <input type="email" id="emailReservaCad" class="input-field w-full px-4 py-2 text-center text-sm font-bold" placeholder="reserva@email.com">
+                <p id="msgErroEmails" class="text-red-500 dark:text-red-400 text-xs font-bold mt-2 hidden text-center"><i class="fa-solid fa-triangle-exclamation"></i> Preencha um e-mail principal válido!</p>
+            </div>
+            
+            <button id="btnSalvarEmails" onclick="salvarEmailsCadastro()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center">
+                <i class="fa-solid fa-floppy-disk mr-2"></i> SALVAR E ENTRAR
             </button>
         </div>
     </div>
@@ -167,10 +192,12 @@
             
             <!-- PASSO 1: CONFIRMAR E-MAIL -->
             <div id="passo1Recuperacao" class="w-full flex flex-col items-center">
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 text-center font-medium">Informe o e-mail para o qual deseja receber o código de segurança.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 text-center font-medium">Selecione o e-mail cadastrado para o qual deseja receber o código de segurança.</p>
                 <div class="w-full mb-6">
                     <label class="text-[10px] font-bold text-gray-500 uppercase">E-mail de Destino</label>
-                    <input type="email" id="emailRecuperacao" class="input-field w-full px-4 py-2 text-center text-sm font-bold" placeholder="Para qual e-mail enviar?">
+                    <select id="selectEmailRecuperacao" class="input-field w-full px-4 py-2 text-center text-sm font-bold text-gray-700 dark:text-gray-200">
+                        <!-- Será preenchido via JS do Firebase -->
+                    </select>
                 </div>
                 <button onclick="enviarCodigoRecuperacao()" id="btnReceberCodigo" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center mb-3">
                     <i class="fa-solid fa-paper-plane mr-2"></i> RECEBER CÓDIGO
@@ -488,13 +515,13 @@
         }
 
         // ===================================================================
-        // USUÁRIOS E LOGIN NA NUVEM
+        // USUÁRIOS, LOGIN E RECUPERAÇÃO NA NUVEM (ATUALIZADO PARA SEGURANÇA)
         // ===================================================================
         const SENHA_PADRAO = "prime2026";
         const USUARIOS_INICIAIS = {
-            "admin": { senha: SENHA_PADRAO, primeiroAcesso: false, email: "admin@grupoprimeb2b.com.br" },
-            "MuriloAguiar": { senha: SENHA_PADRAO, primeiroAcesso: true, email: "murilo.aguiar@gmail.com" },
-            "MarcosFernandes": { senha: SENHA_PADRAO, primeiroAcesso: true, email: "marcos.fernandes@gmail.com" }
+            "admin": { senha: SENHA_PADRAO, primeiroAcesso: false, emailPrincipal: "", emailReserva: "" },
+            "MuriloAguiar": { senha: SENHA_PADRAO, primeiroAcesso: true, emailPrincipal: "", emailReserva: "" },
+            "MarcosFernandes": { senha: SENHA_PADRAO, primeiroAcesso: true, emailPrincipal: "", emailReserva: "" }
         };
         let perfilSelecionado = null;
 
@@ -507,10 +534,32 @@
                     let dbUsers = snapUsuarios.val();
                     let atualizou = false;
                     if(!dbUsers["admin"]) { dbUsers["admin"] = USUARIOS_INICIAIS["admin"]; atualizou = true; }
-                    for (let u in USUARIOS_INICIAIS) {
-                        if (dbUsers[u] && !dbUsers[u].email) {
-                            dbUsers[u].email = USUARIOS_INICIAIS[u].email;
+                    
+                    // RESET DE SEGURANÇA: Limpar e-mails antigos gravados na nuvem (mantendo histórico seguro)
+                    for (let u in dbUsers) {
+                        if (dbUsers[u].resetEmailsFeito !== true) {
+                            dbUsers[u].emailPrincipal = "";
+                            dbUsers[u].emailReserva = "";
+                            dbUsers[u].resetEmailsFeito = true;
                             atualizou = true;
+                        }
+                    }
+
+                    for (let u in USUARIOS_INICIAIS) {
+                        if (dbUsers[u]) {
+                            // Migrar legado de segurança
+                            if (dbUsers[u].email) {
+                                delete dbUsers[u].email;
+                                atualizou = true;
+                            }
+                            if (dbUsers[u].emailPrincipal === undefined) {
+                                dbUsers[u].emailPrincipal = "";
+                                atualizou = true;
+                            }
+                            if (dbUsers[u].emailReserva === undefined) {
+                                dbUsers[u].emailReserva = "";
+                                atualizou = true;
+                            }
                         }
                     }
                     if (atualizou) await database.ref('usuarios').set(dbUsers);
@@ -580,6 +629,7 @@
                     
                     document.getElementById('telaLogin').style.display = 'flex';
                     document.getElementById('telaTrocaSenha').style.display = 'none';
+                    document.getElementById('telaCadastroEmails').style.display = 'none';
                     document.getElementById('senhaLogin').value = '';
                     document.getElementById('nomeUsuarioLogado').classList.add('hidden');
                     document.getElementById('avisoAdmin').classList.add('hidden');
@@ -592,6 +642,7 @@
             if (logado === 'true' && usuarioAtual) {
                 document.getElementById('telaLogin').style.display = 'none';
                 document.getElementById('telaTrocaSenha').style.display = 'none';
+                document.getElementById('telaCadastroEmails').style.display = 'none';
                 document.getElementById('senhaLogin').value = '';
                 
                 const badge = document.getElementById('nomeUsuarioLogado');
@@ -608,6 +659,7 @@
             } else {
                 document.getElementById('telaLogin').style.display = 'flex';
                 document.getElementById('telaTrocaSenha').style.display = 'none';
+                document.getElementById('telaCadastroEmails').style.display = 'none';
                 document.getElementById('senhaLogin').value = '';
                 document.getElementById('senhaLogin').focus();
                 document.getElementById('nomeUsuarioLogado').classList.add('hidden');
@@ -630,12 +682,17 @@
 
                 if (dadosUsuario && dadosUsuario.senha === pass) {
                     document.getElementById('msgErroLogin').classList.add('hidden');
+                    perfilSelecionado = user;
                     
+                    // LÓGICA DE INTERCEPTAÇÃO E SEGURANÇA
                     if (dadosUsuario.primeiroAcesso) {
-                        perfilSelecionado = user;
                         document.getElementById('telaLogin').style.display = 'none';
                         document.getElementById('telaTrocaSenha').style.display = 'flex';
                         document.getElementById('novaSenha').focus();
+                    } else if (!dadosUsuario.emailPrincipal || dadosUsuario.emailPrincipal.trim() === "") {
+                        document.getElementById('telaLogin').style.display = 'none';
+                        document.getElementById('telaCadastroEmails').style.display = 'flex';
+                        document.getElementById('emailPrincipalCad').focus();
                     } else {
                         efetuarLogin(user);
                     }
@@ -673,10 +730,52 @@
                 document.getElementById('novaSenha').value = '';
                 document.getElementById('confirmaSenha').value = '';
                 
-                efetuarLogin(perfilSelecionado);
-                showDialog('Senha cadastrada com sucesso na Nuvem! Bem-vindo(a).', 'alert');
+                document.getElementById('telaTrocaSenha').style.display = 'none';
+                
+                // Após salvar senha, verifica se precisa cadastrar os e-mails
+                let snap = await database.ref('usuarios/' + perfilSelecionado).once('value');
+                let dadosUsuario = snap.val();
+                
+                if (!dadosUsuario.emailPrincipal || dadosUsuario.emailPrincipal.trim() === "") {
+                    document.getElementById('telaCadastroEmails').style.display = 'flex';
+                    document.getElementById('emailPrincipalCad').focus();
+                } else {
+                    efetuarLogin(perfilSelecionado);
+                    showDialog('Senha cadastrada com sucesso na Nuvem! Bem-vindo(a).', 'alert');
+                }
             } catch (err) {
                 showToast("Erro ao salvar a senha.", "error");
+            } finally {
+                btn.innerHTML = btnOriginal;
+                btn.disabled = false;
+            }
+        }
+
+        async function salvarEmailsCadastro() {
+            const principal = document.getElementById('emailPrincipalCad').value.trim();
+            const reserva = document.getElementById('emailReservaCad').value.trim();
+            
+            if (principal === '' || !principal.includes('@')) {
+                document.getElementById('msgErroEmails').classList.remove('hidden');
+                return;
+            }
+
+            const btn = document.getElementById('btnSalvarEmails');
+            const btnOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...';
+            btn.disabled = true;
+
+            try {
+                await database.ref('usuarios/' + perfilSelecionado + '/emailPrincipal').set(principal);
+                await database.ref('usuarios/' + perfilSelecionado + '/emailReserva').set(reserva);
+
+                document.getElementById('msgErroEmails').classList.add('hidden');
+                document.getElementById('telaCadastroEmails').style.display = 'none';
+                
+                efetuarLogin(perfilSelecionado);
+                showDialog('E-mails de segurança cadastrados com sucesso!', 'alert');
+            } catch (err) {
+                showToast("Erro ao salvar os e-mails.", "error");
             } finally {
                 btn.innerHTML = btnOriginal;
                 btn.disabled = false;
@@ -731,14 +830,57 @@
 
         let codigoRecuperacaoAtual = null;
 
-        function abrirRecuperacao() {
+        function mascararEmail(email) {
+            if (!email || !email.includes('@')) return email;
+            const partes = email.split('@');
+            const prefixo = partes[0].length > 3 ? partes[0].substring(0, 3) : partes[0];
+            return prefixo + '****@' + partes[1];
+        }
+
+        async function abrirRecuperacao() {
+            const user = document.getElementById('usuarioLogin').value;
+            
             document.getElementById('telaLogin').style.display = 'none';
             document.getElementById('telaRecuperacao').style.display = 'flex';
             
             document.getElementById('passo1Recuperacao').classList.remove('hidden');
             document.getElementById('passo2Recuperacao').classList.add('hidden');
             
-            document.getElementById('emailRecuperacao').value = '';
+            const select = document.getElementById('selectEmailRecuperacao');
+            select.innerHTML = '<option value="">A carregar e-mails seguros...</option>';
+            document.getElementById('btnReceberCodigo').disabled = true;
+
+            try {
+                let snap = await database.ref('usuarios/' + user).once('value');
+                let dadosUsuario = snap.val();
+                
+                select.innerHTML = '';
+                let temEmail = false;
+
+                if (dadosUsuario) {
+                    if (dadosUsuario.emailPrincipal && dadosUsuario.emailPrincipal.includes('@')) {
+                        select.innerHTML += `<option value="${dadosUsuario.emailPrincipal}">${mascararEmail(dadosUsuario.emailPrincipal)} (Principal)</option>`;
+                        temEmail = true;
+                    }
+                    if (dadosUsuario.emailReserva && dadosUsuario.emailReserva.includes('@')) {
+                        select.innerHTML += `<option value="${dadosUsuario.emailReserva}">${mascararEmail(dadosUsuario.emailReserva)} (Alternativo)</option>`;
+                        temEmail = true;
+                    }
+                }
+
+                if (!temEmail) {
+                    select.innerHTML = '<option value="">Sem e-mail cadastrado</option>';
+                    select.disabled = true;
+                } else {
+                    select.disabled = false;
+                    document.getElementById('btnReceberCodigo').disabled = false;
+                }
+
+            } catch (err) {
+                select.innerHTML = '<option value="">Erro ao conectar</option>';
+                showToast("Erro ao buscar dados do utilizador na nuvem.", "error");
+            }
+            
             document.getElementById('codigoRecuperacao').value = '';
             document.getElementById('novaSenhaRecuperacao').value = '';
             document.getElementById('confirmaSenhaRecuperacao').value = '';
@@ -747,10 +889,11 @@
 
         function enviarCodigoRecuperacao() {
             const user = document.getElementById('usuarioLogin').value;
-            const emailDigitado = document.getElementById('emailRecuperacao').value.trim();
+            const select = document.getElementById('selectEmailRecuperacao');
+            const emailSelecionado = select.value;
 
-            if (!emailDigitado || !emailDigitado.includes('@')) {
-                showToast('Por favor, introduza um e-mail válido.', 'error');
+            if (!emailSelecionado || !emailSelecionado.includes('@')) {
+                showToast('Nenhum e-mail de destino válido selecionado.', 'error');
                 return;
             }
 
@@ -765,11 +908,11 @@
                 if (typeof emailjs === 'undefined') throw new Error("EmailJS bloqueado ou não carregado");
 
                 emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-                    to_email: emailDigitado,
+                    to_email: emailSelecionado,
                     to_name: user,
                     codigo: codigoRecuperacaoAtual
                 }).then(function(response) {
-                    avancarParaPasso2(emailDigitado);
+                    avancarParaPasso2(emailSelecionado);
                     showToast('E-mail enviado! Verifique a sua caixa de entrada e Spam.', 'success');
                     btnEnvia.innerHTML = textoOriginalBtn;
                     btnEnvia.disabled = false;
@@ -790,15 +933,10 @@
             }
         }
 
-        function avancarParaPasso2(emailDigitado) {
+        function avancarParaPasso2(emailSelecionado) {
             document.getElementById('passo1Recuperacao').classList.add('hidden');
             document.getElementById('passo2Recuperacao').classList.remove('hidden');
-            
-            const partesEmail = emailDigitado.split('@');
-            const prefixo = partesEmail[0].length > 3 ? partesEmail[0].substring(0, 3) : partesEmail[0];
-            const emailMascarado = prefixo + '****@' + partesEmail[1];
-            
-            document.getElementById('textoEmailRecuperacao').innerText = `Enviámos um código de 6 dígitos para:\n${emailMascarado}`;
+            document.getElementById('textoEmailRecuperacao').innerText = `Enviámos um código de 6 dígitos para:\n${mascararEmail(emailSelecionado)}`;
         }
 
         function cancelarRecuperacao() {
@@ -1724,7 +1862,6 @@
                 let pedidoNF = "";
                 let textoArquivo = "";
 
-                // 1. Extração de Dados via XML (Recomendado / Rápido e Seguro)
                 if (file.name.toLowerCase().endsWith('.xml')) {
                     const text = await file.text();
                     const parser = new DOMParser();
@@ -1739,7 +1876,6 @@
                     if (xPedNode) pedidoNF += xPedNode.textContent + " ";
                     if (infCplNode) pedidoNF += infCplNode.textContent + " ";
 
-                // 2. Extração de Dados via PDF (DANFE)
                 } else if (file.name.toLowerCase().endsWith('.pdf')) {
                     const arrayBuffer = await file.arrayBuffer();
                     const pdf = await pdfjsLib.getDocument(new Uint8Array(arrayBuffer)).promise;
@@ -1749,26 +1885,21 @@
                         textoArquivo += textContent.items.map(item => item.str).join(" ") + " ";
                     }
 
-                    // Regex para localizar o Nº da NF no DANFE
                     const matchNF = textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})\s+SÉRIE/i) || textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})/i);
                     if (matchNF) numeroNF = matchNF[1];
 
-                    // Regex para localizar o Pedido no DANFE
                     const matchPed = textoArquivo.match(/Pedidos?\s*N[º°:]?\s*(\d+)/i) || textoArquivo.match(/Ordem de Compra[^\d]*(\d+)/i) || textoArquivo.match(/PEDIDO[^\d]*(\d+)/i);
                     if (matchPed) pedidoNF = matchPed[1];
                     
-                    // Concatena todo o texto para a validação agressiva (fallback)
                     pedidoNF += " " + textoArquivo;
                 }
 
-                // Proteção 1: Garante que encontrou o número da Nota
                 if (!numeroNF) {
                      showToast(`Não foi possível localizar o número da NF no arquivo.`, 'error');
                      lbl.innerHTML = '<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation"></i> NF NÃO DETETADA</span>';
                      return;
                 }
 
-                // Proteção 2: Validação Cruzada do Pedido
                 const targetDigits = pedidoAlvoParaImprimir.replace(/\D/g, '');
                 let pedidoValidado = false;
 
@@ -1784,7 +1915,6 @@
                      return;
                 }
 
-                // Se passou em todas as seguranças, gera a etiqueta
                 fecharModalUploadNF();
                 showToast(`NF ${numeroNF} validada com sucesso! Gerando etiquetas...`, 'success');
                 gerarJanelaImpressao(cotaParaImprimir, pedidoAlvoParaImprimir, numeroNF);
@@ -1794,7 +1924,7 @@
                 showToast("Erro ao processar o arquivo da NF.", "error");
                 lbl.innerHTML = '<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation"></i> ARQUIVO CORROMPIDO OU INVÁLIDO</span>';
             } finally {
-                event.target.value = ''; // Limpa o input file
+                event.target.value = ''; 
             }
         }
 
@@ -1886,7 +2016,7 @@
                     .text-md { font-size: 14px; font-weight: bold; margin-top: 1.5mm; }
                     .text-sm { font-size: 12px; margin-top: 1mm; font-weight: bold; }
                     
-                    .text-nf { font-size: 64px; font-weight: 900; line-height: 1; letter-spacing: 2px; text-align: center; width: 100%; display: block; }
+                    .text-nf { font-size: 54px; font-weight: 900; line-height: 1; letter-spacing: 2px; text-align: center; width: 100%; display: block; white-space: nowrap; }
                     .text-transp { font-size: 36px; font-weight: 900; text-transform: uppercase; line-height: 1; margin: 0; text-align: center; width: 100%; display: block; }
                     
                     .footer { margin-top: auto; display: flex; justify-content: center; align-items: center; gap: 8mm; padding-top: 3mm; border-top: 3px solid #000; width: 100%; }
@@ -1918,7 +2048,7 @@
                     </div>
 
                     <div class="section" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                        <span class="text-nf">${numeroNF}</span>
+                        <span class="text-nf"><span style="font-size: 40px; margin-right: 5px;">NF:</span>${numeroNF}</span>
                     </div>
 
                     <div class="section no-border" style="padding: 4mm 0;">
