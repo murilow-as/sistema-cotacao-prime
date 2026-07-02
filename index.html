@@ -152,32 +152,7 @@
             </div>
             
             <button id="btnSalvarSenha" onclick="salvarNovaSenha()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center">
-                <i class="fa-solid fa-check mr-2"></i> GUARDAR SENHA
-            </button>
-        </div>
-    </div>
-
-    <!-- TELA DE CADASTRO DE E-MAILS (ATUALIZAÇÃO DE SEGURANÇA) -->
-    <div id="telaCadastroEmails" class="fixed inset-0 z-[112] bg-gray-900/95 hidden items-center justify-center backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
-            <div class="bg-blue-100 text-blue-600 p-3 rounded-full mb-4">
-                <i class="fa-solid fa-envelope-circle-check text-2xl"></i>
-            </div>
-            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2 text-center">Atualização de Segurança</h2>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mb-6 text-center">Cadastre os seus e-mails para recuperação de senha. É obrigatório ter pelo menos o e-mail principal.</p>
-            
-            <div class="w-full mb-3">
-                <label class="text-[10px] font-bold text-gray-500 uppercase">E-mail Principal (Obrigatório)</label>
-                <input type="email" id="emailPrincipalCad" class="input-field w-full px-4 py-2 text-center text-sm font-bold" placeholder="exemplo@email.com">
-            </div>
-            <div class="w-full mb-6">
-                <label class="text-[10px] font-bold text-gray-500 uppercase">E-mail Alternativo (Opcional)</label>
-                <input type="email" id="emailReservaCad" class="input-field w-full px-4 py-2 text-center text-sm font-bold" placeholder="reserva@email.com">
-                <p id="msgErroEmails" class="text-red-500 dark:text-red-400 text-xs font-bold mt-2 hidden text-center"><i class="fa-solid fa-triangle-exclamation"></i> Preencha um e-mail principal válido!</p>
-            </div>
-            
-            <button id="btnSalvarEmails" onclick="salvarEmailsCadastro()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center">
-                <i class="fa-solid fa-floppy-disk mr-2"></i> SALVAR E ENTRAR
+                <i class="fa-solid fa-check mr-2"></i> GUARDAR E ENTRAR
             </button>
         </div>
     </div>
@@ -190,7 +165,7 @@
             </div>
             <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Recuperar Senha</h2>
             
-            <!-- PASSO 1: CONFIRMAR E-MAIL -->
+            <!-- PASSO 1: CONFIRMAR E-MAIL (AGORA SEGURO) -->
             <div id="passo1Recuperacao" class="w-full flex flex-col items-center">
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 text-center font-medium">Selecione o e-mail cadastrado para o qual deseja receber o código de segurança.</p>
                 <div class="w-full mb-6">
@@ -257,6 +232,9 @@
             </button>
             <button onclick="abrirHistorico()" class="bg-gray-800 hover:bg-gray-900 dark:bg-gray-600 dark:hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0">
                 <i class="fa-solid fa-cloud mr-2"></i> Histórico na Nuvem
+            </button>
+            <button onclick="abrirFerramentas()" class="bg-purple-100 hover:bg-purple-200 dark:bg-purple-900 dark:hover:bg-purple-800 text-purple-700 dark:text-purple-300 px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0">
+                <i class="fa-solid fa-print mr-2"></i> Ferramentas
             </button>
             <button onclick="sairSistema()" class="bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 text-red-600 dark:text-red-300 px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Sair do Sistema">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -469,6 +447,29 @@
         </div>
     </div>
 
+    <!-- MODAL DE FERRAMENTAS / IMPRESSÃO AVULSA -->
+    <div id="modalFerramentas" class="modal fixed inset-0 z-[80] items-center justify-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
+            <div class="bg-purple-100 text-purple-600 p-3 rounded-full mb-4">
+                <i class="fa-solid fa-print text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2 text-center">Impressão Avulsa</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Selecione o modelo para imprimir diretamente na Elgin L42 Pro.</p>
+            
+            <button onclick="imprimirEtiquetaAvulsa('fragil')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center mb-3">
+                <i class="fa-solid fa-wine-glass-empty mr-2"></i> ETIQUETA "FRÁGIL"
+            </button>
+
+            <button onclick="imprimirEtiquetaAvulsa('agradecimento')" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center mb-6">
+                <i class="fa-solid fa-handshake mr-2"></i> ETIQUETA "AGRADECIMENTO"
+            </button>
+            
+            <button onclick="fecharFerramentas()" class="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg transition duration-200">
+                Cancelar e Voltar
+            </button>
+        </div>
+    </div>
+
     <!-- MODAL CUSTOMIZADO (ALERT/CONFIRM) -->
     <div id="customDialog" class="modal fixed inset-0 z-[60] items-center justify-center">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-11/12 max-w-sm p-6 transform transition-all border border-gray-200 dark:border-gray-700">
@@ -515,7 +516,7 @@
         }
 
         // ===================================================================
-        // USUÁRIOS, LOGIN E RECUPERAÇÃO NA NUVEM (ATUALIZADO PARA SEGURANÇA)
+        // USUÁRIOS E LOGIN
         // ===================================================================
         const SENHA_PADRAO = "prime2026";
         const USUARIOS_INICIAIS = {
@@ -535,23 +536,25 @@
                     let atualizou = false;
                     if(!dbUsers["admin"]) { dbUsers["admin"] = USUARIOS_INICIAIS["admin"]; atualizou = true; }
                     
-                    // RESET DE SEGURANÇA: Limpar e-mails antigos gravados na nuvem (mantendo histórico seguro)
-                    for (let u in dbUsers) {
-                        if (dbUsers[u].resetEmailsFeito !== true) {
-                            dbUsers[u].emailPrincipal = "";
-                            dbUsers[u].emailReserva = "";
-                            dbUsers[u].resetEmailsFeito = true;
-                            atualizou = true;
-                        }
+                    // Rotina de Limpeza Forçada
+                    if (dbUsers["MuriloAguiar"] && dbUsers["MuriloAguiar"].emailPrincipal && dbUsers["MuriloAguiar"].emailPrincipal.includes("@")) {
+                        dbUsers["MuriloAguiar"].emailPrincipal = "";
+                        dbUsers["MuriloAguiar"].emailReserva = "";
+                        atualizou = true;
+                    }
+                    if (dbUsers["MarcosFernandes"] && dbUsers["MarcosFernandes"].emailPrincipal && dbUsers["MarcosFernandes"].emailPrincipal.includes("@")) {
+                        dbUsers["MarcosFernandes"].emailPrincipal = "";
+                        dbUsers["MarcosFernandes"].emailReserva = "";
+                        atualizou = true;
+                    }
+                    if (dbUsers["admin"] && dbUsers["admin"].emailPrincipal && dbUsers["admin"].emailPrincipal.includes("@")) {
+                        dbUsers["admin"].emailPrincipal = "";
+                        dbUsers["admin"].emailReserva = "";
+                        atualizou = true;
                     }
 
                     for (let u in USUARIOS_INICIAIS) {
                         if (dbUsers[u]) {
-                            // Migrar legado de segurança
-                            if (dbUsers[u].email) {
-                                delete dbUsers[u].email;
-                                atualizou = true;
-                            }
                             if (dbUsers[u].emailPrincipal === undefined) {
                                 dbUsers[u].emailPrincipal = "";
                                 atualizou = true;
@@ -629,7 +632,6 @@
                     
                     document.getElementById('telaLogin').style.display = 'flex';
                     document.getElementById('telaTrocaSenha').style.display = 'none';
-                    document.getElementById('telaCadastroEmails').style.display = 'none';
                     document.getElementById('senhaLogin').value = '';
                     document.getElementById('nomeUsuarioLogado').classList.add('hidden');
                     document.getElementById('avisoAdmin').classList.add('hidden');
@@ -642,7 +644,6 @@
             if (logado === 'true' && usuarioAtual) {
                 document.getElementById('telaLogin').style.display = 'none';
                 document.getElementById('telaTrocaSenha').style.display = 'none';
-                document.getElementById('telaCadastroEmails').style.display = 'none';
                 document.getElementById('senhaLogin').value = '';
                 
                 const badge = document.getElementById('nomeUsuarioLogado');
@@ -659,7 +660,6 @@
             } else {
                 document.getElementById('telaLogin').style.display = 'flex';
                 document.getElementById('telaTrocaSenha').style.display = 'none';
-                document.getElementById('telaCadastroEmails').style.display = 'none';
                 document.getElementById('senhaLogin').value = '';
                 document.getElementById('senhaLogin').focus();
                 document.getElementById('nomeUsuarioLogado').classList.add('hidden');
@@ -684,15 +684,10 @@
                     document.getElementById('msgErroLogin').classList.add('hidden');
                     perfilSelecionado = user;
                     
-                    // LÓGICA DE INTERCEPTAÇÃO E SEGURANÇA
                     if (dadosUsuario.primeiroAcesso) {
                         document.getElementById('telaLogin').style.display = 'none';
                         document.getElementById('telaTrocaSenha').style.display = 'flex';
                         document.getElementById('novaSenha').focus();
-                    } else if (!dadosUsuario.emailPrincipal || dadosUsuario.emailPrincipal.trim() === "") {
-                        document.getElementById('telaLogin').style.display = 'none';
-                        document.getElementById('telaCadastroEmails').style.display = 'flex';
-                        document.getElementById('emailPrincipalCad').focus();
                     } else {
                         efetuarLogin(user);
                     }
@@ -730,52 +725,10 @@
                 document.getElementById('novaSenha').value = '';
                 document.getElementById('confirmaSenha').value = '';
                 
-                document.getElementById('telaTrocaSenha').style.display = 'none';
-                
-                // Após salvar senha, verifica se precisa cadastrar os e-mails
-                let snap = await database.ref('usuarios/' + perfilSelecionado).once('value');
-                let dadosUsuario = snap.val();
-                
-                if (!dadosUsuario.emailPrincipal || dadosUsuario.emailPrincipal.trim() === "") {
-                    document.getElementById('telaCadastroEmails').style.display = 'flex';
-                    document.getElementById('emailPrincipalCad').focus();
-                } else {
-                    efetuarLogin(perfilSelecionado);
-                    showDialog('Senha cadastrada com sucesso na Nuvem! Bem-vindo(a).', 'alert');
-                }
+                efetuarLogin(perfilSelecionado);
+                showDialog('Senha cadastrada com sucesso!', 'alert');
             } catch (err) {
                 showToast("Erro ao salvar a senha.", "error");
-            } finally {
-                btn.innerHTML = btnOriginal;
-                btn.disabled = false;
-            }
-        }
-
-        async function salvarEmailsCadastro() {
-            const principal = document.getElementById('emailPrincipalCad').value.trim();
-            const reserva = document.getElementById('emailReservaCad').value.trim();
-            
-            if (principal === '' || !principal.includes('@')) {
-                document.getElementById('msgErroEmails').classList.remove('hidden');
-                return;
-            }
-
-            const btn = document.getElementById('btnSalvarEmails');
-            const btnOriginal = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...';
-            btn.disabled = true;
-
-            try {
-                await database.ref('usuarios/' + perfilSelecionado + '/emailPrincipal').set(principal);
-                await database.ref('usuarios/' + perfilSelecionado + '/emailReserva').set(reserva);
-
-                document.getElementById('msgErroEmails').classList.add('hidden');
-                document.getElementById('telaCadastroEmails').style.display = 'none';
-                
-                efetuarLogin(perfilSelecionado);
-                showDialog('E-mails de segurança cadastrados com sucesso!', 'alert');
-            } catch (err) {
-                showToast("Erro ao salvar os e-mails.", "error");
             } finally {
                 btn.innerHTML = btnOriginal;
                 btn.disabled = false;
@@ -863,7 +816,7 @@
                         temEmail = true;
                     }
                     if (dadosUsuario.emailReserva && dadosUsuario.emailReserva.includes('@')) {
-                        select.innerHTML += `<option value="${dadosUsuario.emailReserva}">${mascararEmail(dadosUsuario.emailReserva)} (Alternativo)</option>`;
+                        select.innerHTML += `<option value="${dadosUsuario.emailReserva}">${mascararEmail(dadosUsuario.emailReserva)} (Reserva)</option>`;
                         temEmail = true;
                     }
                 }
@@ -1979,50 +1932,122 @@
             <head>
                 <meta charset="UTF-8">
                 <title>Imprimir Etiquetas - NF ${numeroNF}</title>
+                <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
                 <style>
                     @media print {
-                        @page { size: 101.7mm 150mm; margin: 0; }
+                        @page { size: 100mm 150mm; margin: 0; }
                         body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                     }
                     body { 
                         font-family: 'Arial', sans-serif; 
                         margin: 0; 
-                        padding: 0; 
+                        padding: 2mm; 
                         background: #fff; 
                         color: #000; 
-                        text-align: center; /* FORÇA TUDO AO CENTRO */
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
                     }
                     .label { 
-                        width: 101.7mm; 
-                        height: 145mm; 
-                        padding: 5mm; 
+                        width: 96mm; 
+                        height: 146mm; 
                         box-sizing: border-box; 
                         page-break-after: always; 
                         display: flex; 
                         flex-direction: column; 
+                        border: 2px solid #000;
                         overflow: hidden;
-                        text-align: center; /* REFORÇO NO LABEL */
                     }
                     .label:last-child { page-break-after: auto; }
                     
-                    .header { border-bottom: 2px solid #000; padding-bottom: 3mm; margin-bottom: 3mm; }
-                    .header h1 { font-size: 20px; margin: 0; text-transform: uppercase; font-weight: 900; }
+                    .top-section {
+                        display: flex;
+                        height: 48mm;
+                        border-bottom: 2px solid #000;
+                        box-sizing: border-box;
+                    }
+                    .top-left {
+                        flex: 1;
+                        border-right: 2px solid #000;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        padding: 1mm;
+                    }
+                    .top-right {
+                        flex: 1;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        padding: 1mm;
+                    }
                     
-                    .section { margin-bottom: 3mm; border-bottom: 2px solid #000; padding-bottom: 3mm; width: 100%; }
-                    .section.no-border { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-                    .section-title { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 1mm; color: #000; }
+                    .prime-text {
+                        font-family: 'Orbitron', sans-serif;
+                        font-weight: 900;
+                        font-size: 22px;
+                        line-height: 1;
+                        text-transform: uppercase;
+                    }
                     
-                    .text-dest { font-size: 18px; font-weight: 900; line-height: 1.1; word-break: break-word; text-transform: uppercase; }
-                    .text-md { font-size: 14px; font-weight: bold; margin-top: 1.5mm; }
-                    .text-sm { font-size: 12px; margin-top: 1mm; font-weight: bold; }
+                    .qr-text {
+                        font-size: 11px;
+                        font-weight: bold;
+                        text-align: center;
+                        margin-top: 1.5mm;
+                        line-height: 1.1;
+                    }
                     
-                    .text-nf { font-size: 54px; font-weight: 900; line-height: 1; letter-spacing: 2px; text-align: center; width: 100%; display: block; white-space: nowrap; }
-                    .text-transp { font-size: 36px; font-weight: 900; text-transform: uppercase; line-height: 1; margin: 0; text-align: center; width: 100%; display: block; }
+                    .black-bar {
+                        background: #000;
+                        color: #fff;
+                        font-size: 24px;
+                        font-weight: 900;
+                        font-style: italic;
+                        text-align: center;
+                        text-transform: uppercase;
+                        padding: 2mm 0;
+                    }
                     
-                    .footer { margin-top: auto; display: flex; justify-content: center; align-items: center; gap: 8mm; padding-top: 3mm; border-top: 3px solid #000; width: 100%; }
-                    .qr-code { width: 32mm; height: 32mm; }
-                    .vol-info { text-align: center; }
-                    .vol-info h3 { font-size: 48px; margin: 0; font-weight: 900; letter-spacing: -2px; }
+                    .white-area-nf {
+                        font-size: 95px;
+                        font-weight: 900;
+                        text-align: center;
+                        padding: 4mm 0;
+                        line-height: 1;
+                        letter-spacing: -2px;
+                        border-bottom: 2px solid #000;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                    }
+
+                    .white-area-vol {
+                        font-size: 55px;
+                        font-weight: 900;
+                        text-align: center;
+                        padding: 2mm 0;
+                        line-height: 1;
+                        letter-spacing: -1px;
+                        border-bottom: 2px solid #000;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                    }
+                    
+                    .envio-section {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        padding: 0 4mm;
+                        font-size: 32px;
+                        font-weight: 900;
+                        text-transform: uppercase;
+                        flex-grow: 1;
+                        text-align: center;
+                    }
                 </style>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
             </head>
@@ -2030,38 +2055,29 @@
             `;
             
             volumesTotais.forEach((vol, idx) => {
+                let volStr = `${String(idx + 1).padStart(2, '0')} / ${String(volumesTotais.length).padStart(2, '0')}`;
+                
                 html += `
                 <div class="label">
-                    <div class="header">
-                        <h1>GRUPO PRIME B2B</h1>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-title">Remetente</div>
-                        <div class="text-sm">${remetNome}</div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-title">Destinatário</div>
-                        <div class="text-dest">${destNome}</div>
-                        <div class="text-sm" style="font-weight: normal; margin-top: 2mm;">CNPJ: ${destCnpj} &nbsp;|&nbsp; CEP: ${destCep}</div>
-                    </div>
-
-                    <div class="section" style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                        <span class="text-nf"><span style="font-size: 40px; margin-right: 5px;">NF:</span>${numeroNF}</span>
-                    </div>
-
-                    <div class="section no-border" style="padding: 4mm 0;">
-                        <span class="text-transp">${vencedor}</span>
-                    </div>
-
-                    <div class="footer">
-                        <div id="qrcode-${idx}" class="qr-code"></div>
-                        <div class="vol-info">
-                            <div class="text-sm" style="font-size: 14px;">VOLUME</div>
-                            <h3>${idx + 1} / ${volumesTotais.length}</h3>
+                    <div class="top-section">
+                        <div class="top-left">
+                            <div class="prime-text">GRUPO</div>
+                            <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" style="width: 28mm; height: 28mm; margin: 1mm 0; object-fit: contain; filter: grayscale(100%) contrast(1.5);">
+                            <div class="prime-text">PRIME</div>
+                        </div>
+                        <div class="top-right">
+                            <div id="qrcode-${idx}" style="width: 24mm; height: 24mm;"></div>
+                            <div class="qr-text">Leia o QR-CODE<br>para conhecer<br>nosso site e<br>aproveite as<br>promoções!</div>
                         </div>
                     </div>
+                    
+                    <div class="black-bar">NOTA FISCAL</div>
+                    <div class="white-area-nf">${numeroNF}</div>
+                    
+                    <div class="black-bar">VOLUMES:</div>
+                    <div class="white-area-vol">${volStr}</div>
+                    
+                    <div class="envio-section">${vencedor}</div>
                 </div>
                 `;
             });
@@ -2073,8 +2089,8 @@
                         ${volumesTotais.map((_, idx) => `
                             new QRCode(document.getElementById("qrcode-${idx}"), {
                                 text: url,
-                                width: 110,
-                                height: 110,
+                                width: 80,
+                                height: 80,
                                 colorDark : "#000000",
                                 colorLight : "#ffffff",
                                 correctLevel : QRCode.CorrectLevel.L
@@ -2093,6 +2109,136 @@
             printWindow.document.close();
             
             showToast('Preparando tela de impressão...', 'info');
+        }
+
+        function abrirFerramentas() {
+            document.getElementById('modalFerramentas').classList.add('active');
+        }
+
+        function fecharFerramentas() {
+            document.getElementById('modalFerramentas').classList.remove('active');
+        }
+
+        function imprimirEtiquetaAvulsa(tipo) {
+            fecharFerramentas();
+            showToast('Preparando impressão na Elgin...', 'info');
+            
+            const printWindow = window.open('', '_blank');
+            let conteudoHTML = '';
+
+            if (tipo === 'agradecimento') {
+                conteudoHTML = `
+                    <div class="label" style="width: 145mm; height: 95mm; padding: 4mm; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; margin: 0 auto; background: #fff;">
+                        
+                        <!-- Top Black Box -->
+                        <div style="background: #000; color: #fff; width: 100%; height: 35mm; display: flex; align-items: center; justify-content: center; text-align: center; margin-bottom: 2mm;">
+                            <h1 style="font-family: 'Arial Black', Impact, sans-serif; font-style: italic; font-size: 42px; margin: 0; letter-spacing: -1px; line-height: 1.1; transform: scaleX(1.3);">AGRADECEMOS O<br>SEU PEDIDO!</h1>
+                        </div>
+                        
+                        <!-- Bottom Section (Space Between) -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-grow: 1; padding: 0 4mm; width: 100%; box-sizing: border-box;">
+                            
+                            <!-- Left Group (Logo + Text) -->
+                            <div style="display: flex; align-items: center; gap: 6mm;">
+                                <div style="width: 32mm; height: 32mm; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                                    <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" style="width: 100%; height: 100%; object-fit: contain; filter: grayscale(100%) contrast(1.5) brightness(0.9);" alt="Logo">
+                                </div>
+                                
+                                <div style="font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900; line-height: 1; text-align: left; color: #000; flex-shrink: 0; margin-top: 1mm;">
+                                    GRUPO<br>PRIME<br>B2B
+                                </div>
+                            </div>
+                            
+                            <!-- Right Group (QR Code Fixed Box) -->
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; height: 100%;">
+                                <div style="width: 110px; height: 110px; margin-bottom: 3mm;">
+                                    <div id="qrcode-agradecimento" style="width: 100%; height: 100%;"></div>
+                                </div>
+                                <div style="font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; text-align: center; line-height: 1.1; color: #000;">
+                                    Visite nosso portal de<br>compras B2B
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                `;
+            } else if (tipo === 'fragil') {
+                conteudoHTML = `
+                    <div class="label" style="width: 145mm; height: 95mm; padding: 4mm; display: flex; align-items: center; justify-content: center; box-sizing: border-box; margin: 0 auto; background: #fff;">
+                        <!-- Border Box -->
+                        <div style="border: 4px solid #000; border-radius: 12px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 5mm; box-sizing: border-box;">
+                            <!-- Left: Glass Icon -->
+                            <div style="width: 35%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                <svg viewBox="0 0 100 150" style="height: 100%; max-height: 75mm;" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M 15,20 L 15,70 C 15,95 40,100 45,100 L 45,130 L 20,145 L 80,145 L 55,130 L 55,100 C 60,100 85,95 85,70 L 85,20 Z" fill="#000"/>
+                                    <polygon points="40,20 55,50 45,60 50,85 35,85 45,60 35,40" fill="#fff"/>
+                                </svg>
+                            </div>
+                            <!-- Right: Text -->
+                            <div style="width: 65%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <div style="font-family: 'Arial Rounded MT Bold', 'VAG Rounded', Arial, sans-serif; font-size: 58px; font-weight: bold; line-height: 1.1; text-align: center; color: #000; letter-spacing: 1px;">
+                                    CUIDADO<br>FRÁGIL
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Impressão - ${tipo}</title>
+                <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
+                <style>
+                    @media print {
+                        @page { size: 150mm 100mm; margin: 0; }
+                        body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    }
+                    body { 
+                        font-family: 'Arial', sans-serif; 
+                        margin: 0; 
+                        padding: 0; 
+                        background: #fff; 
+                        color: #000; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        width: 100vw; 
+                        height: 100vh; 
+                    }
+                </style>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+            </head>
+            <body>
+                ${conteudoHTML}
+                
+                <script>
+                    window.onload = function() {
+                        if (document.getElementById('qrcode-agradecimento')) {
+                            new QRCode(document.getElementById("qrcode-agradecimento"), {
+                                text: "https://grupoprimeb2b.com.br",
+                                width: 110,
+                                height: 110,
+                                colorDark : "#000000",
+                                colorLight : "#ffffff",
+                                correctLevel : QRCode.CorrectLevel.M
+                            });
+                        }
+                        
+                        setTimeout(() => {
+                            window.print();
+                        }, 800);
+                    };
+                <\/script>
+            </body>
+            </html>
+            `;
+
+            printWindow.document.write(html);
+            printWindow.document.close();
         }
 
         function togglePrevia(id) {
