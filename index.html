@@ -6,14 +6,12 @@
     <meta name="theme-color" content="#3b82f6">
     <title>Gerador de Cotação de Frete</title>
 
-    <!-- OTIMIZAÇÕES GERAIS: Pré-conexão com servidores externos para carregamento mais rápido -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://www.gstatic.com">
 
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- ATIVAÇÃO DO MODO ESCURO MANUAL NO TAILWIND -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -36,7 +34,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        /* Transições suaves para o Dark Mode */
         body, div, input, textarea, select { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
         
         body { background-color: #f3f4f6; }
@@ -55,7 +52,6 @@
         .modal { display: none; background-color: rgba(0,0,0,0.5); }
         .modal.active { display: flex; }
 
-        /* Estilos do Dark Mode (Cinza) */
         body.dark { background-color: #111827; color: #f9fafb; }
         body.dark .bg-white { background-color: #1f2937; }
         body.dark .bg-gray-50 { background-color: #111827; }
@@ -74,7 +70,6 @@
         body.dark .bg-red-50 { background-color: #7f1d1d; }
         body.dark .text-red-500 { color: #fca5a5; }
 
-        /* Estilos do Tema AMOLED (Preto Absoluto) */
         body.dark.amoled { background-color: #000000; }
         body.dark.amoled .bg-white, body.dark.amoled .bg-gray-50, body.dark.amoled .bg-gray-100 { background-color: #000000; border-color: #1a1a1a; }
         body.dark.amoled .bg-gray-800, body.dark.amoled .bg-gray-900 { background-color: #050505; border-color: #222; }
@@ -95,7 +90,7 @@
 
 <body class="p-4 md:p-8 font-sans text-gray-800 relative transition-colors duration-300">
 
-    <!-- TELA DE CARREGAMENTO DO SERVIDOR (FIREBASE) -->
+    <!-- TELA DE CARREGAMENTO -->
     <div id="telaCarregamento" class="fixed inset-0 z-[500] bg-gray-900 flex flex-col items-center justify-center transition-opacity duration-300">
         <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" class="h-20 w-20 mb-6 object-contain rounded-full shadow-lg animate-pulse">
         <h2 class="text-white text-sm font-bold tracking-widest uppercase mb-4"><i class="fa-solid fa-cloud-arrow-down mr-2"></i> Conectando à Nuvem</h2>
@@ -104,7 +99,7 @@
         </div>
     </div>
 
-    <!-- TELA DE LOGIN DE ACESSO -->
+    <!-- TELA DE LOGIN -->
     <div id="telaLogin" class="fixed inset-0 z-[100] bg-gray-900/95 hidden items-center justify-center backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
             <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" ondblclick="habilitarAdmin()" class="h-16 w-16 mb-4 object-contain rounded-full shadow-sm cursor-default" title="Acesso Restrito">
@@ -134,7 +129,7 @@
         </div>
     </div>
 
-    <!-- TELA DE TROCA DE SENHA (PRIMEIRO ACESSO) -->
+    <!-- TELA DE TROCA DE SENHA -->
     <div id="telaTrocaSenha" class="fixed inset-0 z-[110] bg-gray-900/95 hidden items-center justify-center backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
             <div class="bg-yellow-100 text-yellow-600 p-3 rounded-full mb-4">
@@ -157,7 +152,7 @@
         </div>
     </div>
 
-    <!-- TELA DE RECUPERAÇÃO DE SENHA -->
+    <!-- TELA DE RECUPERAÇÃO -->
     <div id="telaRecuperacao" class="fixed inset-0 z-[115] bg-gray-900/95 hidden items-center justify-center backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
             <div class="bg-blue-100 text-blue-600 p-3 rounded-full mb-4">
@@ -165,14 +160,11 @@
             </div>
             <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Recuperar Senha</h2>
             
-            <!-- PASSO 1: CONFIRMAR E-MAIL (AGORA SEGURO) -->
             <div id="passo1Recuperacao" class="w-full flex flex-col items-center">
                 <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 text-center font-medium">Selecione o e-mail cadastrado para o qual deseja receber o código de segurança.</p>
                 <div class="w-full mb-6">
                     <label class="text-[10px] font-bold text-gray-500 uppercase">E-mail de Destino</label>
-                    <select id="selectEmailRecuperacao" class="input-field w-full px-4 py-2 text-center text-sm font-bold text-gray-700 dark:text-gray-200">
-                        <!-- Será preenchido via JS do Firebase -->
-                    </select>
+                    <select id="selectEmailRecuperacao" class="input-field w-full px-4 py-2 text-center text-sm font-bold text-gray-700 dark:text-gray-200"></select>
                 </div>
                 <button onclick="enviarCodigoRecuperacao()" id="btnReceberCodigo" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center mb-3">
                     <i class="fa-solid fa-paper-plane mr-2"></i> RECEBER CÓDIGO
@@ -182,7 +174,6 @@
                 </button>
             </div>
 
-            <!-- PASSO 2: DIGITAR CÓDIGO E NOVA SENHA -->
             <div id="passo2Recuperacao" class="w-full flex flex-col items-center hidden">
                 <p id="textoEmailRecuperacao" class="text-xs text-gray-500 dark:text-gray-400 mb-6 text-center font-medium"></p>
                 
@@ -210,7 +201,7 @@
         </div>
     </div>
 
-    <!-- TOAST NOTIFICATION (AVISO FLUTUANTE) -->
+    <!-- TOAST NOTIFICATION -->
     <div id="toastNotification" class="fixed top-5 right-5 z-[200] transform translate-x-full opacity-0 transition-all duration-300 flex items-center px-4 py-3 rounded-lg shadow-xl text-white font-bold text-sm pointer-events-none">
         <i id="toastIcon" class="mr-2"></i>
         <span id="toastMessage"></span>
@@ -242,7 +233,7 @@
         </div>
     </div>
 
-    <!-- AVISO ADMIN - VISÍVEL APENAS PARA O ADMINISTRADOR -->
+    <!-- AVISO ADMIN -->
     <div id="avisoAdmin" class="max-w-7xl mx-auto mb-4 bg-red-100 dark:bg-red-900/40 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative hidden shadow-sm flex items-center justify-center">
         <strong class="font-bold uppercase tracking-wide text-sm"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Perfil Admin: </strong>
         <span class="block sm:inline ml-2 text-sm font-medium">Necessário efetuar login com perfil de utilizador para gerar cotações.</span>
@@ -252,7 +243,6 @@
         
         <div class="w-full md:w-3/5 lg:w-2/3 p-6 overflow-y-auto" style="max-height: 85vh;">
             
-            <!-- ÁREA DE IMPORTAÇÃO DE PDF -->
             <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
                     <h3 class="text-sm font-bold text-blue-800 dark:text-blue-300"><i class="fa-solid fa-file-pdf mr-2 text-red-500"></i>Leitor de Pedidos (PDF)</h3>
@@ -344,7 +334,6 @@
                     <input type="text" id="destCidade" class="input-field input-disabled" readonly placeholder="Busca automática via CEP" oninput="dadosAlterados()">
                 </div>
 
-                <!-- CAIXA DE INTELIGÊNCIA - TRANSPORTADORAS RECOMENDADAS -->
                 <div id="boxRecomendacao" class="col-span-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 p-4 rounded-lg shadow-inner hidden mt-2 transition-all duration-300">
                     <div class="flex items-start">
                         <div class="text-indigo-500 dark:text-indigo-400 mt-0.5 mr-3">
@@ -366,7 +355,6 @@
                 <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1"><i class="fa-solid fa-circle-info"></i> Preencha as medidas e clique no botão <strong class="text-purple-600 dark:text-purple-400">+</strong> ao final da linha para adicionar outro item.</p>
             </div>
             
-            <!-- CABEÇALHO DA TABELA -->
             <div class="w-full overflow-x-auto pb-2">
                 <div class="min-w-[650px]">
                     <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 mb-2 px-2 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase items-center">
@@ -425,14 +413,14 @@
         </div>
     </div>
 
-    <!-- MODAL DE UPLOAD DE NOTA FISCAL (NF-e) PARA IMPRESSÃO -->
+    <!-- MODAL DE UPLOAD DE NOTA FISCAL (NF-e) -->
     <div id="modalUploadNF" class="modal fixed inset-0 z-[70] items-center justify-center">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-md flex flex-col items-center border border-gray-200 dark:border-gray-700">
             <div class="bg-blue-100 text-blue-600 p-3 rounded-full mb-4">
                 <i class="fa-solid fa-file-invoice text-2xl"></i>
             </div>
             <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2 text-center">Validação de Nota Fiscal</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Para gerar as etiquetas do <strong class="text-blue-600 dark:text-blue-400">Pedido <span id="lblPedidoAlvo"></span></strong>, envie o arquivo <b>XML</b> ou <b>PDF</b> (DANFE) correspondente.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Para gerar as etiquetas do <strong class="text-blue-600 dark:text-blue-400">Pedido <span id="lblPedidoAlvo"></span></strong>, envie o arquivo <b>XML</b> ou <b>PDF</b> (DANFE).</p>
             
             <div class="w-full mb-4 bg-gray-50 dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center relative hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                 <input type="file" id="nfUploadInput" accept=".xml, .pdf" onchange="processarUploadNF(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
@@ -447,7 +435,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE FERRAMENTAS / IMPRESSÃO AVULSA -->
+    <!-- MODAL DE FERRAMENTAS -->
     <div id="modalFerramentas" class="modal fixed inset-0 z-[80] items-center justify-center backdrop-blur-sm transition-opacity duration-300">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
             <div class="bg-purple-100 text-purple-600 p-3 rounded-full mb-4">
@@ -505,9 +493,6 @@
         let historicoNuvem = []; 
         let catalogoProdutos = {}; 
 
-        // ===================================================================
-        // EMAILJS CONFIG
-        // ===================================================================
         const EMAILJS_PUBLIC_KEY = "CTg8A_GwwkKvSsNfg"; 
         const EMAILJS_SERVICE_ID = "service_cup0dnn";
         const EMAILJS_TEMPLATE_ID = "template_qicj1j7";
@@ -515,9 +500,6 @@
             emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
         }
 
-        // ===================================================================
-        // USUÁRIOS E LOGIN
-        // ===================================================================
         const SENHA_PADRAO = "prime2026";
         const USUARIOS_INICIAIS = {
             "admin": { senha: SENHA_PADRAO, primeiroAcesso: false, emailPrincipal: "", emailReserva: "" },
@@ -536,33 +518,20 @@
                     let atualizou = false;
                     if(!dbUsers["admin"]) { dbUsers["admin"] = USUARIOS_INICIAIS["admin"]; atualizou = true; }
                     
-                    // Rotina de Limpeza Forçada
                     if (dbUsers["MuriloAguiar"] && dbUsers["MuriloAguiar"].emailPrincipal && dbUsers["MuriloAguiar"].emailPrincipal.includes("@")) {
-                        dbUsers["MuriloAguiar"].emailPrincipal = "";
-                        dbUsers["MuriloAguiar"].emailReserva = "";
-                        atualizou = true;
+                        dbUsers["MuriloAguiar"].emailPrincipal = ""; dbUsers["MuriloAguiar"].emailReserva = ""; atualizou = true;
                     }
                     if (dbUsers["MarcosFernandes"] && dbUsers["MarcosFernandes"].emailPrincipal && dbUsers["MarcosFernandes"].emailPrincipal.includes("@")) {
-                        dbUsers["MarcosFernandes"].emailPrincipal = "";
-                        dbUsers["MarcosFernandes"].emailReserva = "";
-                        atualizou = true;
+                        dbUsers["MarcosFernandes"].emailPrincipal = ""; dbUsers["MarcosFernandes"].emailReserva = ""; atualizou = true;
                     }
                     if (dbUsers["admin"] && dbUsers["admin"].emailPrincipal && dbUsers["admin"].emailPrincipal.includes("@")) {
-                        dbUsers["admin"].emailPrincipal = "";
-                        dbUsers["admin"].emailReserva = "";
-                        atualizou = true;
+                        dbUsers["admin"].emailPrincipal = ""; dbUsers["admin"].emailReserva = ""; atualizou = true;
                     }
 
                     for (let u in USUARIOS_INICIAIS) {
                         if (dbUsers[u]) {
-                            if (dbUsers[u].emailPrincipal === undefined) {
-                                dbUsers[u].emailPrincipal = "";
-                                atualizou = true;
-                            }
-                            if (dbUsers[u].emailReserva === undefined) {
-                                dbUsers[u].emailReserva = "";
-                                atualizou = true;
-                            }
+                            if (dbUsers[u].emailPrincipal === undefined) { dbUsers[u].emailPrincipal = ""; atualizou = true; }
+                            if (dbUsers[u].emailReserva === undefined) { dbUsers[u].emailReserva = ""; atualizou = true; }
                         }
                     }
                     if (atualizou) await database.ref('usuarios').set(dbUsers);
@@ -576,9 +545,7 @@
                 database.ref('historico').on('value', (snapshot) => {
                     const dados = snapshot.val();
                     let array = [];
-                    for(let key in dados) {
-                        array.push(dados[key]);
-                    }
+                    for(let key in dados) { array.push(dados[key]); }
                     array.sort((a,b) => b.timestamp - a.timestamp);
                     historicoNuvem = array;
                     
@@ -610,10 +577,8 @@
             const select = document.getElementById('usuarioLogin');
             if(!select.querySelector('option[value="admin"]')) {
                 const opt = document.createElement('option');
-                opt.value = 'admin';
-                opt.text = 'Administrador (Admin)';
-                select.appendChild(opt);
-                select.value = 'admin';
+                opt.value = 'admin'; opt.text = 'Administrador (Admin)';
+                select.appendChild(opt); select.value = 'admin';
                 showDialog('Modo de Administração liberado no seletor.', 'alert');
             }
         }
@@ -698,8 +663,7 @@
             } catch (err) {
                 showToast("Erro ao comunicar com o servidor.", "error");
             } finally {
-                btn.innerHTML = btnOriginal;
-                btn.disabled = false;
+                btn.innerHTML = btnOriginal; btn.disabled = false;
             }
         }
 
@@ -714,8 +678,7 @@
 
             const btn = document.getElementById('btnSalvarSenha');
             const btnOriginal = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...';
-            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...'; btn.disabled = true;
 
             try {
                 await database.ref('usuarios/' + perfilSelecionado + '/senha').set(nova);
@@ -730,8 +693,7 @@
             } catch (err) {
                 showToast("Erro ao salvar a senha.", "error");
             } finally {
-                btn.innerHTML = btnOriginal;
-                btn.disabled = false;
+                btn.innerHTML = btnOriginal; btn.disabled = false;
             }
         }
 
@@ -767,14 +729,11 @@
             toast.className = 'fixed top-5 right-5 z-[200] transform transition-all duration-300 flex items-center px-4 py-3 rounded-lg shadow-xl text-white font-bold text-sm pointer-events-none';
 
             if(tipo === 'success') {
-                toast.classList.add('bg-green-600');
-                icon.className = 'fa-solid fa-circle-check mr-2';
+                toast.classList.add('bg-green-600'); icon.className = 'fa-solid fa-circle-check mr-2';
             } else if(tipo === 'error') {
-                toast.classList.add('bg-red-600');
-                icon.className = 'fa-solid fa-triangle-exclamation mr-2';
+                toast.classList.add('bg-red-600'); icon.className = 'fa-solid fa-triangle-exclamation mr-2';
             } else {
-                toast.classList.add('bg-blue-600');
-                icon.className = 'fa-solid fa-circle-info mr-2';
+                toast.classList.add('bg-blue-600'); icon.className = 'fa-solid fa-circle-info mr-2';
             }
 
             setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
@@ -825,10 +784,8 @@
                     select.innerHTML = '<option value="">Sem e-mail cadastrado</option>';
                     select.disabled = true;
                 } else {
-                    select.disabled = false;
-                    document.getElementById('btnReceberCodigo').disabled = false;
+                    select.disabled = false; document.getElementById('btnReceberCodigo').disabled = false;
                 }
-
             } catch (err) {
                 select.innerHTML = '<option value="">Erro ao conectar</option>';
                 showToast("Erro ao buscar dados do utilizador na nuvem.", "error");
@@ -845,35 +802,26 @@
             const select = document.getElementById('selectEmailRecuperacao');
             const emailSelecionado = select.value;
 
-            if (!emailSelecionado || !emailSelecionado.includes('@')) {
-                showToast('Nenhum e-mail de destino válido selecionado.', 'error');
-                return;
-            }
+            if (!emailSelecionado || !emailSelecionado.includes('@')) { showToast('Nenhum e-mail válido selecionado.', 'error'); return; }
 
             const btnEnvia = document.getElementById('btnReceberCodigo');
             const textoOriginalBtn = btnEnvia.innerHTML;
-            btnEnvia.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> A ENVIAR...';
-            btnEnvia.disabled = true;
+            btnEnvia.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> A ENVIAR...'; btnEnvia.disabled = true;
 
             codigoRecuperacaoAtual = Math.floor(100000 + Math.random() * 900000).toString();
             
             try {
                 if (typeof emailjs === 'undefined') throw new Error("EmailJS bloqueado ou não carregado");
-
                 emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-                    to_email: emailSelecionado,
-                    to_name: user,
-                    codigo: codigoRecuperacaoAtual
+                    to_email: emailSelecionado, to_name: user, codigo: codigoRecuperacaoAtual
                 }).then(function(response) {
                     avancarParaPasso2(emailSelecionado);
                     showToast('E-mail enviado! Verifique a sua caixa de entrada e Spam.', 'success');
-                    btnEnvia.innerHTML = textoOriginalBtn;
-                    btnEnvia.disabled = false;
+                    btnEnvia.innerHTML = textoOriginalBtn; btnEnvia.disabled = false;
                 }).catch(function(error) {
                     let detalheErro = error.text || 'Verifique as chaves no código.';
                     showToast('Erro EmailJS: ' + detalheErro, 'error');
-                    btnEnvia.innerHTML = textoOriginalBtn;
-                    btnEnvia.disabled = false;
+                    btnEnvia.innerHTML = textoOriginalBtn; btnEnvia.disabled = false;
                 });
             } catch (err) {
                 if (err.message && err.message.includes("bloqueado")) {
@@ -881,8 +829,7 @@
                 } else {
                     showToast('Ocorreu um erro no sistema de envio.', 'error');
                 }
-                btnEnvia.innerHTML = textoOriginalBtn;
-                btnEnvia.disabled = false;
+                btnEnvia.innerHTML = textoOriginalBtn; btnEnvia.disabled = false;
             }
         }
 
@@ -905,21 +852,15 @@
             const msgErro = document.getElementById('msgErroRecuperacao');
             
             if(codigoDigitado !== codigoRecuperacaoAtual) {
-                msgErro.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Código inválido!';
-                msgErro.classList.remove('hidden');
-                return;
+                msgErro.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Código inválido!'; msgErro.classList.remove('hidden'); return;
             }
-            
             if(nova === '' || nova !== conf) {
-                msgErro.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> As senhas não coincidem ou estão vazias!';
-                msgErro.classList.remove('hidden');
-                return;
+                msgErro.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> As senhas não coincidem ou estão vazias!'; msgErro.classList.remove('hidden'); return;
             }
 
             const btn = document.getElementById('btnConfirmaRecup');
             const originalBtn = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...';
-            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> SALVANDO...'; btn.disabled = true;
             
             try {
                 const user = document.getElementById('usuarioLogin').value;
@@ -933,8 +874,7 @@
             } catch(e) {
                 showToast("Erro ao alterar senha na nuvem.", "error");
             } finally {
-                btn.innerHTML = originalBtn;
-                btn.disabled = false;
+                btn.innerHTML = originalBtn; btn.disabled = false;
             }
         }
 
@@ -957,7 +897,6 @@
                 document.getElementById('dialogTitle').innerHTML = titleIcon.outerHTML + " Aviso";
                 callbackConfirmDialog = null;
             }
-            
             dialog.classList.add('active');
         }
 
@@ -966,29 +905,13 @@
         }
 
         document.getElementById('dialogBtnConfirm').addEventListener('click', () => {
-            closeDialog();
-            if (callbackConfirmDialog) callbackConfirmDialog();
+            closeDialog(); if (callbackConfirmDialog) callbackConfirmDialog();
         });
 
         const dadosRemetentes = {
-            "P": {
-                nome: "PRIME2P SOLUCOES EM TI E REPRESENTACAO COMERCIAL LTDA",
-                cnpj: "11.259.196/0001-50", 
-                cep: "03511-050",
-                cidade: "São Paulo / SP"
-            },
-            "XD": {
-                nome: "PRIMEXD COMERCIO DE EQUIPAMENTOS E INFORMATICA LTDA",
-                cnpj: "43.391.624/0001-90", 
-                cep: "03511-050",
-                cidade: "São Paulo / SP"
-            },
-            "XC": {
-                nome: "PRIMEXCORP COMERCIO DE SUPRIMENTOS LTDA",
-                cnpj: "49.123.568/0001-99", 
-                cep: "03511-050",           
-                cidade: "SÃO PAULO / SP"    
-            }
+            "P": { nome: "PRIME2P SOLUCOES EM TI E REPRESENTACAO COMERCIAL LTDA", cnpj: "11.259.196/0001-50", cep: "03511-050", cidade: "São Paulo / SP" },
+            "XD": { nome: "PRIMEXD COMERCIO DE EQUIPAMENTOS E INFORMATICA LTDA", cnpj: "43.391.624/0001-90", cep: "03511-050", cidade: "São Paulo / SP" },
+            "XC": { nome: "PRIMEXCORP COMERCIO DE SUPRIMENTOS LTDA", cnpj: "49.123.568/0001-99", cep: "03511-050", cidade: "SÃO PAULO / SP" }
         };
 
         function dadosAlterados() {
@@ -1000,19 +923,14 @@
         }
 
         function calcularTotais() {
-            let totalVolumes = 0;
-            let totalPeso = 0;
-
+            let totalVolumes = 0; let totalPeso = 0;
             const rows = document.querySelectorAll('.item-row');
             rows.forEach(row => {
                 const inputs = row.querySelectorAll('input');
                 const vol = parseInt(inputs[0].value.trim(), 10) || 0;
                 const pesoUn = parseFloat(inputs[5].value.replace(',', '.').trim()) || 0;
-
-                totalVolumes += vol;
-                totalPeso += (vol * pesoUn); 
+                totalVolumes += vol; totalPeso += (vol * pesoUn); 
             });
-
             document.getElementById('qtdVolumes').value = totalVolumes > 0 ? totalVolumes : "";
             document.getElementById('pesoTotal').value = totalPeso > 0 ? totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 3}) : "";
         }
@@ -1024,8 +942,7 @@
             if (usuarioAtual === 'admin') {
                 btn.innerHTML = '<i class="fa-solid fa-ban mr-2"></i> MODO ADMIN - CÓPIA BLOQUEADA';
                 btn.className = "mt-4 w-full py-3 bg-red-600 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-60 cursor-not-allowed";
-                btn.disabled = true;
-                return false;
+                btn.disabled = true; return false;
             }
 
             const pedido = document.getElementById('pedido').value.trim();
@@ -1039,43 +956,31 @@
             if(!pedido || !valorNf) {
                 btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> PREENCHA O PEDIDO E VALOR DA NF';
                 btn.className = "mt-4 w-full py-3 bg-red-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-60 cursor-not-allowed";
-                btn.disabled = true;
-                return false;
+                btn.disabled = true; return false;
             }
-
             if(!remetente) {
                 btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> SELECIONE O CNPJ REMETENTE';
                 btn.className = "mt-4 w-full py-3 bg-red-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-60 cursor-not-allowed";
-                btn.disabled = true;
-                return false;
+                btn.disabled = true; return false;
             } 
-            
             if(!destCnpj || !destNome || !destCep || !destCidade) {
                 btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> PREENCHA O DESTINATÁRIO COMPLETO';
                 btn.className = "mt-4 w-full py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-90 cursor-not-allowed";
-                btn.disabled = true;
-                return false;
+                btn.disabled = true; return false;
             }
 
             let itensCompletos = true;
             const rows = document.querySelectorAll('.item-row');
-            
             if(rows.length === 0) itensCompletos = false;
-            
             rows.forEach(row => {
                 const inputs = row.querySelectorAll('input');
-                inputs.forEach(input => {
-                    if (input.value.trim() === '') {
-                        itensCompletos = false;
-                    }
-                });
+                inputs.forEach(input => { if (input.value.trim() === '') itensCompletos = false; });
             });
 
             if(!itensCompletos) {
                 btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> PREENCHA TODOS OS DADOS DOS ITENS';
                 btn.className = "mt-4 w-full py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-90 cursor-not-allowed";
-                btn.disabled = true;
-                return false;
+                btn.disabled = true; return false;
             } 
 
             btn.innerHTML = '<i class="fa-regular fa-copy mr-2"></i> GERAR CÓDIGO E COPIAR';
@@ -1105,16 +1010,13 @@
                 </div>
             `;
             document.getElementById('containerItens').appendChild(div);
-            
-            atualizarBotoesItens();
-            dadosAlterados();
+            atualizarBotoesItens(); dadosAlterados();
         }
 
         function abrirPesquisaWeb(btn) {
             const inputDesc = btn.previousElementSibling;
             const nomeProduto = inputDesc.value.trim();
             if(!nomeProduto) return;
-            
             const query = encodeURIComponent(nomeProduto);
             window.open(`https://www.google.com/search?q=${query}`, '_blank');
         }
@@ -1124,222 +1026,130 @@
             rows.forEach((row, index) => {
                 const btnContainer = row.querySelector('.btn-container');
                 const rowId = row.id;
-                
                 let botoesHTML = '';
 
                 if (rows.length > 1) {
-                    botoesHTML += `
-                        <button onclick="removerItem('${rowId}')" class="bg-red-100 hover:bg-red-200 text-red-600 rounded w-8 h-8 flex items-center justify-center font-bold shadow-sm transition border border-red-200 shrink-0" title="Remover Linha">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    `;
+                    botoesHTML += `<button onclick="removerItem('${rowId}')" class="bg-red-100 hover:bg-red-200 text-red-600 rounded w-8 h-8 flex items-center justify-center font-bold shadow-sm transition border border-red-200 shrink-0" title="Remover Linha"><i class="fa-solid fa-trash-can"></i></button>`;
                 }
-
                 if (index === rows.length - 1) {
-                    botoesHTML += `
-                        <button onclick="adicionarItem()" class="bg-purple-600 hover:bg-purple-700 text-white rounded w-8 h-8 flex items-center justify-center font-bold shadow transition shrink-0" title="Adicionar Nova Linha">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                    `;
+                    botoesHTML += `<button onclick="adicionarItem()" class="bg-purple-600 hover:bg-purple-700 text-white rounded w-8 h-8 flex items-center justify-center font-bold shadow transition shrink-0" title="Adicionar Nova Linha"><i class="fa-solid fa-plus"></i></button>`;
                 }
-                
                 btnContainer.innerHTML = botoesHTML;
             });
         }
 
         function removerItem(id) {
             const rows = document.querySelectorAll('.item-row');
-            if (rows.length > 1) {
-                document.getElementById(id).remove();
-                atualizarBotoesItens();
-                dadosAlterados();
-            }
+            if (rows.length > 1) { document.getElementById(id).remove(); atualizarBotoesItens(); dadosAlterados(); }
         }
 
         function gerarPreviaTexto(codigoFinal = null) {
-            const val = (id) => {
-                const el = document.getElementById(id);
-                return el ? el.value.trim() : "";
-            };
-            
+            const val = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
             let texto = "";
             if (codigoFinal) {
-                texto += `[ CÓDIGO DA COTAÇÃO: ${codigoFinal} ]\n`;
-                texto += `------------------------------------------\n\n`;
+                texto += `[ CÓDIGO DA COTAÇÃO: ${codigoFinal} ]\n`; texto += `------------------------------------------\n\n`;
             }
 
             texto += `PEDIDO ${val('pedido')}.\n\n`;
             texto += `COTAÇÃO DE FRETE - GRUPO PRIME B2B\n`;
             texto += `MODALIDADE DE FRETE: ${val('modalidade')}\n\n`;
-            
             texto += `INFORMAÇÕES DO REMETENTE:\n\n`;
             
             const remetenteKey = val('empresaRemetente');
             if(remetenteKey && dadosRemetentes[remetenteKey]) {
                 const rem = dadosRemetentes[remetenteKey];
-                texto += `NOME: ${rem.nome}.\n`;
-                texto += `CNPJ: ${rem.cnpj}.\n`;
-                texto += `CEP REMETENTE: ${rem.cep} - ${rem.cidade}\n`;
+                texto += `NOME: ${rem.nome}.\nCNPJ: ${rem.cnpj}.\nCEP REMETENTE: ${rem.cep} - ${rem.cidade}\n`;
             } else {
-                texto += `NOME: \n`;
-                texto += `CNPJ: \n`;
-                texto += `CEP REMETENTE: \n`;
+                texto += `NOME: \nCNPJ: \nCEP REMETENTE: \n`;
             }
-            texto += `\n`;
-            
-            texto += `INFORMAÇÕES DO DESTINATÁRIO:\n\n`;
-            texto += `NOME: ${val('destNome')}.\n`;
-            texto += `CNPJ: ${val('destCnpj')}.\n`;
+            texto += `\nINFORMAÇÕES DO DESTINATÁRIO:\n\n`;
+            texto += `NOME: ${val('destNome')}.\nCNPJ: ${val('destCnpj')}.\n`;
             let cidDest = val('destCidade') ? ` - ${val('destCidade')}` : "";
             texto += `CEP DESTINATÁRIO: ${val('destCep')}${cidDest}\n\n`;
-            
             texto += `VALOR DA NOTA FISCAL: R$ ${val('valorNf')}.\n`;
             texto += `QUANTIDADE DE VOLUME(S): ${val('qtdVolumes')}.\n`;
             texto += `PESO TOTAL: ${val('pesoTotal')} Kg.\n\n`;
-            
             texto += `VOLUME(S) E PESO(S) DO(S) ITEM(NS):\n\n`;
 
             const rows = document.querySelectorAll('.item-row');
             rows.forEach(row => {
                 const inputs = row.querySelectorAll('input');
-                const vol = inputs[0].value.trim();
-                const desc = inputs[1].value.trim();
-                const comp = inputs[2].value.trim();
-                const larg = inputs[3].value.trim();
-                const alt = inputs[4].value.trim();
-                const pesoUn = inputs[5].value.trim();
-
-                if(vol !== "" && desc !== "") {
-                    texto += `${vol} vol. - ${desc} | ${comp}cm x ${larg}cm x ${alt}cm - ${pesoUn}kg un.\n`;
-                }
+                const vol = inputs[0].value.trim(), desc = inputs[1].value.trim(), comp = inputs[2].value.trim(), larg = inputs[3].value.trim(), alt = inputs[4].value.trim(), pesoUn = inputs[5].value.trim();
+                if(vol !== "" && desc !== "") { texto += `${vol} vol. - ${desc} | ${comp}cm x ${larg}cm x ${alt}cm - ${pesoUn}kg un.\n`; }
             });
 
             texto += `\nAguardamos o valor do frete e número da cotação para análise.`;
-
-            document.getElementById('textoFinal').value = texto;
-            return texto; 
+            document.getElementById('textoFinal').value = texto; return texto; 
         }
 
         function verificarMemoriaProduto(inputDesc) {
             const row = inputDesc.closest('.item-row');
             if (!row) return; 
             const inputs = row.querySelectorAll('input');
-            
             const descOriginal = inputDesc.value.trim();
             const desc = limparNomeProduto(descOriginal).toUpperCase();
             const btnWeb = inputDesc.nextElementSibling;
             
             if(!desc) {
                 inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-                inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
                 if(btnWeb) btnWeb.style.display = 'none';
                 return;
             }
             
             let produtoEncontrado = null;
-            
             for(let key in catalogoProdutos) {
                 let prod = catalogoProdutos[key];
-                if(prod && prod.desc && prod.desc.toUpperCase() === desc) {
-                    produtoEncontrado = prod;
-                    break;
-                }
+                if(prod && prod.desc && prod.desc.toUpperCase() === desc) { produtoEncontrado = prod; break; }
             }
 
             if(produtoEncontrado) {
                 let parts = produtoEncontrado.parts;
-                if(!parts) {
-                    parts = [{
-                        comp: produtoEncontrado.comp,
-                        larg: produtoEncontrado.larg,
-                        alt: produtoEncontrado.alt,
-                        peso: produtoEncontrado.peso
-                    }];
-                }
+                if(!parts) { parts = [{ comp: produtoEncontrado.comp, larg: produtoEncontrado.larg, alt: produtoEncontrado.alt, peso: produtoEncontrado.peso }]; }
 
-                inputs[2].value = parts[0].comp || "";
-                inputs[3].value = parts[0].larg || "";
-                inputs[4].value = parts[0].alt || "";
-                inputs[5].value = parts[0].peso || "";
-                
-                inputDesc.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+                inputs[2].value = parts[0].comp || ""; inputs[3].value = parts[0].larg || ""; inputs[4].value = parts[0].alt || ""; inputs[5].value = parts[0].peso || "";
                 inputDesc.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
-
                 if(btnWeb) btnWeb.style.display = 'none';
 
                 if(parts.length > 1 && !inputDesc.dataset.spawned) {
                     inputDesc.dataset.spawned = "true";
-                    
                     for(let i = 1; i < parts.length; i++) {
                         adicionarItem(); 
-                        
                         let allRows = document.querySelectorAll('.item-row');
                         let newRow = allRows[allRows.length - 1];
                         let newInputs = newRow.querySelectorAll('input');
                         
-                        newInputs[0].value = parts[i].vol || "1";
-                        newInputs[1].value = produtoEncontrado.desc; 
-                        newInputs[2].value = parts[i].comp || "";
-                        newInputs[3].value = parts[i].larg || "";
-                        newInputs[4].value = parts[i].alt || "";
-                        newInputs[5].value = parts[i].peso || "";
-                        
-                        newInputs[1].classList.remove('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+                        newInputs[0].value = parts[i].vol || "1"; newInputs[1].value = produtoEncontrado.desc; 
+                        newInputs[2].value = parts[i].comp || ""; newInputs[3].value = parts[i].larg || ""; newInputs[4].value = parts[i].alt || ""; newInputs[5].value = parts[i].peso || "";
                         newInputs[1].classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
                         newInputs[1].dataset.spawned = "true"; 
-                        
                         const newBtnWeb = newInputs[1].nextElementSibling;
                         if(newBtnWeb) newBtnWeb.style.display = 'none';
                     }
                     showToast(`Produto Multi-Volume! ${parts.length} partes adicionadas.`, 'info');
                 }
-
             } else {
                 inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
                 delete inputDesc.dataset.spawned;
-                
-                if(descOriginal.length > 3) {
-                    if(btnWeb) btnWeb.style.display = 'flex';
-                } else {
-                    if(btnWeb) btnWeb.style.display = 'none';
-                }
+                if(descOriginal.length > 3) { if(btnWeb) btnWeb.style.display = 'flex'; } else { if(btnWeb) btnWeb.style.display = 'none'; }
             }
         }
 
         async function salvarMemoriaProdutos() {
             const rows = document.querySelectorAll('.item-row');
             let grouped = {};
-
             rows.forEach(row => {
                 const inputs = row.querySelectorAll('input');
-                const vol = inputs[0].value.trim();
-                const desc = limparNomeProduto(inputs[1].value.trim());
-                const comp = inputs[2].value.trim();
-                const larg = inputs[3].value.trim();
-                const alt = inputs[4].value.trim();
-                const peso = inputs[5].value.trim();
+                const vol = inputs[0].value.trim(), desc = limparNomeProduto(inputs[1].value.trim()), comp = inputs[2].value.trim(), larg = inputs[3].value.trim(), alt = inputs[4].value.trim(), peso = inputs[5].value.trim();
 
                 if (desc && (comp || larg || alt || peso)) {
                     const safeKey = desc.replace(/[.#$\[\]\/]/g, "_").toUpperCase();
-                    
-                    if(!grouped[safeKey]) {
-                        grouped[safeKey] = { desc: desc, parts: [] };
-                    }
-                    
-                    grouped[safeKey].parts.push({
-                        vol: vol || "1",
-                        comp: comp,
-                        larg: larg,
-                        alt: alt,
-                        peso: peso
-                    });
+                    if(!grouped[safeKey]) { grouped[safeKey] = { desc: desc, parts: [] }; }
+                    grouped[safeKey].parts.push({ vol: vol || "1", comp: comp, larg: larg, alt: alt, peso: peso });
                 }
             });
 
             let promises = [];
-            for(let key in grouped) {
-                promises.push(database.ref('produtos/' + key).set(grouped[key]));
-            }
+            for(let key in grouped) { promises.push(database.ref('produtos/' + key).set(grouped[key])); }
             return Promise.all(promises);
         }
 
@@ -1354,72 +1164,53 @@
             
             if(!idCotacaoSessao) {
                 const textoOriginalBtn = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> GERANDO CÓDIGO NA NUVEM...';
-                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> GERANDO CÓDIGO NA NUVEM...'; btn.disabled = true;
 
                 try {
                     await salvarMemoriaProdutos();
-
                     let snapContador = await database.ref('contadores/' + prefixo).once('value');
                     let atual = snapContador.val() || 0;
                     let novoNumero = atual + 1;
-                    
                     await database.ref('contadores/' + prefixo).set(novoNumero);
                     
                     let numFormatado = novoNumero.toString().padStart(4, '0');
                     idCotacaoSessao = `${prefixo}-${numFormatado}`;
                     
                     const badge = document.getElementById('badgeCodigo');
-                    badge.innerText = `Cód: ${idCotacaoSessao}`;
-                    badge.classList.remove('hidden');
+                    badge.innerText = `Cód: ${idCotacaoSessao}`; badge.classList.remove('hidden');
 
                     let textoComId = gerarPreviaTexto(idCotacaoSessao);
-                    
                     let ufDestino = "";
-                    if (destCidade.includes('/')) {
-                        ufDestino = destCidade.split('/')[1].trim();
-                    }
+                    if (destCidade.includes('/')) { ufDestino = destCidade.split('/')[1].trim(); }
                     let primarias = getTransportadorasPrimariasPorUF(ufDestino);
                     
                     await database.ref('historico/' + idCotacaoSessao).set({
-                        id: idCotacaoSessao,
-                        data: new Date().toLocaleString('pt-BR'),
-                        timestamp: Date.now(),
-                        destinatario: destinatarioFinal || "Sem Destinatário",
-                        usuario: localStorage.getItem('primeUsuarioAtual') || "Desconhecido", 
-                        texto: textoComId,
-                        uf: ufDestino,
-                        primarias: primarias,
-                        cotacoes: {}
+                        id: idCotacaoSessao, data: new Date().toLocaleString('pt-BR'), timestamp: Date.now(),
+                        destinatario: destinatarioFinal || "Sem Destinatário", usuario: localStorage.getItem('primeUsuarioAtual') || "Desconhecido", 
+                        texto: textoComId, uf: ufDestino, primarias: primarias, cotacoes: {}
                     });
 
-                    textarea.value = textoComId;
-                    textarea.removeAttribute('readonly');
-                    textarea.select();
-                    document.execCommand('copy');
-                    window.getSelection().removeAllRanges();
-                    textarea.setAttribute('readonly', 'true');
+                    textarea.value = textoComId; textarea.removeAttribute('readonly'); textarea.select();
+                    document.execCommand('copy'); window.getSelection().removeAllRanges(); textarea.setAttribute('readonly', 'true');
                     
                     btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> COPIADO (CÓD: ${idCotacaoSessao})`;
-                    btn.classList.replace('bg-green-600', 'bg-blue-600');
-                    btn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+                    btn.classList.replace('bg-green-600', 'bg-blue-600'); btn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
 
                     setTimeout(() => validarBotaoCopiar(), 3000);
                 } catch(err) {
-                    console.error("Erro Nuvem:", err);
                     showToast('Erro ao processar no servidor. Tente novamente.', 'error');
-                    btn.innerHTML = textoOriginalBtn;
-                    btn.disabled = false;
+                    btn.innerHTML = textoOriginalBtn; btn.disabled = false;
                 }
             } else {
-                textarea.removeAttribute('readonly');
-                textarea.select();
-                document.execCommand('copy');
-                window.getSelection().removeAllRanges();
-                textarea.setAttribute('readonly', 'true');
+                textarea.removeAttribute('readonly'); textarea.select();
+                document.execCommand('copy'); window.getSelection().removeAllRanges(); textarea.setAttribute('readonly', 'true');
                 showToast(`Cotação ${idCotacaoSessao} copiada!`, 'success');
             }
         }
+
+        // ===================================================================
+        // HISTÓRICO E TRANSPORTADORAS SECUNDÁRIAS
+        // ===================================================================
 
         function abrirHistorico() {
             document.getElementById('inputBuscaHistorico').value = ''; 
@@ -1431,19 +1222,28 @@
             document.getElementById('modalHistorico').classList.remove('active');
         }
 
+        function toggleSecundariasUI(id) {
+            const box = document.getElementById(`box-sec-${id}`);
+            const icone = document.getElementById(`icone-sec-${id}`);
+            if(box.classList.contains('hidden')) {
+                box.classList.remove('hidden');
+                icone.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            } else {
+                box.classList.add('hidden');
+                icone.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            }
+        }
+
         function renderizarListaHistorico() {
             let openItems = [];
             document.querySelectorAll('[id^="previa-"]').forEach(el => {
-                if (!el.classList.contains('hidden')) {
-                    openItems.push(el.id.replace('previa-', ''));
-                }
+                if (!el.classList.contains('hidden')) { openItems.push(el.id.replace('previa-', '')); }
             });
 
             const lista = document.getElementById('listaHistorico');
             const termoBusca = document.getElementById('inputBuscaHistorico').value.toLowerCase();
             
             lista.innerHTML = '';
-            
             let historicoFiltrado = historicoNuvem;
 
             if (termoBusca) {
@@ -1476,19 +1276,28 @@
                     let melhoresTransps = transpsPreenchidas.filter(x => x.v === valorMinimo).map(x => x.k);
 
                     let primarias = item.primarias || [];
-                    if (primarias.length === 0 && item.texto) {
+                    let secundarias = [];
+
+                    if (item.uf) {
+                        if (primarias.length === 0) primarias = getTransportadorasPrimariasPorUF(item.uf);
+                        secundarias = getTransportadorasSecundariasPorUF(item.uf);
+                    } else if (item.texto) {
                         const match = item.texto.match(/CEP DESTINATÁRIO:.*\/ ([A-Z]{2})/);
-                        if (match) primarias = getTransportadorasPrimariasPorUF(match[1]);
+                        if (match) {
+                            if (primarias.length === 0) primarias = getTransportadorasPrimariasPorUF(match[1]);
+                            secundarias = getTransportadorasSecundariasPorUF(match[1]);
+                        }
                     }
 
                     let formHtml = '';
-                    if (primarias.length > 0) {
+                    if (primarias.length > 0 || secundarias.length > 0) {
                         formHtml += `<div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                             <div class="flex items-center mb-3">
                                 <i class="fa-solid fa-money-check-dollar text-green-600 dark:text-green-400 mr-2"></i>
                                 <h4 class="text-[11px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Retorno das Transportadoras</h4>
                             </div>`;
                         
+                        // Renderizar Primárias
                         primarias.forEach((t, idx) => {
                             let c = (item.cotacoes && item.cotacoes[t]) ? item.cotacoes[t] : { valor: '', prazo: '', codigo: '' };
                             let isMelhor = temMinimoDuas && melhoresTransps.includes(t);
@@ -1516,6 +1325,47 @@
                                 </div>
                             `;
                         });
+
+                        // Renderizar Secundárias (com botão Hide/Show)
+                        if (secundarias.length > 0) {
+                            let temSecundariaPreenchida = secundarias.some(t => item.cotacoes && item.cotacoes[t] && item.cotacoes[t].valor);
+                            
+                            formHtml += `
+                                <div class="mt-3 text-center border-t border-gray-200 dark:border-gray-700 pt-2">
+                                    <button type="button" onclick="toggleSecundariasUI('${item.id}')" class="text-[10px] bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded font-bold transition w-full sm:w-auto">
+                                        <i id="icone-sec-${item.id}" class="fa-solid fa-chevron-${temSecundariaPreenchida ? 'up' : 'down'} mr-1"></i> Transportadoras Secundárias
+                                    </button>
+                                </div>
+                                <div id="box-sec-${item.id}" class="${temSecundariaPreenchida ? '' : 'hidden'} mt-2 p-2 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100/50 dark:bg-gray-800/50">
+                            `;
+                            
+                            secundarias.forEach((t, idxSec) => {
+                                let idx = primarias.length + idxSec; // Garantir id único na lista inteira
+                                let c = (item.cotacoes && item.cotacoes[t]) ? item.cotacoes[t] : { valor: '', prazo: '', codigo: '' };
+                                let isMelhor = temMinimoDuas && melhoresTransps.includes(t);
+                                let rowClass = isMelhor ? "bg-green-50 dark:bg-green-900/40 border-green-400 shadow-md transform scale-[1.01] transition-transform" : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm opacity-80 hover:opacity-100 transition-opacity";
+                                let labelDestaque = isMelhor ? `<span class="bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 animate-pulse"><i class="fa-solid fa-trophy"></i> Melhor Preço</span>` : "";
+                                let inputClass = isMelhor ? "bg-green-100/50 dark:bg-green-800/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-600 font-extrabold" : "text-gray-700 dark:text-gray-300";
+
+                                formHtml += `
+                                    <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mb-2 items-center p-2 rounded border ${rowClass}">
+                                        <div class="text-[11px] font-bold text-gray-500 dark:text-gray-400 truncate flex items-center" title="${t}">
+                                            ${isMelhor ? '<i class="fa-solid fa-trophy text-yellow-500 mr-1"></i>' : ''}${t} ${labelDestaque}
+                                        </div>
+                                        <div>
+                                            <input type="text" id="val_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="R$ Valor" value="${c.valor}" oninput="this.value=mascaraFrete(this.value)">
+                                        </div>
+                                        <div>
+                                            <input type="text" id="prazo_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="Ex: 5" value="${c.prazo}" onblur="this.value=formatarPrazo(this.value)">
+                                        </div>
+                                        <div>
+                                            <input type="text" id="cod_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="Cód/Nº" value="${c.codigo}">
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            formHtml += `</div>`;
+                        }
                         
                         let manualKey = 'FreteClick_Manual';
                         let cManual = (item.cotacoes && item.cotacoes[manualKey]) ? item.cotacoes[manualKey] : { nomeTransp: '', valor: '', prazo: '', codigo: '' };
@@ -1550,7 +1400,7 @@
                         formHtml += `<button id="btnSalvarCot_${item.id}" onclick="salvarCotacoesHistorico('${item.id}')" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold py-2 rounded shadow transition"><i class="fa-solid fa-floppy-disk mr-1"></i> SALVAR VALORES NA NUVEM</button>
                         </div>`;
                     } else {
-                         formHtml += `<div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-[10px] text-gray-500 text-center"><i class="fa-solid fa-circle-info mr-1"></i> Nenhuma transportadora primária sugerida para o destino desta cotação.</div>`
+                         formHtml += `<div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-[10px] text-gray-500 text-center"><i class="fa-solid fa-circle-info mr-1"></i> Nenhuma transportadora sugerida para o destino desta cotação.</div>`
                     }
 
                     let btnDownload = '';
@@ -1617,14 +1467,23 @@
                 if (!item) throw new Error("Cotação não encontrada");
 
                 let primarias = item.primarias || [];
-                if (primarias.length === 0 && item.texto) {
+                let secundarias = [];
+                
+                if (item.uf) {
+                    if (primarias.length === 0) primarias = getTransportadorasPrimariasPorUF(item.uf);
+                    secundarias = getTransportadorasSecundariasPorUF(item.uf);
+                } else if (item.texto) {
                     const match = item.texto.match(/CEP DESTINATÁRIO:.*\/ ([A-Z]{2})/);
-                    if (match) primarias = getTransportadorasPrimariasPorUF(match[1]);
+                    if (match) {
+                        if (primarias.length === 0) primarias = getTransportadorasPrimariasPorUF(match[1]);
+                        secundarias = getTransportadorasSecundariasPorUF(match[1]);
+                    }
                 }
 
                 let cotacoesParaSalvar = {};
+                let todasAsOpcoes = [...primarias, ...secundarias];
                 
-                primarias.forEach((t, idx) => {
+                todasAsOpcoes.forEach((t, idx) => {
                     const valInput = document.getElementById(`val_${idCotacao}_${idx}`);
                     const prazoInput = document.getElementById(`prazo_${idCotacao}_${idx}`);
                     const codInput = document.getElementById(`cod_${idCotacao}_${idx}`);
@@ -1680,9 +1539,7 @@
                         let v = parseFloat(limpo);
                         transpsPreenchidas.push({
                             nome: k === 'FreteClick_Manual' ? (c.nomeTransp || 'FreteClick') : k,
-                            valor: c.valor,
-                            prazo: c.prazo,
-                            codigo: c.codigo,
+                            valor: c.valor, prazo: c.prazo, codigo: c.codigo,
                             v: isNaN(v) ? Infinity : v
                         });
                     }
@@ -1694,7 +1551,6 @@
             const container = document.createElement('div');
             container.innerHTML = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
-                    
                     <div style="border-bottom: 2px solid #3b82f6; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h1 style="color: #1e3a8a; margin: 0; font-size: 24px; font-weight: bold;">Relatório de Cotação de Frete</h1>
@@ -1705,7 +1561,6 @@
                             <p style="margin: 5px 0 0 0; font-size: 12px; color: #6b7280;">Data da Emissão: ${item.data}</p>
                         </div>
                     </div>
-
                     <div style="margin-bottom: 30px;">
                         <h3 style="color: #374151; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; text-transform: uppercase;">Dados Gerais</h3>
                         <table style="width: 100%; border: none; font-size: 13px; margin-top: 10px;">
@@ -1719,7 +1574,6 @@
                             </tr>
                         </table>
                     </div>
-
                     <div style="margin-bottom: 30px;">
                         <h3 style="color: #374151; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; text-transform: uppercase;">Quadro Comparativo (Ranking)</h3>
                         <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
@@ -1750,12 +1604,10 @@
                             </tbody>
                         </table>
                     </div>
-
                     <div style="margin-bottom: 30px;">
                         <h3 style="color: #374151; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; text-transform: uppercase;">Detalhes Originais da Solicitação</h3>
                         <pre style="background-color: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; border-radius: 5px; font-size: 11px; white-space: pre-wrap; font-family: monospace; color: #4b5563; line-height: 1.5;">\n${item.texto}</pre>
                     </div>
-
                     <div style="margin-top: 50px; text-align: center; color: #9ca3af; font-size: 10px; border-top: 1px solid #e5e7eb; padding-top: 10px;">
                         Documento gerado automaticamente pelo Sistema Gerador de Cotações Logísticas - Grupo Prime B2B
                     </div>
@@ -1902,11 +1754,7 @@
             const t = item.texto;
             const destMatch = t.match(/INFORMAÇÕES DO DESTINATÁRIO:\n+NOME:\s*(.*?)\.\nCNPJ:\s*(.*?)\.\nCEP DESTINATÁRIO:\s*(.*?)\n/);
             let destNome = "", destCnpj = "", destCep = "";
-            if (destMatch) {
-                destNome = destMatch[1];
-                destCnpj = destMatch[2];
-                destCep = destMatch[3];
-            }
+            if (destMatch) { destNome = destMatch[1]; destCnpj = destMatch[2]; destCep = destMatch[3]; }
 
             const remetMatch = t.match(/INFORMAÇÕES DO REMETENTE:\n+NOME:\s*(.*?)\.\n/);
             const remetNome = remetMatch ? remetMatch[1] : "Grupo Prime B2B";
@@ -2056,27 +1904,18 @@
             if (tipo === 'agradecimento') {
                 conteudoHTML = `
                     <div class="label" style="width: 145mm; height: 95mm; padding: 4mm; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; margin: 0 auto; background: #fff;">
-                        
-                        <!-- Top Black Box -->
                         <div style="background: #000; color: #fff; width: 100%; height: 35mm; display: flex; align-items: center; justify-content: center; text-align: center; margin-bottom: 2mm;">
                             <h1 style="font-family: 'Arial Black', Impact, sans-serif; font-style: italic; font-size: 42px; margin: 0; letter-spacing: -1px; line-height: 1.1; transform: scaleX(1.3);">AGRADECEMOS O<br>SEU PEDIDO!</h1>
                         </div>
-                        
-                        <!-- Bottom Section (Space Between) -->
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-grow: 1; padding: 0 4mm; width: 100%; box-sizing: border-box;">
-                            
-                                <!-- Left Group (Logo + Text) -->
                             <div style="display: flex; align-items: center; gap: 6mm;">
                                 <div style="width: 34mm; height: 34mm; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
                                     <img src="P_LOGO-removebg-preview.png" onerror="this.src='https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128'" style="width: 100%; height: 100%; object-fit: contain; filter: brightness(0);" alt="Logo">
                                 </div>
-                                
                                 <div style="font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900; line-height: 1; text-align: left; color: #000; flex-shrink: 0; margin-top: 1mm;">
                                     GRUPO<br>PRIME<br>B2B
                                 </div>
                             </div>
-                            
-                            <!-- Right Group (QR Code Fixed Box) -->
                             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; height: 100%;">
                                 <div style="width: 110px; height: 110px; margin-bottom: 3mm;">
                                     <div id="qrcode-agradecimento" style="width: 100%; height: 100%;"></div>
@@ -2085,23 +1924,19 @@
                                     Visite nosso portal de<br>compras B2B
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 `;
             } else if (tipo === 'fragil') {
                 conteudoHTML = `
                     <div class="label" style="width: 145mm; height: 95mm; padding: 4mm; display: flex; align-items: center; justify-content: center; box-sizing: border-box; margin: 0 auto; background: #fff;">
-                        <!-- Border Box -->
                         <div style="border: 4px solid #000; border-radius: 12px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 5mm; box-sizing: border-box;">
-                            <!-- Left: Glass Icon -->
                             <div style="width: 35%; height: 100%; display: flex; align-items: center; justify-content: center;">
                                 <svg viewBox="0 0 100 150" style="height: 100%; max-height: 75mm;" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M 15,20 L 15,70 C 15,95 40,100 45,100 L 45,130 L 20,145 L 80,145 L 55,130 L 55,100 C 60,100 85,95 85,70 L 85,20 Z" fill="#000"/>
                                     <polygon points="40,20 55,50 45,60 50,85 35,85 45,60 35,40" fill="#fff"/>
                                 </svg>
                             </div>
-                            <!-- Right: Text -->
                             <div style="width: 65%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                                 <div style="font-family: 'Arial Rounded MT Bold', 'VAG Rounded', Arial, sans-serif; font-size: 58px; font-weight: bold; line-height: 1.1; text-align: center; color: #000; letter-spacing: 1px;">
                                     CUIDADO<br>FRÁGIL
@@ -2154,10 +1989,7 @@
                                 correctLevel : QRCode.CorrectLevel.M
                             });
                         }
-                        
-                        setTimeout(() => {
-                            window.print();
-                        }, 800);
+                        setTimeout(() => { window.print(); }, 800);
                     };
                 <\/script>
             </body>
@@ -2166,18 +1998,6 @@
 
             printWindow.document.write(html);
             printWindow.document.close();
-        }
-
-        function togglePrevia(id) {
-            const previa = document.getElementById(`previa-${id}`);
-            const icone = document.getElementById(`icone-${id}`);
-            if (previa.classList.contains('hidden')) {
-                previa.classList.remove('hidden');
-                icone.classList.replace('fa-chevron-right', 'fa-chevron-down');
-            } else {
-                previa.classList.add('hidden');
-                icone.classList.replace('fa-chevron-down', 'fa-chevron-right');
-            }
         }
 
         function apagarCotacaoHistorico(id) {
@@ -2204,49 +2024,40 @@
             }
         }
 
+        function togglePrevia(id) {
+            const previa = document.getElementById(`previa-${id}`);
+            const icone = document.getElementById(`icone-${id}`);
+            if (previa.classList.contains('hidden')) {
+                previa.classList.remove('hidden');
+                icone.classList.replace('fa-chevron-right', 'fa-chevron-down');
+            } else {
+                previa.classList.add('hidden');
+                icone.classList.replace('fa-chevron-down', 'fa-chevron-right');
+            }
+        }
+
         function mascaraMoeda(v) {
-            v = v.replace(/\D/g, "");
-            v = (v/100).toFixed(2) + "";
-            v = v.replace(".", ",");
-            v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-            return v;
+            v = v.replace(/\D/g, ""); v = (v/100).toFixed(2) + ""; v = v.replace(".", ","); v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1."); return v;
         }
 
         function mascaraFrete(v) {
-            v = v.replace(/\D/g, "");
-            if(v === "") return "";
-            v = (v/100).toFixed(2) + "";
-            v = v.replace(".", ",");
-            v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-            return "R$ " + v;
+            v = v.replace(/\D/g, ""); if(v === "") return ""; v = (v/100).toFixed(2) + ""; v = v.replace(".", ","); v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1."); return "R$ " + v;
         }
 
         function formatarPrazo(v) {
-            v = v.trim();
-            if(!v || v.toLowerCase().includes('dia')) return v;
-            return v + " dias úteis";
+            v = v.trim(); if(!v || v.toLowerCase().includes('dia')) return v; return v + " dias úteis";
         }
 
         function limparNomeProduto(nome) {
-            if (!nome) return "";
-            let limpo = nome.replace(/^[a-zA-Z0-9]*\d[a-zA-Z0-9]*\s*-\s*/, '');
-            limpo = limpo.replace(/\s*-\s*[a-zA-Z0-9]*\d[a-zA-Z0-9]*$/, '');
-            return limpo.trim();
+            if (!nome) return ""; let limpo = nome.replace(/^[a-zA-Z0-9]*\d[a-zA-Z0-9]*\s*-\s*/, ''); limpo = limpo.replace(/\s*-\s*[a-zA-Z0-9]*\d[a-zA-Z0-9]*$/, ''); return limpo.trim();
         }
 
         function mascaraCNPJ(v) {
-            v = v.replace(/\D/g, "");
-            v = v.replace(/^(\d{2})(\d)/, "$1.$2");
-            v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
-            v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
-            v = v.replace(/(\d{4})(\d)/, "$1-$2");
-            return v.substring(0, 18);
+            v = v.replace(/\D/g, ""); v = v.replace(/^(\d{2})(\d)/, "$1.$2"); v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3"); v = v.replace(/\.(\d{3})(\d)/, ".$1/$2"); v = v.replace(/(\d{4})(\d)/, "$1-$2"); return v.substring(0, 18);
         }
 
         function mascaraCEP(v) {
-            v = v.replace(/\D/g, "");
-            v = v.replace(/^(\d{5})(\d)/, "$1-$2");
-            return v.substring(0, 9);
+            v = v.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); return v.substring(0, 9);
         }
 
         const transportadorasMap = [
@@ -2262,14 +2073,27 @@
             { nome: "RODONAVES", ufs: ["AC","AP","AM","DF","ES","GO","MT","MS","MG","PA","PR","RJ","RS","RO","RR","SC","SP","TO"] }, 
             { nome: "TADEX", ufs: ["SP", "RJ", "ES"] },
             { nome: "TODO BRASIL", ufs: ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"] },
-            { nome: "TRANSWELLS", ufs: ["SP", "RJ"] }
+            { nome: "TRANSWELLS", ufs: ["SP", "RJ", "MG"] }
         ];
 
         function getTransportadorasPrimariasPorUF(uf) {
             if(!uf) return [];
             const recomendadas = transportadorasMap.filter(t => t.ufs.includes(uf.toUpperCase()));
             const secundariasNomes = ["BRASSPRESS", "TODO BRASIL", "RODONAVES"];
-            return recomendadas.filter(t => !secundariasNomes.includes(t.nome)).map(t => t.nome);
+            return recomendadas.filter(t => {
+                if (uf.toUpperCase() === 'AM' && t.nome === 'TODO BRASIL') return true;
+                return !secundariasNomes.includes(t.nome);
+            }).map(t => t.nome);
+        }
+
+        function getTransportadorasSecundariasPorUF(uf) {
+            if(!uf) return [];
+            const recomendadas = transportadorasMap.filter(t => t.ufs.includes(uf.toUpperCase()));
+            const secundariasNomes = ["BRASSPRESS", "TODO BRASIL", "RODONAVES"];
+            return recomendadas.filter(t => {
+                if (uf.toUpperCase() === 'AM' && t.nome === 'TODO BRASIL') return false;
+                return secundariasNomes.includes(t.nome);
+            }).map(t => t.nome);
         }
 
         function sugerirTransportadora(uf) {
@@ -2277,15 +2101,19 @@
             const lista = document.getElementById('listaRecomendadas');
             const texto = document.getElementById('textoRecomendacao');
             
-            if(!uf) {
-                box.classList.add('hidden');
-                return;
-            }
+            if(!uf) { box.classList.add('hidden'); return; }
 
             const recomendadas = transportadorasMap.filter(t => t.ufs.includes(uf.toUpperCase()));
             const secundariasNomes = ["BRASSPRESS", "TODO BRASIL", "RODONAVES"];
-            const primarias = recomendadas.filter(t => !secundariasNomes.includes(t.nome));
-            const secundarias = recomendadas.filter(t => secundariasNomes.includes(t.nome));
+            
+            const primarias = recomendadas.filter(t => {
+                if (uf.toUpperCase() === 'AM' && t.nome === 'TODO BRASIL') return true;
+                return !secundariasNomes.includes(t.nome);
+            });
+            const secundarias = recomendadas.filter(t => {
+                if (uf.toUpperCase() === 'AM' && t.nome === 'TODO BRASIL') return false;
+                return secundariasNomes.includes(t.nome);
+            });
             
             texto.innerHTML = `Com base no destino (<strong>Estado: ${uf.toUpperCase()}</strong>), indicamos as seguintes parceiras:`;
             lista.innerHTML = '';
@@ -2295,7 +2123,9 @@
                 htmlPrimarias += '<span class="bg-white border border-indigo-200 text-indigo-700 text-xs px-3 py-1.5 rounded-lg font-bold shadow-sm">Nenhuma parceira regional primária mapeada.</span>';
             } else {
                 primarias.forEach(t => {
-                    let nota = (t.nome === "MIRIN DO SUL" && uf.toUpperCase() === "PR") ? " (Londrina/Curitiba)" : "";
+                    let nota = "";
+                    if (t.nome === "MIRIN DO SUL") nota = " (Exceto Londrina)";
+                    if (t.nome === "TRANSWELLS" && uf.toUpperCase() === "MG") nota = " (Belo Horizonte)";
                     htmlPrimarias += `<span class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow transition cursor-default flex items-center"><i class="fa-solid fa-star text-yellow-300 mr-1.5"></i> ${t.nome}${nota}</span>`;
                 });
             }
@@ -2357,12 +2187,7 @@
             const file = inputElement.files[0];
             
             if (!file) return;
-            
-            if (file.type !== "application/pdf") {
-                showToast("Por favor, selecione um arquivo PDF.", "error");
-                inputElement.value = '';
-                return;
-            }
+            if (file.type !== "application/pdf") { showToast("Por favor, selecione um arquivo PDF.", "error"); inputElement.value = ''; return; }
 
             const lbl = document.getElementById('lblPdfUpload');
             const originalHTML = lbl.innerHTML;
@@ -2386,19 +2211,14 @@
                         
                         analisarTextoPDF(fullText);
                     } catch (error) {
-                        console.error("Erro ao processar PDF:", error);
                         showToast("Erro ao ler o PDF. Tente preencher manualmente.", "error");
                     } finally {
-                        lbl.innerHTML = originalHTML;
-                        lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
-                        inputElement.value = ''; 
+                        lbl.innerHTML = originalHTML; lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none'); inputElement.value = ''; 
                     }
                 };
                 fileReader.readAsArrayBuffer(file);
             } catch (err) {
-                lbl.innerHTML = originalHTML;
-                lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
-                inputElement.value = '';
+                lbl.innerHTML = originalHTML; lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none'); inputElement.value = '';
             }
         }
 
@@ -2413,8 +2233,7 @@
 
             let matchPedido = texto.match(/pedido\s+(\d+)/i) || texto.match(/PEDIDO\s*-\s*OP\s*(\d+)/i) || texto.match(/(\d+)-/);
             if (matchPedido) {
-                let p = matchPedido[1];
-                if(p.length >= 4 && p.length <= 8) document.getElementById('pedido').value = p;
+                let p = matchPedido[1]; if(p.length >= 4 && p.length <= 8) document.getElementById('pedido').value = p;
             }
 
             let matchTotal = texto.match(/\bTOTAL\b[\s\S]{0,40}?R\$\s*([\d\.,]+)/i);
@@ -2422,36 +2241,25 @@
                 document.getElementById('valorNf').value = mascaraMoeda(matchTotal[1]);
             } else {
                 let matches = [...texto.matchAll(/R\$\s*([\d\.,]+)/gi)];
-                if (matches.length > 0) {
-                    document.getElementById('valorNf').value = mascaraMoeda(matches[matches.length - 1][1]);
-                }
+                if (matches.length > 0) document.getElementById('valorNf').value = mascaraMoeda(matches[matches.length - 1][1]);
             }
 
             let cnpjs = texto.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}|\b\d{14}\b/g);
             if (cnpjs) {
-                let cnpjCliente = "";
-                cnpjs = cnpjs.map(c => c.replace(/\D/g, ''));
+                let cnpjCliente = ""; cnpjs = cnpjs.map(c => c.replace(/\D/g, ''));
                 const cnpjsPrime = ["11259196000150", "43391624000190", "49123568000199"];
                 cnpjCliente = cnpjs.find(c => !cnpjsPrime.includes(c));
-                
                 if (cnpjCliente) {
-                    let el = document.getElementById('destCnpj');
-                    el.value = mascaraCNPJ(cnpjCliente);
-                    buscarCNPJ(el.value, 'destNome', 'loadDestCnpj');
+                    let el = document.getElementById('destCnpj'); el.value = mascaraCNPJ(cnpjCliente); buscarCNPJ(el.value, 'destNome', 'loadDestCnpj');
                 }
             }
 
             let ceps = texto.match(/CEP\s*[:]?\s*(\d{5}-?\d{3})|\b\d{8}\b/gi);
             if (ceps) {
-                let cepCliente = "";
-                ceps = ceps.map(c => c.replace(/\D/g, ''));
-                const cepsPrime = ["03511050"];
-                cepCliente = ceps.find(c => !cepsPrime.includes(c));
-                
+                let cepCliente = ""; ceps = ceps.map(c => c.replace(/\D/g, ''));
+                const cepsPrime = ["03511050"]; cepCliente = ceps.find(c => !cepsPrime.includes(c));
                 if (cepCliente) {
-                    let el = document.getElementById('destCep');
-                    el.value = mascaraCEP(cepCliente);
-                    buscarCEP(el.value, 'destCidade', 'loadDestCep');
+                    let el = document.getElementById('destCep'); el.value = mascaraCEP(cepCliente); buscarCEP(el.value, 'destCidade', 'loadDestCep');
                 }
             }
 
@@ -2460,113 +2268,64 @@
             
             if (inicioItens !== -1 && fimItens !== -1) {
                 let blocoItens = texto.substring(inicioItens + 8, fimItens).trim();
-                
                 let regexItem = /(?:\b\d+\s+|^)(.+?)\s+(\d+(?:,\d+)?)\s+R\$\s*[\d\.,]+\s+R\$\s*[\d\.,]+/gi;
                 let matchItem;
-                
                 let encontrouAlgo = false;
                 let gridSalva = document.getElementById('containerItens').innerHTML;
 
                 while ((matchItem = regexItem.exec(blocoItens)) !== null) {
-                    if(!encontrouAlgo) {
-                        document.getElementById('containerItens').innerHTML = '';
-                        contadorItens = 0;
-                    }
+                    if(!encontrouAlgo) { document.getElementById('containerItens').innerHTML = ''; contadorItens = 0; }
                     encontrouAlgo = true;
-                    
                     let descProduto = limparNomeProduto(matchItem[1].trim());
                     let qtdProduto = matchItem[2] ? matchItem[2].split(',')[0].trim() : "1";
                     
                     adicionarItem(); 
                     let rows = document.querySelectorAll('.item-row');
                     let inputs = rows[rows.length - 1].querySelectorAll('input');
-                    
-                    inputs[0].value = qtdProduto;
-                    inputs[1].value = descProduto;
-                    
-                    try {
-                        verificarMemoriaProduto(inputs[1]);
-                    } catch (e) {
-                        console.warn("Aviso na memória do produto: ", e);
-                    }
+                    inputs[0].value = qtdProduto; inputs[1].value = descProduto;
+                    try { verificarMemoriaProduto(inputs[1]); } catch (e) {}
                 }
-                
-                if(!encontrouAlgo) {
-                    document.getElementById('containerItens').innerHTML = gridSalva;
-                }
+                if(!encontrouAlgo) document.getElementById('containerItens').innerHTML = gridSalva;
             }
 
-            dadosAlterados();
-            showToast('Dados extraídos do PDF com sucesso!', 'success');
+            dadosAlterados(); showToast('Dados extraídos do PDF com sucesso!', 'success');
         }
 
         function atualizarDataListProdutos() {
             let dl = document.getElementById('dlProdutos');
-            if(!dl) {
-                dl = document.createElement('datalist');
-                dl.id = 'dlProdutos';
-                document.body.appendChild(dl);
-            }
+            if(!dl) { dl = document.createElement('datalist'); dl.id = 'dlProdutos'; document.body.appendChild(dl); }
             dl.innerHTML = '';
             for(let key in catalogoProdutos) {
-                let opt = document.createElement('option');
-                opt.value = catalogoProdutos[key].desc;
-                dl.appendChild(opt);
+                let opt = document.createElement('option'); opt.value = catalogoProdutos[key].desc; dl.appendChild(opt);
             }
         }
 
         function toggleDarkMode() {
-            const body = document.body;
-            const icone = document.getElementById('iconeTema');
+            const body = document.body; const icone = document.getElementById('iconeTema');
             
             if (body.classList.contains('amoled')) {
-                body.classList.remove('dark', 'amoled');
-                icone.className = 'fa-solid fa-sun';
-                localStorage.setItem('primeTema', 'light');
+                body.classList.remove('dark', 'amoled'); icone.className = 'fa-solid fa-sun'; localStorage.setItem('primeTema', 'light');
             } else if (body.classList.contains('dark')) {
-                body.classList.add('amoled');
-                icone.className = 'fa-solid fa-moon'; 
-                localStorage.setItem('primeTema', 'amoled');
+                body.classList.add('amoled'); icone.className = 'fa-solid fa-moon'; localStorage.setItem('primeTema', 'amoled');
             } else {
-                body.classList.add('dark');
-                icone.className = 'fa-solid fa-circle-half-stroke';
-                localStorage.setItem('primeTema', 'dark');
+                body.classList.add('dark'); icone.className = 'fa-solid fa-circle-half-stroke'; localStorage.setItem('primeTema', 'dark');
             }
         }
 
         window.onload = async () => {
             document.getElementById('telaCarregamento').style.display = 'flex';
-            
-            // Failsafe contra travamentos na inicialização
             setTimeout(() => {
                 const tela = document.getElementById('telaCarregamento');
-                if (tela && tela.style.display !== 'none') {
-                    tela.style.opacity = '0';
-                    setTimeout(() => tela.style.display = 'none', 300);
-                }
+                if (tela && tela.style.display !== 'none') { tela.style.opacity = '0'; setTimeout(() => tela.style.display = 'none', 300); }
             }, 4000);
             
-            try {
-                await conectarFirebase();
-            } catch (err) {
-                console.error(err);
-            }
-            
-            checarEstadoLogin();
-            
-            adicionarItem();
-            gerarPreviaTexto();
+            try { await conectarFirebase(); } catch (err) {}
+            checarEstadoLogin(); adicionarItem(); gerarPreviaTexto();
             
             const temaSalvo = localStorage.getItem('primeTema');
-            if(temaSalvo === 'amoled') {
-                document.body.classList.add('dark', 'amoled');
-                document.getElementById('iconeTema').className = 'fa-solid fa-moon';
-            } else if(temaSalvo === 'dark') {
-                document.body.classList.add('dark');
-                document.getElementById('iconeTema').className = 'fa-solid fa-circle-half-stroke';
-            } else {
-                document.getElementById('iconeTema').className = 'fa-solid fa-sun';
-            }
+            if(temaSalvo === 'amoled') { document.body.classList.add('dark', 'amoled'); document.getElementById('iconeTema').className = 'fa-solid fa-moon'; } 
+            else if(temaSalvo === 'dark') { document.body.classList.add('dark'); document.getElementById('iconeTema').className = 'fa-solid fa-circle-half-stroke'; } 
+            else { document.getElementById('iconeTema').className = 'fa-solid fa-sun'; }
 
             const TEMPO_EXPIRACAO = 60 * 60 * 1000; 
             let timeoutAtividade = null;
@@ -2574,10 +2333,7 @@
             const atualizarAtividade = () => {
                 if(localStorage.getItem('primeLogado') === 'true') {
                     if(!timeoutAtividade) {
-                        timeoutAtividade = setTimeout(() => {
-                            localStorage.setItem('primeUltimaAtividade', Date.now().toString());
-                            timeoutAtividade = null;
-                        }, 5000); 
+                        timeoutAtividade = setTimeout(() => { localStorage.setItem('primeUltimaAtividade', Date.now().toString()); timeoutAtividade = null; }, 5000); 
                     }
                 }
             };
@@ -2586,39 +2342,23 @@
                 const ultima = localStorage.getItem('primeUltimaAtividade');
                 if(localStorage.getItem('primeLogado') === 'true' && ultima) {
                     if(Date.now() - parseInt(ultima) > TEMPO_EXPIRACAO) {
-                        localStorage.removeItem('primeLogado');
-                        localStorage.removeItem('primeUsuarioAtual');
-                        localStorage.removeItem('primeUltimaAtividade');
-                        checarEstadoLogin(); 
-                        showDialog('Sua sessão expirou devido a 1 hora de inatividade. Por favor, faça login novamente.', 'alert');
+                        localStorage.removeItem('primeLogado'); localStorage.removeItem('primeUsuarioAtual'); localStorage.removeItem('primeUltimaAtividade');
+                        checarEstadoLogin(); showDialog('Sua sessão expirou devido a 1 hora de inatividade. Por favor, faça login novamente.', 'alert');
                     }
                 }
             };
 
-            window.addEventListener('mousemove', atualizarAtividade);
-            window.addEventListener('keydown', atualizarAtividade);
-            window.addEventListener('click', atualizarAtividade);
-            window.addEventListener('scroll', atualizarAtividade);
-
+            window.addEventListener('mousemove', atualizarAtividade); window.addEventListener('keydown', atualizarAtividade);
+            window.addEventListener('click', atualizarAtividade); window.addEventListener('scroll', atualizarAtividade);
             setInterval(verificarInatividade, 60000);
-
-            document.addEventListener('contextmenu', event => {
-                event.preventDefault();
-            });
-
+            
+            document.addEventListener('contextmenu', event => { event.preventDefault(); });
             document.addEventListener('keydown', event => {
-                if (event.key === 'F12') {
-                    event.preventDefault();
-                    return false;
-                }
+                if (event.key === 'F12') { event.preventDefault(); return false; }
                 if (event.ctrlKey && event.shiftKey && (event.key === 'I' || event.key === 'J' || event.key === 'C' || event.key === 'i' || event.key === 'j' || event.key === 'c')) {
-                    event.preventDefault();
-                    return false;
+                    event.preventDefault(); return false;
                 }
-                if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) {
-                    event.preventDefault();
-                    return false;
-                }
+                if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) { event.preventDefault(); return false; }
             });
         };
     </script>
