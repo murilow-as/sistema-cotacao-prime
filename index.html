@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#3b82f6">
+    <meta name="theme-color" content="#4f46e5">
     <title>Gerador de Cotação de Frete</title>
 
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
@@ -15,10 +15,28 @@
     <script>
         tailwind.config = {
             darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
         }
     </script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Script do EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -34,50 +52,77 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
-        body, div, input, textarea, select { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
         
-        body { background-color: #f3f4f6; }
+        /* Inputs Minimalistas */
         .input-field {
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            margin-top: 0.25rem;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid transparent;
+            border-radius: 0.5rem;
             font-size: 0.875rem;
-            background-color: #ffffff;
-            color: #374151;
+            background-color: #f1f5f9; /* slate-100 */
+            color: #334155; /* slate-700 */
+            transition: all 0.2s ease;
+            font-weight: 500;
         }
-        .input-field:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
-        .input-disabled { background-color: #e5e7eb; color: #6b7280; cursor: not-allowed; }
-        .modal { display: none; background-color: rgba(0,0,0,0.5); }
+        .input-field:hover {
+            background-color: #e2e8f0; /* slate-200 */
+        }
+        .input-field:focus { 
+            outline: none; 
+            background-color: #ffffff;
+            border-color: #818cf8; /* brand-400 */
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); 
+        }
+        .input-disabled { 
+            background-color: #e2e8f0; 
+            color: #64748b; 
+            cursor: not-allowed; 
+            opacity: 0.7;
+        }
+        
+        .modal { display: none; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
         .modal.active { display: flex; }
 
-        body.dark { background-color: #111827; color: #f9fafb; }
-        body.dark .bg-white { background-color: #1f2937; }
-        body.dark .bg-gray-50 { background-color: #111827; }
-        body.dark .bg-gray-100 { background-color: #374151; }
-        body.dark .bg-blue-50 { background-color: #1e3a8a; border-color: #1e3a8a; }
-        body.dark .text-gray-800, body.dark .text-gray-700 { color: #f9fafb; }
-        body.dark .text-gray-600, body.dark .text-gray-500 { color: #d1d5db; }
-        body.dark .border-gray-200, body.dark .border-gray-300 { border-color: #374151; }
-        body.dark .input-field { background-color: #374151; color: #f9fafb; border-color: #4b5563; }
-        body.dark .input-disabled { background-color: #1f2937; color: #9ca3af; }
-        body.dark .shadow-lg, body.dark .shadow-2xl { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25); }
-        body.dark .bg-yellow-100 { background-color: #78350f; color: #fef3c7; border-color: #92400e; }
-        body.dark .text-yellow-800 { color: #fde68a; }
-        body.dark .bg-blue-100 { background-color: #1e3a8a; color: #bfdbfe; border-color: #1e40af; }
-        body.dark .text-blue-800 { color: #93c5fd; }
-        body.dark .bg-red-50 { background-color: #7f1d1d; }
-        body.dark .text-red-500 { color: #fca5a5; }
+        /* Dark Mode Suave */
+        body.dark { background-color: #0f172a; color: #f8fafc; }
+        body.dark .bg-white { background-color: #1e293b; }
+        body.dark .bg-gray-50, body.dark .bg-slate-50 { background-color: #0f172a; }
+        body.dark .bg-gray-100, body.dark .bg-slate-100 { background-color: #1e293b; }
+        body.dark .text-gray-800, body.dark .text-gray-700 { color: #f8fafc; }
+        body.dark .text-gray-600, body.dark .text-gray-500 { color: #94a3b8; }
+        body.dark .border-gray-200, body.dark .border-gray-300 { border-color: #334155; }
+        
+        body.dark .input-field { 
+            background-color: #0f172a; 
+            color: #f8fafc; 
+            border-color: #334155; 
+        }
+        body.dark .input-field:hover { background-color: #1e293b; }
+        body.dark .input-field:focus {
+            background-color: #1e293b;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2); 
+        }
+        body.dark .input-disabled { background-color: #0f172a; color: #64748b; border-color: transparent; }
 
+        /* Amoled Mode */
         body.dark.amoled { background-color: #000000; }
-        body.dark.amoled .bg-white, body.dark.amoled .bg-gray-50, body.dark.amoled .bg-gray-100 { background-color: #000000; border-color: #1a1a1a; }
-        body.dark.amoled .bg-gray-800, body.dark.amoled .bg-gray-900 { background-color: #050505; border-color: #222; }
-        body.dark.amoled .input-field { background-color: #000000; border-color: #333; }
-        body.dark.amoled .border-gray-200, body.dark.amoled .border-gray-300, body.dark.amoled .border-gray-700 { border-color: #1a1a1a; }
-        body.dark.amoled .shadow-lg, body.dark.amoled .shadow-2xl { box-shadow: 0 0 15px rgba(255, 255, 255, 0.05); }
-        body.dark.amoled .bg-blue-50 { background-color: #000510; border-color: #001020; }
-        body.dark.amoled .bg-blue-100 { background-color: #001530; border-color: #002550; }
+        body.dark.amoled .bg-white, body.dark.amoled .bg-slate-50, body.dark.amoled .bg-slate-100 { background-color: #000000; border-color: #1a1a1a; }
+        body.dark.amoled .input-field { background-color: #050505; border-color: #222; }
+        body.dark.amoled .input-field:hover { background-color: #111; }
+        body.dark.amoled .input-field:focus { background-color: #000; border-color: #4f46e5; }
+
+        /* Scrollbar suave */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        body.dark ::-webkit-scrollbar-thumb { background: #475569; }
 
         @keyframes fillBar {
             0% { transform: scaleX(0); }
@@ -88,303 +133,289 @@
     </style>
 </head>
 
-<body class="p-4 md:p-8 font-sans text-gray-800 relative transition-colors duration-300">
+<body class="p-4 md:p-8 font-sans text-slate-800 relative transition-colors duration-300">
 
-    <!-- TELA DE CARREGAMENTO -->
-    <div id="telaCarregamento" class="fixed inset-0 z-[500] bg-gray-900 flex flex-col items-center justify-center transition-opacity duration-300">
-        <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" class="h-20 w-20 mb-6 object-contain rounded-full shadow-lg animate-pulse">
-        <h2 class="text-white text-sm font-bold tracking-widest uppercase mb-4"><i class="fa-solid fa-cloud-arrow-down mr-2"></i> Conectando à Nuvem</h2>
-        <div class="w-48 h-1 bg-gray-700 rounded overflow-hidden">
-            <div class="h-full bg-blue-500 w-full animate-loader"></div>
+    <div id="telaCarregamento" class="fixed inset-0 z-[500] bg-slate-900 flex flex-col items-center justify-center transition-opacity duration-300">
+        <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" class="h-20 w-20 mb-6 object-contain rounded-full shadow-lg animate-pulse bg-white p-1">
+        <h2 class="text-white text-xs font-semibold tracking-widest uppercase mb-4"><i class="fa-solid fa-cloud-arrow-down mr-2"></i> Conectando à Nuvem</h2>
+        <div class="w-48 h-1 bg-slate-800 rounded-full overflow-hidden">
+            <div class="h-full bg-brand-500 w-full animate-loader rounded-full"></div>
         </div>
     </div>
 
-    <!-- TELA DE LOGIN -->
-    <div id="telaLogin" class="fixed inset-0 z-[100] bg-gray-900/95 hidden items-center justify-center backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
-            <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" ondblclick="habilitarAdmin()" class="h-16 w-16 mb-4 object-contain rounded-full shadow-sm cursor-default" title="Acesso Restrito">
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">Acesso Restrito</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Selecione o seu perfil e insira a senha.</p>
+    <div id="telaLogin" class="fixed inset-0 z-[100] bg-slate-900/90 hidden items-center justify-center backdrop-blur-md transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-slate-100 dark:border-slate-700">
+            <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" ondblclick="habilitarAdmin()" class="h-16 w-16 mb-5 object-contain rounded-full shadow-sm cursor-default bg-slate-50 p-1" title="Acesso Restrito">
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Acesso Restrito</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-8 text-center">Selecione o seu perfil e insira a senha.</p>
             
-            <div class="w-full mb-4">
-                <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Seu Perfil</label>
-                <select id="usuarioLogin" class="input-field w-full px-4 py-3 font-bold text-gray-700 dark:text-gray-200 mb-2">
+            <div class="w-full mb-5">
+                <label class="text-[10px] font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase mb-1 block">Seu Perfil</label>
+                <select id="usuarioLogin" class="input-field cursor-pointer">
                     <option value="MuriloAguiar">Murilo Aguiar</option>
                     <option value="MarcosFernandes">Marcos Fernandes</option>
                 </select>
             </div>
 
-            <div class="w-full mb-6">
-                <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Senha</label>
-                <input type="password" id="senhaLogin" class="input-field w-full px-4 py-3 text-center text-xl tracking-[0.5em] font-bold" placeholder="••••••••" onkeydown="verificarEnter(event)">
-                <p id="msgErroLogin" class="text-red-500 dark:text-red-400 text-xs font-bold mt-2 hidden text-center"><i class="fa-solid fa-triangle-exclamation"></i> Senha incorreta!</p>
-                <div class="text-right mt-1">
-                    <button onclick="abrirRecuperacao()" class="text-[10px] text-blue-500 hover:text-blue-700 font-bold underline transition">Esqueci a minha senha</button>
+            <div class="w-full mb-8">
+                <label class="text-[10px] font-semibold tracking-wider text-slate-500 dark:text-slate-400 uppercase mb-1 block">Senha</label>
+                <input type="password" id="senhaLogin" class="input-field text-center text-xl tracking-[0.3em]" placeholder="••••••••" onkeydown="verificarEnter(event)">
+                <p id="msgErroLogin" class="text-red-500 dark:text-red-400 text-xs font-medium mt-2 hidden text-center"><i class="fa-solid fa-circle-exclamation mr-1"></i> Senha incorreta</p>
+                <div class="text-right mt-2">
+                    <button onclick="abrirRecuperacao()" class="text-[11px] text-brand-600 hover:text-brand-700 dark:text-brand-400 font-medium transition">Esqueci a minha senha</button>
                 </div>
             </div>
             
-            <button id="btnLogin" onclick="entrarSistema()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center">
-                <i class="fa-solid fa-right-to-bracket mr-2"></i> ACESSAR
+            <button id="btnLogin" onclick="entrarSistema()" class="w-full bg-slate-900 hover:bg-slate-800 dark:bg-brand-600 dark:hover:bg-brand-500 text-white font-medium py-3 rounded-xl shadow-md transition duration-200 flex items-center justify-center">
+                ACESSAR <i class="fa-solid fa-arrow-right ml-2"></i>
             </button>
         </div>
     </div>
 
-    <!-- TELA DE TROCA DE SENHA -->
-    <div id="telaTrocaSenha" class="fixed inset-0 z-[110] bg-gray-900/95 hidden items-center justify-center backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
-            <div class="bg-yellow-100 text-yellow-600 p-3 rounded-full mb-4">
-                <i class="fa-solid fa-key text-2xl"></i>
+    <div id="telaTrocaSenha" class="fixed inset-0 z-[110] bg-slate-900/90 hidden items-center justify-center backdrop-blur-md transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-slate-100 dark:border-slate-700">
+            <div class="bg-amber-50 dark:bg-amber-900/30 text-amber-600 p-4 rounded-full mb-5">
+                <i class="fa-solid fa-shield-halved text-2xl"></i>
             </div>
-            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Primeiro Acesso</h2>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mb-6 text-center">Para a sua segurança, registe uma nova senha pessoal. Usá-la-á nas próximas vezes.</p>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Segurança</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-8 text-center leading-relaxed">Este é o seu primeiro acesso. Registe uma nova senha pessoal e intransferível.</p>
             
-            <div class="w-full mb-3">
-                <input type="password" id="novaSenha" class="input-field w-full px-4 py-2 text-center text-lg tracking-[0.2em] font-bold" placeholder="Nova Senha">
+            <div class="w-full mb-4">
+                <input type="password" id="novaSenha" class="input-field text-center tracking-widest" placeholder="Nova Senha">
             </div>
-            <div class="w-full mb-6">
-                <input type="password" id="confirmaSenha" class="input-field w-full px-4 py-2 text-center text-lg tracking-[0.2em] font-bold" placeholder="Repita a Senha">
-                <p id="msgErroSenha" class="text-red-500 dark:text-red-400 text-xs font-bold mt-2 hidden text-center"><i class="fa-solid fa-triangle-exclamation"></i> As senhas não coincidem ou estão vazias!</p>
+            <div class="w-full mb-8">
+                <input type="password" id="confirmaSenha" class="input-field text-center tracking-widest" placeholder="Confirme a Senha">
+                <p id="msgErroSenha" class="text-red-500 text-xs font-medium mt-2 hidden text-center">As senhas não coincidem.</p>
             </div>
             
-            <button id="btnSalvarSenha" onclick="salvarNovaSenha()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center">
-                <i class="fa-solid fa-check mr-2"></i> GUARDAR E ENTRAR
+            <button id="btnSalvarSenha" onclick="salvarNovaSenha()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-xl shadow-md transition duration-200 flex items-center justify-center">
+                SALVAR E ENTRAR
             </button>
         </div>
     </div>
 
-    <!-- TELA DE RECUPERAÇÃO -->
-    <div id="telaRecuperacao" class="fixed inset-0 z-[115] bg-gray-900/95 hidden items-center justify-center backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
-            <div class="bg-blue-100 text-blue-600 p-3 rounded-full mb-4">
+    <div id="telaRecuperacao" class="fixed inset-0 z-[115] bg-slate-900/90 hidden items-center justify-center backdrop-blur-md transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-slate-100 dark:border-slate-700">
+            <div class="bg-brand-50 dark:bg-brand-900/30 text-brand-600 p-4 rounded-full mb-5">
                 <i class="fa-solid fa-envelope-open-text text-2xl"></i>
             </div>
-            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Recuperar Senha</h2>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Recuperar Senha</h2>
             
             <div id="passo1Recuperacao" class="w-full flex flex-col items-center">
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 text-center font-medium">Selecione o e-mail cadastrado para o qual deseja receber o código de segurança.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 text-center">Selecione o e-mail cadastrado para receber o código de validação.</p>
                 <div class="w-full mb-6">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase">E-mail de Destino</label>
-                    <select id="selectEmailRecuperacao" class="input-field w-full px-4 py-2 text-center text-sm font-bold text-gray-700 dark:text-gray-200"></select>
+                    <select id="selectEmailRecuperacao" class="input-field text-center text-sm cursor-pointer"></select>
                 </div>
-                <button onclick="enviarCodigoRecuperacao()" id="btnReceberCodigo" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center mb-3">
-                    <i class="fa-solid fa-paper-plane mr-2"></i> RECEBER CÓDIGO
+                <button onclick="enviarCodigoRecuperacao()" id="btnReceberCodigo" class="w-full bg-slate-900 hover:bg-slate-800 dark:bg-brand-600 text-white font-medium py-3 rounded-xl shadow-md transition duration-200 mb-4">
+                    ENVIAR CÓDIGO
                 </button>
-                <button onclick="cancelarRecuperacao()" class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-bold underline transition">
-                    Cancelar e Voltar
-                </button>
+                <button onclick="cancelarRecuperacao()" class="text-xs text-slate-500 hover:text-slate-700 font-medium transition">Cancelar</button>
             </div>
 
             <div id="passo2Recuperacao" class="w-full flex flex-col items-center hidden">
-                <p id="textoEmailRecuperacao" class="text-xs text-gray-500 dark:text-gray-400 mb-6 text-center font-medium"></p>
+                <p id="textoEmailRecuperacao" class="text-xs text-slate-500 mb-6 text-center"></p>
                 
-                <div class="w-full mb-3">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase">Código de 6 dígitos</label>
-                    <input type="text" id="codigoRecuperacao" maxlength="6" class="input-field w-full px-4 py-2 text-center text-xl tracking-[0.5em] font-bold text-blue-600" placeholder="000000">
+                <div class="w-full mb-4">
+                    <input type="text" id="codigoRecuperacao" maxlength="6" class="input-field text-center text-xl tracking-[0.5em] font-bold text-brand-600" placeholder="000000">
                 </div>
                 <div class="w-full mb-3">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase">Nova Senha</label>
-                    <input type="password" id="novaSenhaRecuperacao" class="input-field w-full px-4 py-2 text-center text-lg tracking-[0.2em] font-bold" placeholder="Nova Senha">
+                    <input type="password" id="novaSenhaRecuperacao" class="input-field text-center tracking-widest" placeholder="Nova Senha">
                 </div>
                 <div class="w-full mb-6">
-                    <label class="text-[10px] font-bold text-gray-500 uppercase">Repita a Senha</label>
-                    <input type="password" id="confirmaSenhaRecuperacao" class="input-field w-full px-4 py-2 text-center text-lg tracking-[0.2em] font-bold" placeholder="Repita a Senha">
-                    <p id="msgErroRecuperacao" class="text-red-500 dark:text-red-400 text-xs font-bold mt-2 hidden text-center"><i class="fa-solid fa-triangle-exclamation"></i> Erro!</p>
+                    <input type="password" id="confirmaSenhaRecuperacao" class="input-field text-center tracking-widest" placeholder="Confirme a Senha">
+                    <p id="msgErroRecuperacao" class="text-red-500 text-xs font-medium mt-2 hidden text-center">Erro!</p>
                 </div>
                 
-                <button id="btnConfirmaRecup" onclick="confirmarRecuperacao()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center mb-3">
-                    <i class="fa-solid fa-floppy-disk mr-2"></i> ALTERAR SENHA
+                <button id="btnConfirmaRecup" onclick="confirmarRecuperacao()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-xl shadow-md transition duration-200 mb-4">
+                    ALTERAR SENHA
                 </button>
-                <button onclick="cancelarRecuperacao()" class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-bold underline transition">
-                    Cancelar e Voltar
-                </button>
+                <button onclick="cancelarRecuperacao()" class="text-xs text-slate-500 hover:text-slate-700 font-medium transition">Cancelar</button>
             </div>
         </div>
     </div>
 
     <!-- TOAST NOTIFICATION -->
-    <div id="toastNotification" class="fixed top-5 right-5 z-[200] transform translate-x-full opacity-0 transition-all duration-300 flex items-center px-4 py-3 rounded-lg shadow-xl text-white font-bold text-sm pointer-events-none">
-        <i id="toastIcon" class="mr-2"></i>
+    <div id="toastNotification" class="fixed top-5 right-5 z-[200] transform translate-x-full opacity-0 transition-all duration-300 flex items-center px-4 py-3 rounded-xl shadow-lg text-white font-medium text-sm pointer-events-none">
+        <i id="toastIcon" class="mr-3"></i>
         <span id="toastMessage"></span>
     </div>
 
-    <div class="max-w-7xl mx-auto mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div class="max-w-[1400px] mx-auto mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div class="flex items-center">
-            <div class="mr-4 flex-shrink-0">
-                <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" alt="Logo Grupo Prime B2B" class="h-12 w-12 object-contain rounded-full">
+            <div class="mr-4 flex-shrink-0 bg-white dark:bg-slate-800 p-1.5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" alt="Logo Grupo Prime B2B" class="h-10 w-10 object-contain rounded-xl">
             </div>
             <div>
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Grupo Prime B2B</h1>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Sistema Gerador de Cotações <span id="nomeUsuarioLogado" class="ml-2 bg-blue-100 text-blue-800 text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded hidden"></span></p>
+                <h1 class="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Grupo Prime B2B</h1>
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Sistema Gerador de Cotações <span id="nomeUsuarioLogado" class="ml-2 bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full hidden"></span></p>
             </div>
         </div>
-        <div class="flex gap-2 w-full sm:w-auto">
-            <button onclick="toggleDarkMode()" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-yellow-400 px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Alternar Tema">
+        <div class="flex gap-2 w-full sm:w-auto bg-white dark:bg-slate-800 p-1.5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+            <button onclick="toggleDarkMode()" class="hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 px-4 py-2 rounded-xl transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Alternar Tema">
                 <i id="iconeTema" class="fa-solid fa-sun"></i>
             </button>
-            <button onclick="abrirHistorico()" class="bg-gray-800 hover:bg-gray-900 dark:bg-gray-600 dark:hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0">
-                <i class="fa-solid fa-cloud mr-2"></i> Histórico na Nuvem
+            <div class="w-px bg-slate-200 dark:bg-slate-700 my-2"></div>
+            <button onclick="abrirHistorico()" class="hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-medium transition flex items-center justify-center flex-grow sm:flex-grow-0 text-sm">
+                <i class="fa-solid fa-cloud-arrow-up mr-2 text-brand-500"></i> Histórico
             </button>
-            <button onclick="abrirFerramentas()" class="bg-purple-100 hover:bg-purple-200 dark:bg-purple-900 dark:hover:bg-purple-800 text-purple-700 dark:text-purple-300 px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0">
-                <i class="fa-solid fa-print mr-2"></i> Ferramentas
+            <button onclick="abrirFerramentas()" class="hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-medium transition flex items-center justify-center flex-grow sm:flex-grow-0 text-sm">
+                <i class="fa-solid fa-print mr-2 text-indigo-500"></i> Etiquetas
             </button>
-            <button onclick="sairSistema()" class="bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 text-red-600 dark:text-red-300 px-4 py-2 rounded-lg font-bold shadow transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Sair do Sistema">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <div class="w-px bg-slate-200 dark:bg-slate-700 my-2"></div>
+            <button onclick="sairSistema()" class="hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 px-4 py-2 rounded-xl transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Sair do Sistema">
+                <i class="fa-solid fa-power-off"></i>
             </button>
         </div>
     </div>
 
     <!-- AVISO ADMIN -->
-    <div id="avisoAdmin" class="max-w-7xl mx-auto mb-4 bg-red-100 dark:bg-red-900/40 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative hidden shadow-sm flex items-center justify-center">
-        <strong class="font-bold uppercase tracking-wide text-sm"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Perfil Admin: </strong>
-        <span class="block sm:inline ml-2 text-sm font-medium">Necessário efetuar login com perfil de utilizador para gerar cotações.</span>
+    <div id="avisoAdmin" class="max-w-[1400px] mx-auto mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-400 px-4 py-3 rounded-2xl relative hidden shadow-sm flex items-center justify-center">
+        <span class="text-xs font-medium"><i class="fa-solid fa-shield-halved mr-2"></i> <strong>Modo Administrador:</strong> É necessário efetuar login com perfil de utilizador para gerar cotações e gerar códigos.</span>
     </div>
 
-    <div class="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row">
+    <div class="max-w-[1400px] mx-auto bg-white dark:bg-slate-800 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col md:flex-row">
         
-        <div class="w-full md:w-3/5 lg:w-2/3 p-6 overflow-y-auto" style="max-height: 85vh;">
+        <!-- COLUNA ESQUERDA: FORMULÁRIO -->
+        <div class="w-full md:w-[60%] lg:w-[65%] p-6 md:p-8 overflow-y-auto custom-scrollbar" style="max-height: 80vh;">
             
-            <div class="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                    <h3 class="text-sm font-bold text-blue-800 dark:text-blue-300"><i class="fa-solid fa-file-pdf mr-2 text-red-500"></i>Leitor de Pedidos (PDF)</h3>
-                    <p class="text-[11px] text-blue-600 dark:text-blue-400 mt-1">Importe o PDF do pedido padrão para preencher os dados automaticamente.</p>
-                </div>
-                <div class="shrink-0">
-                    <input type="file" id="pdfUpload" accept="application/pdf" class="hidden" onchange="iniciarLeituraPDF(event)">
-                    <label for="pdfUpload" id="lblPdfUpload" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-3 rounded shadow transition cursor-pointer flex items-center justify-center">
-                        <i class="fa-solid fa-upload mr-2"></i> LER PDF
-                    </label>
+            <!-- BLOCO: IMPORTAÇÃO PDF -->
+            <div class="mb-8 group">
+                <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-brand-400 dark:hover:border-brand-500 bg-slate-50/50 dark:bg-slate-900/20 rounded-2xl p-6 transition-all duration-300 relative flex flex-col items-center justify-center text-center">
+                    <input type="file" id="pdfUpload" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="iniciarLeituraPDF(event)">
+                    <div class="bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-400 w-12 h-12 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-file-pdf text-xl"></i>
+                    </div>
+                    <h3 id="lblPdfUpload" class="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">Arraste o PDF do Pedido ou clique aqui</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Preenchimento automático e inteligente de todos os dados.</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Nº do Pedido</label>
-                    <input type="text" id="pedido" class="input-field" placeholder="Ex: 12345" oninput="dadosAlterados()">
-                </div>
-                <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Modalidade de Frete</label>
-                    <select id="modalidade" class="input-field font-bold text-gray-700 dark:text-gray-200" onchange="dadosAlterados()">
-                        <option value="CIF">CIF (Pago na Origem)</option>
-                        <option value="FOB">FOB (Pago no Destino)</option>
-                    </select>
-                </div>
-                <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Valor da NF (R$)</label>
-                    <input type="text" id="valorNf" class="input-field" placeholder="Ex: 1.500,00" oninput="this.value=mascaraMoeda(this.value); dadosAlterados()">
-                </div>
-                <div class="col-span-2 sm:col-span-1">
-                    <div class="flex gap-2">
-                        <div class="w-1/2">
-                            <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Total Vol.</label>
-                            <input type="text" id="qtdVolumes" class="input-field input-disabled text-center" readonly placeholder="0">
-                        </div>
-                        <div class="w-1/2">
-                            <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Total (kg)</label>
-                            <input type="text" id="pesoTotal" class="input-field input-disabled text-center" readonly placeholder="0.0">
-                        </div>
+            <!-- BLOCO: DADOS GERAIS -->
+            <div class="mb-8">
+                <h3 class="text-xs font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase mb-4 pl-1">Dados Gerais</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5 block pl-1">Nº do Pedido</label>
+                        <input type="text" id="pedido" class="input-field font-medium" placeholder="Ex: 12345" oninput="dadosAlterados()">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5 block pl-1">Frete</label>
+                        <select id="modalidade" class="input-field cursor-pointer font-medium" onchange="dadosAlterados()">
+                            <option value="CIF">CIF (Pago na Origem)</option>
+                            <option value="FOB">FOB (Destino)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5 block pl-1">Valor NF (R$)</label>
+                        <input type="text" id="valorNf" class="input-field font-medium text-brand-700 dark:text-brand-400" placeholder="0,00" oninput="this.value=mascaraMoeda(this.value); dadosAlterados()">
                     </div>
                 </div>
             </div>
 
-            <hr class="my-4 border-gray-200 dark:border-gray-700">
-
-            <div class="grid grid-cols-2 gap-4 mb-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
-                <div class="col-span-2 flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-blue-700 dark:text-blue-300 uppercase"><i class="fa-solid fa-building mr-2"></i>Empresa Remetente</h3>
-                </div>
-                <div class="col-span-2">
-                    <select id="empresaRemetente" class="input-field border-blue-300 dark:border-blue-600 font-bold text-blue-800 dark:text-blue-200" onchange="dadosAlterados()">
-                        <option value="">-- Selecione a Empresa --</option>
-                        <option value="P">Prime2P</option>
-                        <option value="XD">PrimeXD</option>
-                        <option value="XC">PrimeXCORP</option>
-                    </select>
-                </div>
-                <div class="col-span-2">
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400 italic mt-1"><i class="fa-solid fa-circle-info"></i> O CNPJ, Nome e Endereço serão preenchidos automaticamente no texto final.</p>
-                </div>
+            <!-- BLOCO: REMETENTE -->
+            <div class="mb-8 bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                <h3 class="text-xs font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase mb-4 pl-1">Remetente (Origem)</h3>
+                <select id="empresaRemetente" class="input-field cursor-pointer font-medium border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800" onchange="dadosAlterados()">
+                    <option value="">Selecione a Empresa do Grupo Prime...</option>
+                    <option value="P">Prime2P Soluções</option>
+                    <option value="XD">PrimeXD Comércio</option>
+                    <option value="XC">PrimeXCORP</option>
+                </select>
             </div>
 
-            <hr class="my-4 border-gray-200 dark:border-gray-700">
-
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="col-span-2">
-                    <h3 class="text-sm font-bold text-green-600 dark:text-green-400 uppercase mb-2"><i class="fa-solid fa-map-location-dot mr-2"></i>Destinatário</h3>
-                </div>
-                <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">CNPJ</label>
-                    <div class="relative">
-                        <input type="text" id="destCnpj" class="input-field pr-8" placeholder="00.000.000/0000-00" maxlength="18" oninput="this.value = mascaraCNPJ(this.value); dadosAlterados();" onblur="buscarCNPJ(this.value, 'destNome', 'loadDestCnpj')">
-                        <span id="loadDestCnpj" class="absolute right-2 top-3 text-green-500 hidden"><i class="fas fa-spinner fa-spin"></i></span>
+            <!-- BLOCO: DESTINATÁRIO -->
+            <div class="mb-8">
+                <h3 class="text-xs font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase mb-4 pl-1 flex items-center justify-between">
+                    <span>Destinatário (Cliente)</span>
+                    <span id="loadDestCnpj" class="text-emerald-500 hidden"><i class="fas fa-spinner fa-spin text-sm"></i></span>
+                    <span id="loadDestCep" class="text-emerald-500 hidden"><i class="fas fa-spinner fa-spin text-sm"></i></span>
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1.5 block pl-1">CNPJ</label>
+                        <input type="text" id="destCnpj" class="input-field font-medium" placeholder="00.000.000/0000-00" maxlength="18" oninput="this.value = mascaraCNPJ(this.value); dadosAlterados();" onblur="buscarCNPJ(this.value, 'destNome', 'loadDestCnpj')">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1.5 block pl-1">Razão Social</label>
+                        <input type="text" id="destNome" class="input-field input-disabled font-medium" readonly placeholder="Busca automática..." oninput="dadosAlterados()">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1.5 block pl-1">CEP</label>
+                        <input type="text" id="destCep" class="input-field font-medium" placeholder="00000-000" maxlength="9" oninput="this.value = mascaraCEP(this.value); dadosAlterados(); if(this.value.length < 9) { const box = document.getElementById('boxRecomendacao'); if(box) box.classList.add('hidden'); }" onblur="buscarCEP(this.value, 'destCidade', 'loadDestCep')">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1.5 block pl-1">Cidade / UF</label>
+                        <input type="text" id="destCidade" class="input-field input-disabled font-medium" readonly placeholder="Busca automática..." oninput="dadosAlterados()">
                     </div>
                 </div>
-                <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Nome</label>
-                    <input type="text" id="destNome" class="input-field input-disabled" readonly placeholder="Busca automática via CNPJ" oninput="dadosAlterados()">
-                </div>
-                <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">CEP</label>
-                    <div class="relative">
-                        <input type="text" id="destCep" class="input-field pr-8" placeholder="00000-000" maxlength="9" oninput="this.value = mascaraCEP(this.value); dadosAlterados(); if(this.value.length < 9) { const box = document.getElementById('boxRecomendacao'); if(box) box.classList.add('hidden'); }" onblur="buscarCEP(this.value, 'destCidade', 'loadDestCep')">
-                        <span id="loadDestCep" class="absolute right-2 top-3 text-green-500 hidden"><i class="fas fa-spinner fa-spin"></i></span>
-                    </div>
-                </div>
-                <div class="col-span-2 sm:col-span-1">
-                    <label class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Cidade / UF</label>
-                    <input type="text" id="destCidade" class="input-field input-disabled" readonly placeholder="Busca automática via CEP" oninput="dadosAlterados()">
-                </div>
 
-                <div id="boxRecomendacao" class="col-span-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 p-4 rounded-lg shadow-inner hidden mt-2 transition-all duration-300">
+                <!-- DICA INTELIGENTE (CÉREBRO) -->
+                <div id="boxRecomendacao" class="mt-4 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 p-4 rounded-xl hidden transition-all duration-300">
                     <div class="flex items-start">
-                        <div class="text-indigo-500 dark:text-indigo-400 mt-0.5 mr-3">
-                            <i class="fa-solid fa-robot text-xl animate-pulse"></i>
-                        </div>
+                        <i class="fa-solid fa-bolt text-emerald-500 mt-0.5 mr-3"></i>
                         <div class="w-full">
-                            <h4 class="text-xs font-bold text-indigo-800 dark:text-indigo-300 uppercase tracking-wider mb-1">Cérebro Logístico</h4>
-                            <p id="textoRecomendacao" class="text-[11px] text-indigo-600 dark:text-indigo-400 mb-3"></p>
+                            <h4 class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1">Rotas Recomendadas</h4>
+                            <p id="textoRecomendacao" class="text-xs text-slate-600 dark:text-slate-400 mb-2"></p>
                             <div id="listaRecomendadas" class="flex flex-col gap-2"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <hr class="my-4 border-gray-200 dark:border-gray-700">
-
+            <!-- BLOCO: ITENS -->
             <div class="mb-4">
-                <h3 class="text-sm font-bold text-purple-600 dark:text-purple-400 uppercase"><i class="fa-solid fa-cubes mr-2"></i>Itens da Cotação</h3>
-                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1"><i class="fa-solid fa-circle-info"></i> Preencha as medidas e clique no botão <strong class="text-purple-600 dark:text-purple-400">+</strong> ao final da linha para adicionar outro item.</p>
+                <div class="flex justify-between items-end mb-4 pl-1">
+                    <div>
+                        <h3 class="text-xs font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase mb-1">Volumes e Pesos</h3>
+                        <p class="text-[10px] text-slate-400">Total calculado automaticamente.</p>
+                    </div>
+                    <div class="flex gap-3 text-right">
+                        <div>
+                            <span class="text-[10px] font-semibold text-slate-400 uppercase block">Qtd</span>
+                            <span id="qtdVolumes" class="text-sm font-bold text-slate-700 dark:text-slate-200">0</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-semibold text-slate-400 uppercase block">Peso (Kg)</span>
+                            <span id="pesoTotal" class="text-sm font-bold text-slate-700 dark:text-slate-200">0.0</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="w-full overflow-x-auto pb-2">
+            <div class="w-full overflow-x-auto pb-4">
                 <div class="min-w-[650px]">
-                    <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 mb-2 px-2 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase items-center">
+                    <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_70px] gap-2 mb-2 px-3 text-[10px] font-semibold text-slate-400 uppercase items-center">
                         <div class="text-center">Vol</div>
-                        <div>Descrição</div>
+                        <div>Descrição do Item</div>
                         <div class="text-center">Comp</div>
                         <div class="text-center">Larg</div>
                         <div class="text-center">Alt</div>
-                        <div class="text-center">Peso Un.</div>
-                        <div class="text-center">Ações</div>
+                        <div class="text-center">Kg/Un</div>
+                        <div class="text-center"></div>
                     </div>
                     
-                    <div id="containerItens" class="space-y-3"></div>
+                    <div id="containerItens" class="space-y-2"></div>
                 </div>
             </div>
 
         </div>
 
-        <div class="w-full md:w-2/5 lg:w-1/3 bg-gray-50 dark:bg-gray-900 p-6 border-l border-gray-200 dark:border-gray-700 flex flex-col relative">
-            <h2 class="text-lg font-bold text-gray-700 dark:text-gray-200 mb-4 flex items-center justify-between">
-                <span><i class="fa-regular fa-file-lines mr-2"></i> Resultado Final</span>
-                <span id="badgeCodigo" class="bg-yellow-200 text-yellow-800 text-xs px-2 py-1 rounded font-bold hidden"></span>
-            </h2>
+        <!-- COLUNA DIREITA: RESULTADO -->
+        <div class="w-full md:w-[40%] lg:w-[35%] bg-slate-50 dark:bg-slate-900/50 p-6 md:p-8 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 flex flex-col relative">
             
-            <div class="flex-grow">
-                <textarea id="textoFinal" readonly tabindex="-1" class="w-full h-full min-h-[400px] p-4 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-inner text-sm font-mono text-gray-500 dark:text-gray-400 resize-none focus:outline-none cursor-not-allowed select-none"></textarea>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">
+                    Preview da Cotação
+                </h2>
+                <span id="badgeCodigo" class="bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 text-[10px] px-2.5 py-1 rounded-full font-bold hidden border border-brand-200 dark:border-brand-800"></span>
+            </div>
+            
+            <div class="flex-grow relative group">
+                <textarea id="textoFinal" readonly tabindex="-1" oncopy="if(!window.isSystemCopy) return false;" oncut="return false;" onpaste="return false;" oncontextmenu="return false;" class="w-full h-full min-h-[400px] p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm text-[13px] leading-relaxed font-mono text-slate-600 dark:text-slate-400 resize-none focus:outline-none cursor-not-allowed select-none transition-colors"></textarea>
             </div>
 
-            <button onclick="processarECopiar()" id="btnCopiar" class="mt-4 w-full py-3 bg-red-500 text-white font-bold rounded-lg shadow-md transition duration-200 flex items-center justify-center text-lg opacity-60 cursor-not-allowed">
-                <i class="fa-solid fa-lock mr-2"></i> SELECIONE O REMETENTE
+            <button onclick="processarECopiar()" id="btnCopiar" class="mt-6 w-full py-4 bg-slate-200 text-slate-500 font-semibold rounded-2xl transition duration-300 flex items-center justify-center text-sm cursor-not-allowed">
+                PREENCHA OS DADOS
             </button>
         </div>
 
@@ -392,82 +423,82 @@
 
     <!-- MODAL DE HISTÓRICO -->
     <div id="modalHistorico" class="modal fixed inset-0 z-50 items-center justify-center">
-        <div class="bg-white dark:bg-gray-800 w-11/12 max-w-6xl rounded-xl shadow-2xl flex flex-col max-h-[85vh] border border-gray-200 dark:border-gray-700">
-            <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-xl">
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-cloud mr-2 text-blue-500"></i> Histórico Sincronizado</h2>
-                <button onclick="fecharHistorico()" class="text-gray-500 hover:text-red-500 text-2xl transition"><i class="fa-solid fa-xmark"></i></button>
+        <div class="bg-white dark:bg-slate-800 w-11/12 max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] border border-slate-100 dark:border-slate-700 overflow-hidden">
+            <div class="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80">
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center"><i class="fa-solid fa-cloud-arrow-up mr-3 text-brand-500"></i> Base de Conhecimento</h2>
+                <button onclick="fecharHistorico()" class="text-slate-400 hover:text-red-500 text-xl transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <div class="flex gap-2">
-                    <div class="relative flex-grow">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
-                        <input type="text" id="inputBuscaHistorico" placeholder="Buscar por ID, destinatário ou data..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 input-field" oninput="renderizarListaHistorico()">
-                    </div>
+            <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400"></i>
+                    <input type="text" id="inputBuscaHistorico" placeholder="Buscar por ID, cliente, cidade..." class="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-sm transition-all" oninput="renderizarListaHistorico()">
                 </div>
             </div>
 
-            <div class="p-6 overflow-y-auto flex-grow bg-gray-100 dark:bg-gray-900">
-                <div id="listaHistorico" class="space-y-3"></div>
+            <div class="p-6 overflow-y-auto flex-grow bg-slate-50/50 dark:bg-slate-900/20">
+                <div id="listaHistorico" class="space-y-4"></div>
             </div>
         </div>
     </div>
 
     <!-- MODAL DE UPLOAD DE NOTA FISCAL (NF-e) -->
     <div id="modalUploadNF" class="modal fixed inset-0 z-[70] items-center justify-center">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-md flex flex-col items-center border border-gray-200 dark:border-gray-700">
-            <div class="bg-blue-100 text-blue-600 p-3 rounded-full mb-4">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-11/12 max-w-md flex flex-col items-center border border-slate-100 dark:border-slate-700">
+            <div class="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-4 rounded-full mb-5">
                 <i class="fa-solid fa-file-invoice text-2xl"></i>
             </div>
-            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2 text-center">Validação de Nota Fiscal</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Para gerar as etiquetas do <strong class="text-blue-600 dark:text-blue-400">Pedido <span id="lblPedidoAlvo"></span></strong>, envie o arquivo <b>XML</b> ou <b>PDF</b> (DANFE).</p>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2 text-center">Validar e Imprimir</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-8 text-center leading-relaxed">Envie o arquivo <b>XML</b> ou <b>PDF</b> (DANFE) do pedido <strong class="text-indigo-600 dark:text-indigo-400">#<span id="lblPedidoAlvo"></span></strong> para gerar as etiquetas.</p>
             
-            <div class="w-full mb-4 bg-gray-50 dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center relative hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                <input type="file" id="nfUploadInput" accept=".xml, .pdf" onchange="processarUploadNF(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
-                <p class="text-xs font-bold text-gray-600 dark:text-gray-300">Clique ou arraste a Nota Fiscal (XML/PDF)</p>
-                <p id="lblStatusNF" class="text-[10px] text-blue-500 font-bold mt-2 h-4"></p>
+            <div class="w-full mb-6 group relative">
+                <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-indigo-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-8 text-center transition-colors">
+                    <input type="file" id="nfUploadInput" accept=".xml, .pdf" onchange="processarUploadNF(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-3 group-hover:text-indigo-500 transition-colors"></i>
+                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">Selecione o arquivo da Nota Fiscal</p>
+                </div>
+                <p id="lblStatusNF" class="text-[10px] text-center text-indigo-500 font-bold mt-3 h-4"></p>
             </div>
             
-            <button onclick="fecharModalUploadNF()" class="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg transition duration-200">
-                Cancelar e Voltar
+            <button onclick="fecharModalUploadNF()" class="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium py-3 rounded-xl transition duration-200 text-sm">
+                Cancelar
             </button>
         </div>
     </div>
 
     <!-- MODAL DE FERRAMENTAS -->
-    <div id="modalFerramentas" class="modal fixed inset-0 z-[80] items-center justify-center backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-gray-200 dark:border-gray-700">
-            <div class="bg-purple-100 text-purple-600 p-3 rounded-full mb-4">
+    <div id="modalFerramentas" class="modal fixed inset-0 z-[80] items-center justify-center backdrop-blur-md transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-11/12 max-w-sm flex flex-col items-center border border-slate-100 dark:border-slate-700">
+            <div class="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 p-4 rounded-full mb-5">
                 <i class="fa-solid fa-print text-2xl"></i>
             </div>
-            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2 text-center">Impressão Avulsa</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center">Selecione o modelo para imprimir diretamente na Elgin L42 Pro.</p>
+            <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2 text-center">Impressão Elgin L42</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-8 text-center">Modelos de etiquetas avulsas prontas para impressão direta.</p>
             
-            <button onclick="imprimirEtiquetaAvulsa('fragil')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center mb-3">
-                <i class="fa-solid fa-wine-glass-empty mr-2"></i> ETIQUETA "FRÁGIL"
+            <button onclick="imprimirEtiquetaAvulsa('fragil')" class="w-full bg-white dark:bg-slate-700 border-2 border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-600 font-semibold py-3 rounded-xl shadow-sm transition duration-200 flex items-center justify-center mb-3">
+                <i class="fa-solid fa-wine-glass-empty mr-2"></i> RÓTULO "FRÁGIL"
             </button>
 
-            <button onclick="imprimirEtiquetaAvulsa('agradecimento')" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md transition duration-200 flex items-center justify-center mb-6">
-                <i class="fa-solid fa-handshake mr-2"></i> ETIQUETA "AGRADECIMENTO"
+            <button onclick="imprimirEtiquetaAvulsa('agradecimento')" class="w-full bg-white dark:bg-slate-700 border-2 border-brand-500 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-slate-600 font-semibold py-3 rounded-xl shadow-sm transition duration-200 flex items-center justify-center mb-6">
+                <i class="fa-solid fa-handshake mr-2"></i> RÓTULO "AGRADECIMENTO"
             </button>
             
-            <button onclick="fecharFerramentas()" class="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg transition duration-200">
-                Cancelar e Voltar
+            <button onclick="fecharFerramentas()" class="text-xs font-medium text-slate-500 hover:text-slate-700 transition">
+                Fechar Janela
             </button>
         </div>
     </div>
 
     <!-- MODAL CUSTOMIZADO (ALERT/CONFIRM) -->
     <div id="customDialog" class="modal fixed inset-0 z-[60] items-center justify-center">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-11/12 max-w-sm p-6 transform transition-all border border-gray-200 dark:border-gray-700">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2 flex items-center" id="dialogTitle">
-                <i class="fa-solid fa-circle-info text-blue-500 mr-2"></i> Aviso
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-11/12 max-w-sm p-6 transform transition-all border border-slate-100 dark:border-slate-700">
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-3 flex items-center" id="dialogTitle">
+                <i class="fa-solid fa-circle-info text-brand-500 mr-2"></i> Aviso
             </h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6" id="dialogMessage"></p>
+            <p class="text-sm text-slate-600 dark:text-slate-300 mb-8 leading-relaxed" id="dialogMessage"></p>
             <div class="flex justify-end gap-3">
-                <button id="dialogBtnCancel" onclick="closeDialog()" class="hidden px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition">Cancelar</button>
-                <button id="dialogBtnConfirm" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition shadow">OK</button>
+                <button id="dialogBtnCancel" onclick="closeDialog()" class="hidden px-5 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition text-sm">Cancelar</button>
+                <button id="dialogBtnConfirm" class="px-5 py-2.5 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-700 transition shadow-sm text-sm">Entendi</button>
             </div>
         </div>
     </div>
@@ -561,7 +592,7 @@
 
             } catch (err) {
                 console.error("Erro ao conectar ao Firebase:", err);
-                showToast("Erro de conexão com a Nuvem. Algumas funções podem falhar.", "error");
+                showToast("Erro de conexão. Algumas funções podem falhar.", "error");
             } finally {
                 setTimeout(() => {
                     const tela = document.getElementById('telaCarregamento');
@@ -579,7 +610,7 @@
                 const opt = document.createElement('option');
                 opt.value = 'admin'; opt.text = 'Administrador (Admin)';
                 select.appendChild(opt); select.value = 'admin';
-                showDialog('Modo de Administração liberado no seletor.', 'alert');
+                showDialog('Modo de Administração liberado.', 'alert');
             }
         }
 
@@ -601,7 +632,7 @@
                     document.getElementById('nomeUsuarioLogado').classList.add('hidden');
                     document.getElementById('avisoAdmin').classList.add('hidden');
                     
-                    showDialog('Sua sessão expirou devido a 1 hora de inatividade. Por favor, faça login novamente.', 'alert');
+                    showDialog('Sua sessão expirou devido inatividade. Por favor, faça login novamente.', 'alert');
                     return; 
                 }
             }
@@ -612,7 +643,7 @@
                 document.getElementById('senhaLogin').value = '';
                 
                 const badge = document.getElementById('nomeUsuarioLogado');
-                badge.innerText = `Logado: ${usuarioAtual}`;
+                badge.innerText = `${usuarioAtual}`;
                 badge.classList.remove('hidden');
 
                 if (usuarioAtual === 'admin') {
@@ -689,9 +720,9 @@
                 document.getElementById('confirmaSenha').value = '';
                 
                 efetuarLogin(perfilSelecionado);
-                showDialog('Senha cadastrada com sucesso!', 'alert');
+                showToast('Senha atualizada.', 'success');
             } catch (err) {
-                showToast("Erro ao salvar a senha.", "error");
+                showToast("Erro ao salvar.", "error");
             } finally {
                 btn.innerHTML = btnOriginal; btn.disabled = false;
             }
@@ -713,7 +744,7 @@
         }
 
         function sairSistema() {
-            showDialog('Tem certeza que deseja desconectar do sistema?', 'confirm', () => {
+            showDialog('Deseja encerrar a sua sessão atual?', 'confirm', () => {
                 localStorage.removeItem('primeLogado');
                 localStorage.removeItem('primeUsuarioAtual'); 
                 checarEstadoLogin();
@@ -726,14 +757,14 @@
             const icon = document.getElementById('toastIcon');
 
             msg.innerText = mensagem; 
-            toast.className = 'fixed top-5 right-5 z-[200] transform transition-all duration-300 flex items-center px-4 py-3 rounded-lg shadow-xl text-white font-bold text-sm pointer-events-none';
+            toast.className = 'fixed top-5 right-5 z-[200] transform transition-all duration-300 flex items-center px-4 py-3 rounded-xl shadow-lg text-white font-medium text-sm pointer-events-none';
 
             if(tipo === 'success') {
-                toast.classList.add('bg-green-600'); icon.className = 'fa-solid fa-circle-check mr-2';
+                toast.classList.add('bg-emerald-600'); icon.className = 'fa-solid fa-circle-check mr-2';
             } else if(tipo === 'error') {
-                toast.classList.add('bg-red-600'); icon.className = 'fa-solid fa-triangle-exclamation mr-2';
+                toast.classList.add('bg-red-500'); icon.className = 'fa-solid fa-triangle-exclamation mr-2';
             } else {
-                toast.classList.add('bg-blue-600'); icon.className = 'fa-solid fa-circle-info mr-2';
+                toast.classList.add('bg-brand-600'); icon.className = 'fa-solid fa-circle-info mr-2';
             }
 
             setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
@@ -759,7 +790,7 @@
             document.getElementById('passo2Recuperacao').classList.add('hidden');
             
             const select = document.getElementById('selectEmailRecuperacao');
-            select.innerHTML = '<option value="">A carregar e-mails seguros...</option>';
+            select.innerHTML = '<option value="">A carregar...</option>';
             document.getElementById('btnReceberCodigo').disabled = true;
 
             try {
@@ -788,7 +819,7 @@
                 }
             } catch (err) {
                 select.innerHTML = '<option value="">Erro ao conectar</option>';
-                showToast("Erro ao buscar dados do utilizador na nuvem.", "error");
+                showToast("Erro ao buscar dados.", "error");
             }
             
             document.getElementById('codigoRecuperacao').value = '';
@@ -806,29 +837,24 @@
 
             const btnEnvia = document.getElementById('btnReceberCodigo');
             const textoOriginalBtn = btnEnvia.innerHTML;
-            btnEnvia.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> A ENVIAR...'; btnEnvia.disabled = true;
+            btnEnvia.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> ENVIANDO...'; btnEnvia.disabled = true;
 
             codigoRecuperacaoAtual = Math.floor(100000 + Math.random() * 900000).toString();
             
             try {
-                if (typeof emailjs === 'undefined') throw new Error("EmailJS bloqueado ou não carregado");
+                if (typeof emailjs === 'undefined') throw new Error("EmailJS bloqueado");
                 emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
                     to_email: emailSelecionado, to_name: user, codigo: codigoRecuperacaoAtual
                 }).then(function(response) {
                     avancarParaPasso2(emailSelecionado);
-                    showToast('E-mail enviado! Verifique a sua caixa de entrada e Spam.', 'success');
+                    showToast('Código enviado!', 'success');
                     btnEnvia.innerHTML = textoOriginalBtn; btnEnvia.disabled = false;
                 }).catch(function(error) {
-                    let detalheErro = error.text || 'Verifique as chaves no código.';
-                    showToast('Erro EmailJS: ' + detalheErro, 'error');
+                    showToast('Erro de envio.', 'error');
                     btnEnvia.innerHTML = textoOriginalBtn; btnEnvia.disabled = false;
                 });
             } catch (err) {
-                if (err.message && err.message.includes("bloqueado")) {
-                    showToast('O sistema de e-mail foi bloqueado pelo seu navegador (verifique o AdBlock).', 'error');
-                } else {
-                    showToast('Ocorreu um erro no sistema de envio.', 'error');
-                }
+                showToast('Ocorreu um erro no sistema.', 'error');
                 btnEnvia.innerHTML = textoOriginalBtn; btnEnvia.disabled = false;
             }
         }
@@ -836,7 +862,7 @@
         function avancarParaPasso2(emailSelecionado) {
             document.getElementById('passo1Recuperacao').classList.add('hidden');
             document.getElementById('passo2Recuperacao').classList.remove('hidden');
-            document.getElementById('textoEmailRecuperacao').innerText = `Enviámos um código de 6 dígitos para:\n${mascararEmail(emailSelecionado)}`;
+            document.getElementById('textoEmailRecuperacao').innerText = `Enviámos um código para:\n${mascararEmail(emailSelecionado)}`;
         }
 
         function cancelarRecuperacao() {
@@ -852,10 +878,10 @@
             const msgErro = document.getElementById('msgErroRecuperacao');
             
             if(codigoDigitado !== codigoRecuperacaoAtual) {
-                msgErro.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Código inválido!'; msgErro.classList.remove('hidden'); return;
+                msgErro.innerHTML = 'Código inválido.'; msgErro.classList.remove('hidden'); return;
             }
             if(nova === '' || nova !== conf) {
-                msgErro.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> As senhas não coincidem ou estão vazias!'; msgErro.classList.remove('hidden'); return;
+                msgErro.innerHTML = 'As senhas não coincidem.'; msgErro.classList.remove('hidden'); return;
             }
 
             const btn = document.getElementById('btnConfirmaRecup');
@@ -870,9 +896,9 @@
                 codigoRecuperacaoAtual = null;
                 document.getElementById('telaRecuperacao').style.display = 'none';
                 document.getElementById('telaLogin').style.display = 'flex';
-                showDialog('Senha alterada com sucesso! Já pode acessar com a nova senha.', 'alert');
+                showToast('Senha alterada com sucesso!', 'success');
             } catch(e) {
-                showToast("Erro ao alterar senha na nuvem.", "error");
+                showToast("Erro na nuvem.", "error");
             } finally {
                 btn.innerHTML = originalBtn; btn.disabled = false;
             }
@@ -888,12 +914,12 @@
             
             if (tipo === 'confirm') {
                 btnCancel.classList.remove('hidden');
-                titleIcon.className = "fa-solid fa-triangle-exclamation text-yellow-500 mr-2";
+                titleIcon.className = "fa-solid fa-triangle-exclamation text-amber-500 mr-2";
                 document.getElementById('dialogTitle').innerHTML = titleIcon.outerHTML + " Confirmação";
                 callbackConfirmDialog = callback;
             } else {
                 btnCancel.classList.add('hidden');
-                titleIcon.className = "fa-solid fa-circle-info text-blue-500 mr-2";
+                titleIcon.className = "fa-solid fa-circle-info text-brand-500 mr-2";
                 document.getElementById('dialogTitle').innerHTML = titleIcon.outerHTML + " Aviso";
                 callbackConfirmDialog = null;
             }
@@ -931,8 +957,8 @@
                 const pesoUn = parseFloat(inputs[5].value.replace(',', '.').trim()) || 0;
                 totalVolumes += vol; totalPeso += (vol * pesoUn); 
             });
-            document.getElementById('qtdVolumes').value = totalVolumes > 0 ? totalVolumes : "";
-            document.getElementById('pesoTotal').value = totalPeso > 0 ? totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 3}) : "";
+            document.getElementById('qtdVolumes').innerText = totalVolumes > 0 ? totalVolumes : "0";
+            document.getElementById('pesoTotal').innerText = totalPeso > 0 ? totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 3}) : "0.0";
         }
 
         function validarBotaoCopiar() {
@@ -940,8 +966,8 @@
             const usuarioAtual = localStorage.getItem('primeUsuarioAtual');
             
             if (usuarioAtual === 'admin') {
-                btn.innerHTML = '<i class="fa-solid fa-ban mr-2"></i> MODO ADMIN - CÓPIA BLOQUEADA';
-                btn.className = "mt-4 w-full py-3 bg-red-600 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-60 cursor-not-allowed";
+                btn.innerHTML = '<i class="fa-solid fa-ban mr-2"></i> BLOQUEADO PARA ADMIN';
+                btn.className = "mt-6 w-full py-4 bg-slate-100 text-slate-400 font-semibold rounded-2xl flex items-center justify-center text-sm cursor-not-allowed";
                 btn.disabled = true; return false;
             }
 
@@ -953,19 +979,9 @@
             const destCep = document.getElementById('destCep').value.trim();
             const destCidade = document.getElementById('destCidade').value.trim();
             
-            if(!pedido || !valorNf) {
-                btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> PREENCHA O PEDIDO E VALOR DA NF';
-                btn.className = "mt-4 w-full py-3 bg-red-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-60 cursor-not-allowed";
-                btn.disabled = true; return false;
-            }
-            if(!remetente) {
-                btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> SELECIONE O CNPJ REMETENTE';
-                btn.className = "mt-4 w-full py-3 bg-red-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-60 cursor-not-allowed";
-                btn.disabled = true; return false;
-            } 
-            if(!destCnpj || !destNome || !destCep || !destCidade) {
-                btn.innerHTML = '<i class="fa-solid fa-lock mr-2"></i> PREENCHA O DESTINATÁRIO COMPLETO';
-                btn.className = "mt-4 w-full py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-90 cursor-not-allowed";
+            if(!pedido || !valorNf || !remetente || !destCnpj || !destNome || !destCep || !destCidade) {
+                btn.innerHTML = 'PREENCHA TODOS OS DADOS';
+                btn.className = "mt-6 w-full py-4 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-semibold rounded-2xl flex items-center justify-center text-sm cursor-not-allowed transition-colors";
                 btn.disabled = true; return false;
             }
 
@@ -978,13 +994,13 @@
             });
 
             if(!itensCompletos) {
-                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> PREENCHA TODOS OS DADOS DOS ITENS';
-                btn.className = "mt-4 w-full py-3 bg-orange-500 text-white font-bold rounded-lg shadow-md flex items-center justify-center text-lg opacity-90 cursor-not-allowed";
+                btn.innerHTML = 'PREENCHA OS ITENS';
+                btn.className = "mt-6 w-full py-4 bg-amber-50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400 font-semibold rounded-2xl flex items-center justify-center text-sm cursor-not-allowed transition-colors";
                 btn.disabled = true; return false;
             } 
 
-            btn.innerHTML = '<i class="fa-regular fa-copy mr-2"></i> GERAR CÓDIGO E COPIAR';
-            btn.className = "mt-4 w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-200 flex items-center justify-center text-lg cursor-pointer";
+            btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> GERAR E COPIAR COTAÇÃO';
+            btn.className = "mt-6 w-full py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center text-sm cursor-pointer transform hover:-translate-y-0.5";
             btn.disabled = false;
             return true;
         }
@@ -992,20 +1008,20 @@
         function adicionarItem() {
             contadorItens++;
             const div = document.createElement('div');
-            div.className = 'flex flex-col gap-1 bg-gray-50 dark:bg-gray-700 p-2 rounded-lg border border-gray-200 dark:border-gray-600 item-row';
+            div.className = 'flex flex-col gap-1 bg-white dark:bg-slate-800/80 p-2 rounded-xl border border-slate-100 dark:border-slate-700/50 item-row shadow-sm transition-all hover:border-brand-200 dark:hover:border-brand-800/50';
             div.id = `item-${contadorItens}`;
             
             div.innerHTML = `
-                <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_75px] gap-2 items-center">
-                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center font-bold" placeholder="0" oninput="dadosAlterados()">
+                <div class="grid grid-cols-[50px_minmax(200px,1fr)_60px_60px_60px_70px_70px] gap-2 items-center">
+                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center font-bold bg-slate-50 dark:bg-slate-900" placeholder="0" oninput="dadosAlterados()">
                     <div class="relative w-full">
-                        <input type="text" list="dlProdutos" class="input-field m-0 py-1.5 pl-2 pr-[60px] font-medium transition-colors w-full" placeholder="Ex: Caixa de Parafusos..." oninput="verificarMemoriaProduto(this); dadosAlterados()" title="Nome do Produto">
-                        <button onclick="abrirPesquisaWeb(this)" class="absolute right-1 top-[5px] bg-blue-600 hover:bg-blue-700 text-white text-[9px] uppercase tracking-wider font-bold px-3 py-1 rounded shadow transition flex items-center gap-1" style="display: none;" title="Pesquisar na Web"><i class="fa-solid fa-globe"></i> WEB</button>
+                        <input type="text" list="dlProdutos" class="input-field m-0 py-1.5 px-3 font-medium transition-colors w-full" placeholder="Descrição do produto..." oninput="verificarMemoriaProduto(this); dadosAlterados()" title="Nome do Produto">
+                        <button onclick="abrirPesquisaWeb(this)" class="absolute right-1 top-1 text-slate-400 hover:text-brand-500 bg-white dark:bg-slate-800 rounded p-1 transition" style="display: none;" title="Buscar na Web"><i class="fa-solid fa-magnifying-glass text-xs"></i></button>
                     </div>
-                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
-                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
-                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="cm" oninput="dadosAlterados()">
-                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center" placeholder="kg" oninput="dadosAlterados()">
+                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center text-xs" placeholder="cm" oninput="dadosAlterados()">
+                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center text-xs" placeholder="cm" oninput="dadosAlterados()">
+                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center text-xs" placeholder="cm" oninput="dadosAlterados()">
+                    <input type="text" class="input-field m-0 py-1.5 px-2 text-center text-xs font-semibold" placeholder="kg" oninput="dadosAlterados()">
                     <div class="btn-container flex justify-center gap-1"></div>
                 </div>
             `;
@@ -1029,10 +1045,10 @@
                 let botoesHTML = '';
 
                 if (rows.length > 1) {
-                    botoesHTML += `<button onclick="removerItem('${rowId}')" class="bg-red-100 hover:bg-red-200 text-red-600 rounded w-8 h-8 flex items-center justify-center font-bold shadow-sm transition border border-red-200 shrink-0" title="Remover Linha"><i class="fa-solid fa-trash-can"></i></button>`;
+                    botoesHTML += `<button onclick="removerItem('${rowId}')" class="text-slate-400 hover:text-red-500 rounded p-1.5 transition" title="Remover"><i class="fa-solid fa-trash-can"></i></button>`;
                 }
                 if (index === rows.length - 1) {
-                    botoesHTML += `<button onclick="adicionarItem()" class="bg-purple-600 hover:bg-purple-700 text-white rounded w-8 h-8 flex items-center justify-center font-bold shadow transition shrink-0" title="Adicionar Nova Linha"><i class="fa-solid fa-plus"></i></button>`;
+                    botoesHTML += `<button onclick="adicionarItem()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded p-1.5 transition ml-1" title="Adicionar Linha"><i class="fa-solid fa-plus"></i></button>`;
                 }
                 btnContainer.innerHTML = botoesHTML;
             });
@@ -1067,8 +1083,8 @@
             let cidDest = val('destCidade') ? ` - ${val('destCidade')}` : "";
             texto += `CEP DESTINATÁRIO: ${val('destCep')}${cidDest}\n\n`;
             texto += `VALOR DA NOTA FISCAL: R$ ${val('valorNf')}.\n`;
-            texto += `QUANTIDADE DE VOLUME(S): ${val('qtdVolumes')}.\n`;
-            texto += `PESO TOTAL: ${val('pesoTotal')} Kg.\n\n`;
+            texto += `QUANTIDADE DE VOLUME(S): ${document.getElementById('qtdVolumes').innerText}.\n`;
+            texto += `PESO TOTAL: ${document.getElementById('pesoTotal').innerText} Kg.\n\n`;
             texto += `VOLUME(S) E PESO(S) DO(S) ITEM(NS):\n\n`;
 
             const rows = document.querySelectorAll('.item-row');
@@ -1091,7 +1107,7 @@
             const btnWeb = inputDesc.nextElementSibling;
             
             if(!desc) {
-                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                inputDesc.classList.remove('bg-emerald-50', 'dark:bg-emerald-900/20', 'text-emerald-700');
                 if(btnWeb) btnWeb.style.display = 'none';
                 return;
             }
@@ -1107,7 +1123,7 @@
                 if(!parts) { parts = [{ comp: produtoEncontrado.comp, larg: produtoEncontrado.larg, alt: produtoEncontrado.alt, peso: produtoEncontrado.peso }]; }
 
                 inputs[2].value = parts[0].comp || ""; inputs[3].value = parts[0].larg || ""; inputs[4].value = parts[0].alt || ""; inputs[5].value = parts[0].peso || "";
-                inputDesc.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                inputDesc.classList.add('bg-emerald-50', 'dark:bg-emerald-900/20', 'text-emerald-700');
                 if(btnWeb) btnWeb.style.display = 'none';
 
                 if(parts.length > 1 && !inputDesc.dataset.spawned) {
@@ -1120,17 +1136,17 @@
                         
                         newInputs[0].value = parts[i].vol || "1"; newInputs[1].value = produtoEncontrado.desc; 
                         newInputs[2].value = parts[i].comp || ""; newInputs[3].value = parts[i].larg || ""; newInputs[4].value = parts[i].alt || ""; newInputs[5].value = parts[i].peso || "";
-                        newInputs[1].classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                        newInputs[1].classList.add('bg-emerald-50', 'dark:bg-emerald-900/20', 'text-emerald-700');
                         newInputs[1].dataset.spawned = "true"; 
                         const newBtnWeb = newInputs[1].nextElementSibling;
                         if(newBtnWeb) newBtnWeb.style.display = 'none';
                     }
-                    showToast(`Produto Multi-Volume! ${parts.length} partes adicionadas.`, 'info');
+                    showToast(`Produto com ${parts.length} volumes adicionados.`, 'info');
                 }
             } else {
-                inputDesc.classList.remove('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+                inputDesc.classList.remove('bg-emerald-50', 'dark:bg-emerald-900/20', 'text-emerald-700');
                 delete inputDesc.dataset.spawned;
-                if(descOriginal.length > 3) { if(btnWeb) btnWeb.style.display = 'flex'; } else { if(btnWeb) btnWeb.style.display = 'none'; }
+                if(descOriginal.length > 3) { if(btnWeb) btnWeb.style.display = 'block'; } else { if(btnWeb) btnWeb.style.display = 'none'; }
             }
         }
 
@@ -1164,7 +1180,7 @@
             
             if(!idCotacaoSessao) {
                 const textoOriginalBtn = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> GERANDO CÓDIGO NA NUVEM...'; btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> A REGISTAR...'; btn.disabled = true;
 
                 try {
                     await salvarMemoriaProdutos();
@@ -1191,20 +1207,22 @@
                     });
 
                     textarea.value = textoComId; textarea.removeAttribute('readonly'); textarea.select();
-                    document.execCommand('copy'); window.getSelection().removeAllRanges(); textarea.setAttribute('readonly', 'true');
+                    window.isSystemCopy = true; document.execCommand('copy'); window.isSystemCopy = false;
+                    window.getSelection().removeAllRanges(); textarea.setAttribute('readonly', 'true');
                     
-                    btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> COPIADO (CÓD: ${idCotacaoSessao})`;
-                    btn.classList.replace('bg-green-600', 'bg-blue-600'); btn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+                    btn.innerHTML = `<i class="fa-solid fa-clipboard-check mr-2"></i> CÓDIGO COPIADO (${idCotacaoSessao})`;
+                    btn.classList.replace('bg-brand-600', 'bg-emerald-600'); btn.classList.replace('hover:bg-brand-700', 'hover:bg-emerald-700');
 
                     setTimeout(() => validarBotaoCopiar(), 3000);
                 } catch(err) {
-                    showToast('Erro ao processar no servidor. Tente novamente.', 'error');
+                    showToast('Erro de conexão.', 'error');
                     btn.innerHTML = textoOriginalBtn; btn.disabled = false;
                 }
             } else {
                 textarea.removeAttribute('readonly'); textarea.select();
-                document.execCommand('copy'); window.getSelection().removeAllRanges(); textarea.setAttribute('readonly', 'true');
-                showToast(`Cotação ${idCotacaoSessao} copiada!`, 'success');
+                window.isSystemCopy = true; document.execCommand('copy'); window.isSystemCopy = false;
+                window.getSelection().removeAllRanges(); textarea.setAttribute('readonly', 'true');
+                showToast(`Texto copiado!`, 'success');
             }
         }
 
@@ -1257,7 +1275,7 @@
             }
             
             if (historicoFiltrado.length === 0) {
-                lista.innerHTML = '<p class="text-center text-gray-500 py-10">Nenhuma cotação encontrada no servidor.</p>';
+                lista.innerHTML = '<div class="text-center text-slate-400 py-10 text-sm">Nenhum registo encontrado.</div>';
             } else {
                 historicoFiltrado.forEach((item) => {
                     let transpsPreenchidas = [];
@@ -1291,36 +1309,32 @@
 
                     let formHtml = '';
                     if (primarias.length > 0 || secundarias.length > 0) {
-                        formHtml += `<div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div class="flex items-center mb-3">
-                                <i class="fa-solid fa-money-check-dollar text-green-600 dark:text-green-400 mr-2"></i>
-                                <h4 class="text-[11px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Retorno das Transportadoras</h4>
+                        formHtml += `<div class="mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                            <div class="flex items-center mb-4">
+                                <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Retornos Logísticos</h4>
                             </div>`;
                         
                         // Renderizar Primárias
                         primarias.forEach((t, idx) => {
                             let c = (item.cotacoes && item.cotacoes[t]) ? item.cotacoes[t] : { valor: '', prazo: '', codigo: '' };
                             let isMelhor = temMinimoDuas && melhoresTransps.includes(t);
-                            let rowClass = isMelhor ? "bg-green-50 dark:bg-green-900/40 border-green-400 shadow-md transform scale-[1.01] transition-transform" : "bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-600 shadow-sm";
-                            let labelDestaque = isMelhor ? `<span class="bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 animate-pulse"><i class="fa-solid fa-trophy"></i> Melhor Preço</span>` : "";
-                            let inputClass = isMelhor ? "bg-green-100/50 dark:bg-green-800/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-600 font-extrabold" : "text-gray-700 dark:text-gray-300";
+                            let rowClass = isMelhor ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 shadow-sm" : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700";
+                            let labelDestaque = isMelhor ? `<span class="bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded-md ml-2"><i class="fa-solid fa-trophy mr-1"></i>Vencedor</span>` : "";
+                            let inputClass = isMelhor ? "bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 font-bold" : "bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700";
 
                             formHtml += `
-                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mb-2 items-center p-2 rounded border ${rowClass}">
-                                    <div class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 truncate flex items-center" title="${t}">
-                                        ${isMelhor ? '<i class="fa-solid fa-trophy text-yellow-500 mr-1"></i>' : ''}${t} ${labelDestaque}
+                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mb-2 items-center p-2 rounded-lg border ${rowClass}">
+                                    <div class="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate flex items-center pl-1" title="${t}">
+                                        ${t} ${labelDestaque}
                                     </div>
                                     <div>
-                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Valor (R$)</label>
-                                        <input type="text" id="val_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="R$ Valor" value="${c.valor}" oninput="this.value=mascaraFrete(this.value)">
+                                        <input type="text" id="val_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-xs text-center w-full ${inputClass}" placeholder="R$ Valor" value="${c.valor}" oninput="this.value=mascaraFrete(this.value)">
                                     </div>
                                     <div>
-                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Prazo</label>
-                                        <input type="text" id="prazo_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="Ex: 5" value="${c.prazo}" onblur="this.value=formatarPrazo(this.value)">
+                                        <input type="text" id="prazo_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-xs text-center w-full ${inputClass}" placeholder="Prazo" value="${c.prazo}" onblur="this.value=formatarPrazo(this.value)">
                                     </div>
                                     <div>
-                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Cód. Cotação</label>
-                                        <input type="text" id="cod_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="Cód/Nº" value="${c.codigo}">
+                                        <input type="text" id="cod_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-xs text-center w-full ${inputClass}" placeholder="Cód/Nº" value="${c.codigo}">
                                     </div>
                                 </div>
                             `;
@@ -1331,35 +1345,35 @@
                             let temSecundariaPreenchida = secundarias.some(t => item.cotacoes && item.cotacoes[t] && item.cotacoes[t].valor);
                             
                             formHtml += `
-                                <div class="mt-3 text-center border-t border-gray-200 dark:border-gray-700 pt-2">
-                                    <button type="button" onclick="toggleSecundariasUI('${item.id}')" class="text-[10px] bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded font-bold transition w-full sm:w-auto">
-                                        <i id="icone-sec-${item.id}" class="fa-solid fa-chevron-${temSecundariaPreenchida ? 'up' : 'down'} mr-1"></i> Transportadoras Secundárias
+                                <div class="mt-3 border-t border-slate-200 dark:border-slate-700 pt-3">
+                                    <button type="button" onclick="toggleSecundariasUI('${item.id}')" class="text-[10px] text-slate-500 hover:text-slate-700 font-semibold transition">
+                                        <i id="icone-sec-${item.id}" class="fa-solid fa-chevron-${temSecundariaPreenchida ? 'up' : 'down'} mr-1"></i> Secundárias
                                     </button>
                                 </div>
-                                <div id="box-sec-${item.id}" class="${temSecundariaPreenchida ? '' : 'hidden'} mt-2 p-2 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100/50 dark:bg-gray-800/50">
+                                <div id="box-sec-${item.id}" class="${temSecundariaPreenchida ? '' : 'hidden'} mt-2">
                             `;
                             
                             secundarias.forEach((t, idxSec) => {
                                 let idx = primarias.length + idxSec; // Garantir id único na lista inteira
                                 let c = (item.cotacoes && item.cotacoes[t]) ? item.cotacoes[t] : { valor: '', prazo: '', codigo: '' };
                                 let isMelhor = temMinimoDuas && melhoresTransps.includes(t);
-                                let rowClass = isMelhor ? "bg-green-50 dark:bg-green-900/40 border-green-400 shadow-md transform scale-[1.01] transition-transform" : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm opacity-80 hover:opacity-100 transition-opacity";
-                                let labelDestaque = isMelhor ? `<span class="bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 animate-pulse"><i class="fa-solid fa-trophy"></i> Melhor Preço</span>` : "";
-                                let inputClass = isMelhor ? "bg-green-100/50 dark:bg-green-800/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-600 font-extrabold" : "text-gray-700 dark:text-gray-300";
+                                let rowClass = isMelhor ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 shadow-sm" : "bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700";
+                                let labelDestaque = isMelhor ? `<span class="bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded-md ml-2"><i class="fa-solid fa-trophy mr-1"></i>Vencedor</span>` : "";
+                                let inputClass = isMelhor ? "bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 font-bold" : "bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700 opacity-80 focus:opacity-100";
 
                                 formHtml += `
-                                    <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mb-2 items-center p-2 rounded border ${rowClass}">
-                                        <div class="text-[11px] font-bold text-gray-500 dark:text-gray-400 truncate flex items-center" title="${t}">
-                                            ${isMelhor ? '<i class="fa-solid fa-trophy text-yellow-500 mr-1"></i>' : ''}${t} ${labelDestaque}
+                                    <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mb-2 items-center p-2 rounded-lg border ${rowClass}">
+                                        <div class="text-xs font-semibold text-slate-500 truncate flex items-center pl-1" title="${t}">
+                                            ${t} ${labelDestaque}
                                         </div>
                                         <div>
-                                            <input type="text" id="val_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="R$ Valor" value="${c.valor}" oninput="this.value=mascaraFrete(this.value)">
+                                            <input type="text" id="val_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-xs text-center w-full ${inputClass}" placeholder="R$ Valor" value="${c.valor}" oninput="this.value=mascaraFrete(this.value)">
                                         </div>
                                         <div>
-                                            <input type="text" id="prazo_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="Ex: 5" value="${c.prazo}" onblur="this.value=formatarPrazo(this.value)">
+                                            <input type="text" id="prazo_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-xs text-center w-full ${inputClass}" placeholder="Prazo" value="${c.prazo}" onblur="this.value=formatarPrazo(this.value)">
                                         </div>
                                         <div>
-                                            <input type="text" id="cod_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClass}" placeholder="Cód/Nº" value="${c.codigo}">
+                                            <input type="text" id="cod_${item.id}_${idx}" class="input-field m-0 py-1.5 px-2 text-xs text-center w-full ${inputClass}" placeholder="Cód/Nº" value="${c.codigo}">
                                         </div>
                                     </div>
                                 `;
@@ -1370,75 +1384,70 @@
                         let manualKey = 'FreteClick_Manual';
                         let cManual = (item.cotacoes && item.cotacoes[manualKey]) ? item.cotacoes[manualKey] : { nomeTransp: '', valor: '', prazo: '', codigo: '' };
                         let isMelhorManual = temMinimoDuas && melhoresTransps.includes(manualKey);
-                        let rowClassManual = isMelhorManual ? "bg-green-50 dark:bg-green-900/40 border-green-400 shadow-md transform scale-[1.01] transition-transform" : "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 shadow-sm";
-                        let labelDestaqueManual = isMelhorManual ? `<span class="bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded ml-1 animate-pulse"><i class="fa-solid fa-trophy"></i> Melhor Preço</span>` : "";
-                        let inputClassManual = isMelhorManual ? "bg-green-100/50 dark:bg-green-800/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-600 font-extrabold" : "text-gray-700 dark:text-gray-300";
+                        let rowClassManual = isMelhorManual ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 shadow-sm" : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700";
+                        let labelDestaqueManual = isMelhorManual ? `<span class="bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded-md ml-2"><i class="fa-solid fa-trophy mr-1"></i>Vencedor</span>` : "";
+                        let inputClassManual = isMelhorManual ? "bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 font-bold" : "bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700";
 
                         formHtml += `
-                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mt-4 items-center p-2 rounded border ${rowClassManual}">
+                                <div class="grid grid-cols-1 sm:grid-cols-[1fr_100px_80px_120px] gap-2 mt-4 items-center p-2 rounded-lg border ${rowClassManual}">
                                     <div>
-                                        <label class="text-[8px] font-bold ${isMelhorManual ? 'text-green-600' : 'text-orange-500'} uppercase block mb-0.5 flex items-center">
-                                            <i class="fa-solid fa-computer-mouse mr-1"></i> FreteClick (Alternativa) ${labelDestaqueManual}
-                                        </label>
-                                        <input type="text" id="nome_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] font-bold ${isMelhorManual ? 'text-green-800 dark:text-green-300' : 'text-orange-700'} w-full" placeholder="Nome da Transportadora" value="${cManual.nomeTransp}">
+                                        <input type="text" id="nome_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-xs font-semibold text-slate-600 dark:text-slate-300 w-full" placeholder="Alternativa (ex: FreteClick)" value="${cManual.nomeTransp}">
                                     </div>
-                                    <div class="sm:mt-[14px]">
-                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Valor (R$)</label>
-                                        <input type="text" id="val_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClassManual}" placeholder="R$ Valor" value="${cManual.valor}" oninput="this.value=mascaraFrete(this.value)">
+                                    <div>
+                                        <input type="text" id="val_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-xs text-center w-full ${inputClassManual}" placeholder="R$ Valor" value="${cManual.valor}" oninput="this.value=mascaraFrete(this.value)">
                                     </div>
-                                    <div class="sm:mt-[14px]">
-                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Prazo</label>
-                                        <input type="text" id="prazo_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClassManual}" placeholder="Ex: 5" value="${cManual.prazo}" onblur="this.value=formatarPrazo(this.value)">
+                                    <div>
+                                        <input type="text" id="prazo_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-xs text-center w-full ${inputClassManual}" placeholder="Prazo" value="${cManual.prazo}" onblur="this.value=formatarPrazo(this.value)">
                                     </div>
-                                    <div class="sm:mt-[14px]">
-                                        <label class="text-[8px] font-bold text-gray-400 uppercase block mb-0.5 sm:hidden">Cód. Cotação</label>
-                                        <input type="text" id="cod_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-[11px] text-center w-full ${inputClassManual}" placeholder="Cód/Nº" value="${cManual.codigo}">
+                                    <div>
+                                        <input type="text" id="cod_${item.id}_manual" class="input-field m-0 py-1.5 px-2 text-xs text-center w-full ${inputClassManual}" placeholder="Cód/Nº" value="${cManual.codigo}">
                                     </div>
                                 </div>
                         `;
 
-                        formHtml += `<button id="btnSalvarCot_${item.id}" onclick="salvarCotacoesHistorico('${item.id}')" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold py-2 rounded shadow transition"><i class="fa-solid fa-floppy-disk mr-1"></i> SALVAR VALORES NA NUVEM</button>
+                        formHtml += `<button id="btnSalvarCot_${item.id}" onclick="salvarCotacoesHistorico('${item.id}')" class="mt-4 w-full bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 text-white text-xs font-medium py-2.5 rounded-lg transition">Salvar Informações</button>
                         </div>`;
                     } else {
-                         formHtml += `<div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-[10px] text-gray-500 text-center"><i class="fa-solid fa-circle-info mr-1"></i> Nenhuma transportadora sugerida para o destino desta cotação.</div>`
+                         formHtml += `<div class="mt-4 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 text-[10px] text-slate-500 text-center">Nenhum mapeamento regional.</div>`
                     }
 
                     let btnDownload = '';
                     if (temMinimoDuas) {
                         btnDownload = `
-                            <button onclick="baixarCotacaoPdf('${item.id}')" class="bg-purple-100 dark:bg-purple-900 hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-700 dark:text-purple-300 px-4 py-2 rounded font-bold transition whitespace-nowrap shadow-sm" title="Baixar PDF Oficial">
-                                <i class="fa-solid fa-file-pdf mr-1"></i> Baixar PDF
+                            <button onclick="baixarCotacaoPdf('${item.id}')" class="text-brand-600 hover:text-brand-700 dark:text-brand-400 font-medium px-3 py-1.5 rounded transition text-xs flex items-center">
+                                <i class="fa-solid fa-file-pdf mr-1.5"></i> Baixar Relatório
                             </button>
-                            <button onclick="iniciarImpressaoEtiquetas('${item.id}')" class="bg-gray-800 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-gray-600 text-white px-4 py-2 rounded font-bold transition whitespace-nowrap shadow-sm ml-2" title="Imprimir Etiquetas (Elgin L42 Pro)">
-                                <i class="fa-solid fa-print mr-1"></i> Etiquetas
+                            <button onclick="iniciarImpressaoEtiquetas('${item.id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 font-medium px-3 py-1.5 rounded transition text-xs flex items-center ml-2">
+                                <i class="fa-solid fa-tags mr-1.5"></i> L42 Pro
                             </button>
                         `;
                     }
 
                     lista.innerHTML += `
-                        <div class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm flex flex-col overflow-hidden transition-all">
-                            <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <div class="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden transition-all">
+                            <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/80">
                                 <div class="flex-grow w-full cursor-pointer select-none" onclick="togglePrevia('${item.id}')">
-                                    <div class="flex items-center flex-wrap gap-y-2">
-                                        <i id="icone-${item.id}" class="fa-solid fa-chevron-right text-gray-400 mr-3 w-3 text-center transition-transform duration-200"></i>
-                                        <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded border border-yellow-200 mr-3">${item.id}</span>
-                                        <span class="text-xs text-gray-500 dark:text-gray-400 mr-3"><i class="fa-regular fa-calendar mr-1"></i> ${item.data}</span>
-                                        <span class="text-xs text-blue-600 dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-900/40 px-2 py-1 rounded"><i class="fa-solid fa-user-tie mr-1"></i> ${item.usuario || 'Desconhecido'}</span>
+                                    <div class="flex items-center flex-wrap gap-y-2 mb-1">
+                                        <i id="icone-${item.id}" class="fa-solid fa-chevron-right text-slate-400 mr-2 w-3 text-center transition-transform duration-200 text-xs"></i>
+                                        <span class="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-md mr-3">${item.id}</span>
+                                        <span class="text-[10px] text-slate-500 mr-3">${item.data}</span>
+                                        <span class="text-[10px] text-brand-600 dark:text-brand-400 font-medium"><i class="fa-regular fa-user mr-1"></i>${item.usuario || 'N/I'}</span>
                                     </div>
-                                    <p class="text-sm font-bold text-gray-700 dark:text-gray-200 mt-2 ml-6"><i class="fa-regular fa-building mr-1"></i> Dest.: ${item.destinatario}</p>
+                                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-200 ml-6">${item.destinatario}</p>
                                 </div>
-                                <div class="flex gap-2">
+                                <div class="flex gap-1 items-center">
                                     ${btnDownload}
-                                    <button onclick="apagarCotacaoHistorico('${item.id}')" class="bg-red-50 dark:bg-red-900 hover:bg-red-100 dark:hover:bg-red-800 text-red-500 dark:text-red-300 px-3 py-2 rounded font-bold transition shadow-sm" title="Apagar Cotação">
-                                        <i class="fa-solid fa-trash"></i>
+                                    <div class="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-2"></div>
+                                    <button onclick="copiarDoHistorico('${item.id}')" class="text-slate-400 hover:text-brand-500 px-2 py-1 transition" title="Copiar Texto">
+                                        <i class="fa-regular fa-copy"></i>
                                     </button>
-                                    <button onclick="copiarDoHistorico('${item.id}')" class="bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 px-4 py-2 rounded font-bold transition whitespace-nowrap shadow-sm">
-                                        <i class="fa-regular fa-copy mr-1"></i> Copiar
+                                    <button onclick="apagarCotacaoHistorico('${item.id}')" class="text-slate-400 hover:text-red-500 px-2 py-1 transition" title="Apagar">
+                                        <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 </div>
                             </div>
-                            <div id="previa-${item.id}" class="hidden bg-gray-100 dark:bg-gray-800 p-4 border-t border-gray-200 dark:border-gray-600">
-                                <div class="text-xs font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-2">${item.texto}</div>
+                            <div id="previa-${item.id}" class="hidden bg-slate-50/50 dark:bg-slate-900/30 p-5 border-t border-slate-100 dark:border-slate-700">
+                                <div oncopy="return false;" oncontextmenu="return false;" class="text-xs font-mono text-slate-500 dark:text-slate-400 whitespace-pre-wrap mb-2 leading-relaxed bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 select-none">${item.texto}</div>
                                 ${formHtml}
                             </div>
                         </div>
@@ -1516,10 +1525,10 @@
                 }
 
                 await database.ref('historico/' + idCotacao + '/cotacoes').set(cotacoesParaSalvar);
-                showToast('Valores de frete registrados com sucesso!', 'success');
+                showToast('Salvo com sucesso.', 'success');
             } catch (err) {
                 console.error(err);
-                showToast('Erro ao salvar retornos.', 'error');
+                showToast('Erro ao salvar.', 'error');
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
@@ -1551,53 +1560,52 @@
             const container = document.createElement('div');
             container.innerHTML = `
                 <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
-                    <div style="border-bottom: 2px solid #3b82f6; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h1 style="color: #1e3a8a; margin: 0; font-size: 24px; font-weight: bold;">Relatório de Cotação de Frete</h1>
-                            <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">Grupo Prime B2B</p>
+                            <h1 style="color: #0f172a; margin: 0; font-size: 20px; font-weight: bold;">Relatório Logístico</h1>
+                            <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">Grupo Prime B2B</p>
                         </div>
                         <div style="text-align: right;">
-                            <h2 style="margin: 0; font-size: 20px; color: #3b82f6; font-weight: bold;">${item.id}</h2>
-                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #6b7280;">Data da Emissão: ${item.data}</p>
+                            <h2 style="margin: 0; font-size: 16px; color: #4f46e5; font-weight: bold;">${item.id}</h2>
+                            <p style="margin: 5px 0 0 0; font-size: 10px; color: #94a3b8;">${item.data}</p>
                         </div>
                     </div>
                     <div style="margin-bottom: 30px;">
-                        <h3 style="color: #374151; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; text-transform: uppercase;">Dados Gerais</h3>
-                        <table style="width: 100%; border: none; font-size: 13px; margin-top: 10px;">
+                        <table style="width: 100%; border: none; font-size: 12px; margin-top: 10px;">
                             <tr>
                                 <td style="padding: 5px 0; width: 50%;"><strong>Destinatário:</strong> ${item.destinatario}</td>
-                                <td style="padding: 5px 0; width: 50%;"><strong>UF Destino:</strong> ${item.uf || '-'}</td>
+                                <td style="padding: 5px 0; width: 50%;"><strong>UF:</strong> ${item.uf || '-'}</td>
                             </tr>
                             <tr>
-                                <td style="padding: 5px 0;"><strong>Responsável Logística:</strong> ${item.usuario || 'Desconhecido'}</td>
+                                <td style="padding: 5px 0;"><strong>Responsável:</strong> ${item.usuario || 'N/I'}</td>
                                 <td style="padding: 5px 0;"></td>
                             </tr>
                         </table>
                     </div>
                     <div style="margin-bottom: 30px;">
-                        <h3 style="color: #374151; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; text-transform: uppercase;">Quadro Comparativo (Ranking)</h3>
-                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;">
+                        <h3 style="color: #475569; font-size: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; text-transform: uppercase;">Quadro Comparativo</h3>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px;">
                             <thead>
-                                <tr style="background-color: #f3f4f6; color: #374151;">
-                                    <th style="padding: 10px; border: 1px solid #d1d5db; text-align: left;">Classificação</th>
-                                    <th style="padding: 10px; border: 1px solid #d1d5db; text-align: left;">Transportadora</th>
-                                    <th style="padding: 10px; border: 1px solid #d1d5db; text-align: center;">Valor Estimado</th>
-                                    <th style="padding: 10px; border: 1px solid #d1d5db; text-align: center;">Prazo</th>
-                                    <th style="padding: 10px; border: 1px solid #d1d5db; text-align: center;">Cód. / Cotação</th>
+                                <tr style="background-color: #f8fafc; color: #475569;">
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Rank</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Transportadora</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">Valor</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">Prazo</th>
+                                    <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">Cód.</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${transpsPreenchidas.map((t, i) => {
                                     let isWinner = i === 0 && transpsPreenchidas.length >= 2;
                                     let rowStyle = isWinner ? 'background-color: #ecfdf5;' : '';
-                                    let positionText = isWinner ? '⭐ 1º (VENCEDOR)' : `${i + 1}º`;
+                                    let positionText = isWinner ? '★ 1º' : `${i + 1}º`;
                                     return `
                                     <tr style="${rowStyle}">
-                                        <td style="padding: 10px; border: 1px solid #d1d5db; font-weight: ${isWinner ? 'bold' : 'normal'}; color: ${isWinner ? '#059669' : '#374151'};">${positionText}</td>
-                                        <td style="padding: 10px; border: 1px solid #d1d5db; font-weight: bold;">${t.nome}</td>
-                                        <td style="padding: 10px; border: 1px solid #d1d5db; text-align: center; font-weight: bold; color: ${isWinner ? '#059669' : '#374151'};">${t.valor}</td>
-                                        <td style="padding: 10px; border: 1px solid #d1d5db; text-align: center;">${t.prazo || '-'}</td>
-                                        <td style="padding: 10px; border: 1px solid #d1d5db; text-align: center;">${t.codigo || '-'}</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: ${isWinner ? 'bold' : 'normal'}; color: ${isWinner ? '#059669' : '#475569'};">${positionText}</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: bold;">${t.nome}</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center; font-weight: bold; color: ${isWinner ? '#059669' : '#475569'};">${t.valor}</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">${t.prazo || '-'}</td>
+                                        <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center;">${t.codigo || '-'}</td>
                                     </tr>
                                     `;
                                 }).join('')}
@@ -1605,34 +1613,29 @@
                         </table>
                     </div>
                     <div style="margin-bottom: 30px;">
-                        <h3 style="color: #374151; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; text-transform: uppercase;">Detalhes Originais da Solicitação</h3>
-                        <pre style="background-color: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; border-radius: 5px; font-size: 11px; white-space: pre-wrap; font-family: monospace; color: #4b5563; line-height: 1.5;">\n${item.texto}</pre>
-                    </div>
-                    <div style="margin-top: 50px; text-align: center; color: #9ca3af; font-size: 10px; border-top: 1px solid #e5e7eb; padding-top: 10px;">
-                        Documento gerado automaticamente pelo Sistema Gerador de Cotações Logísticas - Grupo Prime B2B
+                        <h3 style="color: #475569; font-size: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; text-transform: uppercase;">Detalhes</h3>
+                        <pre style="background-color: #f8fafc; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 10px; white-space: pre-wrap; font-family: monospace; color: #64748b; line-height: 1.5;">\n${item.texto}</pre>
                     </div>
                 </div>
             `;
 
-            showToast('A preparar o PDF oficial...', 'info');
+            showToast('A preparar o PDF...', 'info');
 
             const opt = {
                 margin:       0, 
-                filename:     `Resultado_Cotacao_${id}.pdf`,
+                filename:     `Cotacao_${id}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
             html2pdf().set(opt).from(container).save().then(() => {
-                showToast('PDF oficial descarregado com sucesso!', 'success');
+                showToast('Descarregado!', 'success');
             }).catch(err => {
-                console.error(err);
-                showToast('Erro ao gerar o PDF.', 'error');
+                showToast('Erro ao gerar.', 'error');
             });
         }
 
-        // --- NOVA LÓGICA: Validação de NF e Impressão de Etiquetas ---
         let cotaParaImprimir = null;
         let pedidoAlvoParaImprimir = "";
 
@@ -1660,7 +1663,7 @@
             if (!file) return;
 
             const lbl = document.getElementById('lblStatusNF');
-            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Lendo e Validando Nota Fiscal...';
+            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Validando...';
 
             try {
                 let numeroNF = "";
@@ -1700,8 +1703,8 @@
                 }
 
                 if (!numeroNF) {
-                     showToast(`Não foi possível localizar o número da NF no arquivo.`, 'error');
-                     lbl.innerHTML = '<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation"></i> NF NÃO DETETADA</span>';
+                     showToast(`Não foi possível localizar o número da NF.`, 'error');
+                     lbl.innerHTML = 'NF NÃO DETECTADA';
                      return;
                 }
 
@@ -1715,19 +1718,18 @@
                 }
 
                 if (!pedidoValidado) {
-                     showToast(`A NF enviada não corresponde ao Pedido ${pedidoAlvoParaImprimir}. Envie a NF correta!`, 'error');
-                     lbl.innerHTML = '<span class="text-red-500"><i class="fa-solid fa-ban"></i> NF INCOMPATÍVEL COM O PEDIDO</span>';
+                     showToast(`NF incompatível com o pedido.`, 'error');
+                     lbl.innerHTML = 'INCOMPATÍVEL';
                      return;
                 }
 
                 fecharModalUploadNF();
-                showToast(`NF ${numeroNF} validada com sucesso! Gerando etiquetas...`, 'success');
+                showToast(`Validado! Gerando etiquetas...`, 'success');
                 gerarJanelaImpressao(cotaParaImprimir, pedidoAlvoParaImprimir, numeroNF);
 
             } catch (error) {
-                console.error(error);
-                showToast("Erro ao processar o arquivo da NF.", "error");
-                lbl.innerHTML = '<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation"></i> ARQUIVO CORROMPIDO OU INVÁLIDO</span>';
+                showToast("Erro ao ler arquivo.", "error");
+                lbl.innerHTML = 'ERRO';
             } finally {
                 event.target.value = ''; 
             }
@@ -1756,9 +1758,6 @@
             let destNome = "", destCnpj = "", destCep = "";
             if (destMatch) { destNome = destMatch[1]; destCnpj = destMatch[2]; destCep = destMatch[3]; }
 
-            const remetMatch = t.match(/INFORMAÇÕES DO REMETENTE:\n+NOME:\s*(.*?)\.\n/);
-            const remetNome = remetMatch ? remetMatch[1] : "Grupo Prime B2B";
-
             const itensTexto = t.split('VOLUME(S) E PESO(S) DO(S) ITEM(NS):')[1] || "";
             const linhas = itensTexto.split('\n').map(l => l.trim()).filter(l => l.includes('vol. -'));
             
@@ -1779,8 +1778,7 @@
             <html>
             <head>
                 <meta charset="UTF-8">
-                <title>Imprimir Etiquetas - NF ${numeroNF}</title>
-                <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
+                <title>Imprimir Etiquetas</title>
                 <style>
                     @media print {
                         @page { size: 100mm 150mm; margin: 0; }
@@ -1799,8 +1797,8 @@
                     .top-left { flex: 1; border-right: 2px solid #000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1mm; }
                     .top-right { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1mm; }
                     
-                    .prime-text { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 900; line-height: 1; margin: 1mm 0; }
-                    .prime-logo { width: 34mm; height: 34mm; object-fit: contain; filter: brightness(0); }
+                    .prime-text { font-family: 'Arial Black', sans-serif; font-size: 20px; font-weight: 900; line-height: 1; margin: 1mm 0; }
+                    .prime-logo { width: 34mm; height: 34mm; object-fit: contain; filter: brightness(0) grayscale(100%); }
                     
                     .qr-code { width: 100%; height: 26mm; margin-bottom: 2mm; display: flex; justify-content: center; align-items: center; }
                     .qr-text { font-size: 11px; font-weight: bold; text-align: center; line-height: 1.1; }
@@ -1827,7 +1825,7 @@
                     <div class="top-row">
                         <div class="top-left">
                             <div class="prime-text">GRUPO</div>
-                            <img src="P_LOGO-removebg-preview.png" onerror="this.src='https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128'" class="prime-logo">
+                            <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" class="prime-logo">
                             <div class="prime-text">PRIME</div>
                         </div>
                         <div class="top-right">
@@ -1874,7 +1872,7 @@
                         
                         setTimeout(() => {
                             window.print();
-                        }, 800);
+                        }, 500);
                     };
                 <\/script>
             </body>
@@ -1882,8 +1880,6 @@
             `;
             printWindow.document.write(html);
             printWindow.document.close();
-            
-            showToast('Preparando tela de impressão...', 'info');
         }
 
         function abrirFerramentas() {
@@ -1896,7 +1892,6 @@
 
         function imprimirEtiquetaAvulsa(tipo) {
             fecharFerramentas();
-            showToast('Preparando impressão na Elgin...', 'info');
             
             const printWindow = window.open('', '_blank');
             let conteudoHTML = '';
@@ -1905,14 +1900,14 @@
                 conteudoHTML = `
                     <div class="label" style="width: 145mm; height: 95mm; padding: 4mm; display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; margin: 0 auto; background: #fff;">
                         <div style="background: #000; color: #fff; width: 100%; height: 35mm; display: flex; align-items: center; justify-content: center; text-align: center; margin-bottom: 2mm;">
-                            <h1 style="font-family: 'Arial Black', Impact, sans-serif; font-style: italic; font-size: 42px; margin: 0; letter-spacing: -1px; line-height: 1.1; transform: scaleX(1.3);">AGRADECEMOS O<br>SEU PEDIDO!</h1>
+                            <h1 style="font-family: 'Arial Black', Impact, sans-serif; font-style: italic; font-size: 38px; margin: 0; letter-spacing: -1px; line-height: 1.1; transform: scaleX(1.3);">AGRADECEMOS O<br>SEU PEDIDO!</h1>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-grow: 1; padding: 0 4mm; width: 100%; box-sizing: border-box;">
                             <div style="display: flex; align-items: center; gap: 6mm;">
                                 <div style="width: 34mm; height: 34mm; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                                    <img src="P_LOGO-removebg-preview.png" onerror="this.src='https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128'" style="width: 100%; height: 100%; object-fit: contain; filter: brightness(0);" alt="Logo">
+                                    <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" style="width: 100%; height: 100%; object-fit: contain; filter: brightness(0) grayscale(100%);" alt="Logo">
                                 </div>
-                                <div style="font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900; line-height: 1; text-align: left; color: #000; flex-shrink: 0; margin-top: 1mm;">
+                                <div style="font-family: 'Arial Black', sans-serif; font-size: 32px; font-weight: 900; line-height: 1; text-align: left; color: #000; flex-shrink: 0; margin-top: 1mm;">
                                     GRUPO<br>PRIME<br>B2B
                                 </div>
                             </div>
@@ -1921,7 +1916,7 @@
                                     <div id="qrcode-agradecimento" style="width: 100%; height: 100%;"></div>
                                 </div>
                                 <div style="font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; text-align: center; line-height: 1.1; color: #000;">
-                                    Visite nosso portal de<br>compras B2B
+                                    Visite o nosso portal<br>de compras B2B
                                 </div>
                             </div>
                         </div>
@@ -1938,7 +1933,7 @@
                                 </svg>
                             </div>
                             <div style="width: 65%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                                <div style="font-family: 'Arial Rounded MT Bold', 'VAG Rounded', Arial, sans-serif; font-size: 58px; font-weight: bold; line-height: 1.1; text-align: center; color: #000; letter-spacing: 1px;">
+                                <div style="font-family: 'Arial Black', Arial, sans-serif; font-size: 58px; font-weight: bold; line-height: 1.1; text-align: center; color: #000; letter-spacing: 1px;">
                                     CUIDADO<br>FRÁGIL
                                 </div>
                             </div>
@@ -1952,31 +1947,18 @@
             <html>
             <head>
                 <meta charset="UTF-8">
-                <title>Impressão - ${tipo}</title>
-                <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
+                <title>Imprimir</title>
                 <style>
                     @media print {
                         @page { size: 150mm 100mm; margin: 0; }
                         body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                     }
-                    body { 
-                        font-family: 'Arial', sans-serif; 
-                        margin: 0; 
-                        padding: 0; 
-                        background: #fff; 
-                        color: #000; 
-                        display: flex; 
-                        align-items: center; 
-                        justify-content: center; 
-                        width: 100vw; 
-                        height: 100vh; 
-                    }
+                    body { font-family: 'Arial', sans-serif; margin: 0; padding: 0; background: #fff; display: flex; align-items: center; justify-content: center; width: 100vw; height: 100vh; }
                 </style>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
             </head>
             <body>
                 ${conteudoHTML}
-                
                 <script>
                     window.onload = function() {
                         if (document.getElementById('qrcode-agradecimento')) {
@@ -1989,7 +1971,7 @@
                                 correctLevel : QRCode.CorrectLevel.M
                             });
                         }
-                        setTimeout(() => { window.print(); }, 800);
+                        setTimeout(() => { window.print(); }, 500);
                     };
                 <\/script>
             </body>
@@ -2001,12 +1983,11 @@
         }
 
         function apagarCotacaoHistorico(id) {
-            showDialog(`Tem certeza que deseja apagar a cotação ${id} do servidor?`, 'confirm', async () => {
+            showDialog(`Apagar a cotação ${id} do servidor?`, 'confirm', async () => {
                 try {
                     await database.ref('historico/' + id).remove();
-                    showToast('Cotação apagada da nuvem.', 'success');
                 } catch(e) {
-                    showToast('Erro ao apagar cotação.', 'error');
+                    showToast('Erro ao apagar.', 'error');
                 }
             });
         }
@@ -2018,9 +1999,9 @@
                 temp.value = item.texto;
                 document.body.appendChild(temp);
                 temp.select();
-                document.execCommand("copy");
+                window.isSystemCopy = true; document.execCommand("copy"); window.isSystemCopy = false;
                 document.body.removeChild(temp);
-                showToast(`Cotação ${id} copiada!`, 'success');
+                showToast(`Copiado!`, 'success');
             }
         }
 
@@ -2099,7 +2080,6 @@
         function sugerirTransportadora(uf) {
             const box = document.getElementById('boxRecomendacao');
             const lista = document.getElementById('listaRecomendadas');
-            const texto = document.getElementById('textoRecomendacao');
             
             if(!uf) { box.classList.add('hidden'); return; }
 
@@ -2115,30 +2095,29 @@
                 return secundariasNomes.includes(t.nome);
             });
             
-            texto.innerHTML = `Com base no destino (<strong>Estado: ${uf.toUpperCase()}</strong>), indicamos as seguintes parceiras:`;
             lista.innerHTML = '';
 
             let htmlPrimarias = '<div class="w-full flex flex-wrap gap-2">';
             if (primarias.length === 0) {
-                htmlPrimarias += '<span class="bg-white border border-indigo-200 text-indigo-700 text-xs px-3 py-1.5 rounded-lg font-bold shadow-sm">Nenhuma parceira regional primária mapeada.</span>';
+                htmlPrimarias += '<span class="text-xs text-slate-500">Nenhuma principal.</span>';
             } else {
                 primarias.forEach(t => {
                     let nota = "";
                     if (t.nome === "MIRIN DO SUL") nota = " (Exceto Londrina)";
                     if (t.nome === "TRANSWELLS" && uf.toUpperCase() === "MG") nota = " (Belo Horizonte)";
-                    htmlPrimarias += `<span class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow transition cursor-default flex items-center"><i class="fa-solid fa-star text-yellow-300 mr-1.5"></i> ${t.nome}${nota}</span>`;
+                    htmlPrimarias += `<span class="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 text-[11px] font-semibold px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800"><i class="fa-solid fa-star text-amber-400 mr-1"></i> ${t.nome}${nota}</span>`;
                 });
             }
             htmlPrimarias += '</div>';
 
-            let htmlSecundarias = '<div class="w-full flex flex-wrap gap-2 items-center border-t border-indigo-200 dark:border-indigo-700/50 pt-2 mt-1">';
-            htmlSecundarias += '<span class="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold uppercase mr-1">Secundárias:</span>';
+            let htmlSecundarias = '<div class="w-full flex flex-wrap gap-2 items-center border-t border-emerald-100 dark:border-emerald-800/30 pt-2 mt-1">';
+            htmlSecundarias += '<span class="text-[10px] text-emerald-600 dark:text-emerald-500 font-bold uppercase mr-1">Secundárias:</span>';
             
             secundarias.forEach(t => {
-                htmlSecundarias += `<span class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-600 text-[11px] px-2 py-1 rounded-lg font-bold shadow-sm cursor-default">${t.nome}</span>`;
+                htmlSecundarias += `<span class="bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[10px] font-medium px-2 py-0.5 rounded-md">${t.nome}</span>`;
             });
 
-            htmlSecundarias += `<span class="bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700 text-[11px] px-2 py-1 rounded-lg font-bold shadow-sm cursor-help flex items-center ml-auto" title="Cotar manualmente / Fora do catálogo"><i class="fa-solid fa-computer-mouse mr-1"></i> FreteClick</span>`;
+            htmlSecundarias += `<span class="bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[10px] font-medium px-2 py-0.5 rounded-md flex items-center ml-auto"><i class="fa-solid fa-bolt text-brand-500 mr-1"></i> FreteClick</span>`;
             htmlSecundarias += '</div>';
 
             lista.innerHTML = htmlPrimarias + htmlSecundarias;
@@ -2187,12 +2166,11 @@
             const file = inputElement.files[0];
             
             if (!file) return;
-            if (file.type !== "application/pdf") { showToast("Por favor, selecione um arquivo PDF.", "error"); inputElement.value = ''; return; }
+            if (file.type !== "application/pdf") { showToast("Selecione um PDF.", "error"); inputElement.value = ''; return; }
 
             const lbl = document.getElementById('lblPdfUpload');
             const originalHTML = lbl.innerHTML;
-            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> LENDO...';
-            lbl.classList.add('opacity-70', 'cursor-not-allowed', 'pointer-events-none');
+            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Extraindo dados...';
 
             try {
                 const fileReader = new FileReader();
@@ -2211,14 +2189,14 @@
                         
                         analisarTextoPDF(fullText);
                     } catch (error) {
-                        showToast("Erro ao ler o PDF. Tente preencher manualmente.", "error");
+                        showToast("Erro na leitura automática.", "error");
                     } finally {
-                        lbl.innerHTML = originalHTML; lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none'); inputElement.value = ''; 
+                        lbl.innerHTML = originalHTML; inputElement.value = ''; 
                     }
                 };
                 fileReader.readAsArrayBuffer(file);
             } catch (err) {
-                lbl.innerHTML = originalHTML; lbl.classList.remove('opacity-70', 'cursor-not-allowed', 'pointer-events-none'); inputElement.value = '';
+                lbl.innerHTML = originalHTML; inputElement.value = '';
             }
         }
 
@@ -2288,7 +2266,7 @@
                 if(!encontrouAlgo) document.getElementById('containerItens').innerHTML = gridSalva;
             }
 
-            dadosAlterados(); showToast('Dados extraídos do PDF com sucesso!', 'success');
+            dadosAlterados(); showToast('Dados extraídos com sucesso.', 'success');
         }
 
         function atualizarDataListProdutos() {
@@ -2317,7 +2295,7 @@
             setTimeout(() => {
                 const tela = document.getElementById('telaCarregamento');
                 if (tela && tela.style.display !== 'none') { tela.style.opacity = '0'; setTimeout(() => tela.style.display = 'none', 300); }
-            }, 4000);
+            }, 3000);
             
             try { await conectarFirebase(); } catch (err) {}
             checarEstadoLogin(); adicionarItem(); gerarPreviaTexto();
@@ -2343,7 +2321,7 @@
                 if(localStorage.getItem('primeLogado') === 'true' && ultima) {
                     if(Date.now() - parseInt(ultima) > TEMPO_EXPIRACAO) {
                         localStorage.removeItem('primeLogado'); localStorage.removeItem('primeUsuarioAtual'); localStorage.removeItem('primeUltimaAtividade');
-                        checarEstadoLogin(); showDialog('Sua sessão expirou devido a 1 hora de inatividade. Por favor, faça login novamente.', 'alert');
+                        checarEstadoLogin(); showDialog('Sessão expirada. Faça login novamente.', 'alert');
                     }
                 }
             };
