@@ -378,6 +378,10 @@
                             <span class="text-[10px] font-semibold text-slate-400 uppercase block">Peso (Kg)</span>
                             <span id="pesoTotal" class="text-sm font-bold text-slate-700 dark:text-slate-200">0.0</span>
                         </div>
+                        <div>
+                            <span class="text-[10px] font-semibold text-slate-400 uppercase block">Cubagem (m³)</span>
+                            <span id="cubagemTotal" class="text-sm font-bold text-brand-600 dark:text-brand-400">0.0000</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -403,11 +407,17 @@
         <!-- COLUNA DIREITA: RESULTADO -->
         <div class="w-full md:w-[40%] lg:w-[35%] bg-slate-50 dark:bg-slate-900/50 p-6 md:p-8 border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-700 flex flex-col relative">
             
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">
-                    Preview da Cotação
-                </h2>
-                <span id="badgeCodigo" class="bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 text-[10px] px-2.5 py-1 rounded-full font-bold hidden border border-brand-200 dark:border-brand-800"></span>
+            <div class="flex flex-col mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide">
+                        Preview da Cotação
+                    </h2>
+                    <span id="badgeCodigo" class="bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 text-[10px] px-2.5 py-1 rounded-full font-bold hidden border border-brand-200 dark:border-brand-800"></span>
+                </div>
+                <div class="flex gap-2 justify-end w-full">
+                    <span id="indicador-peso" class="text-[10px] bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400 px-2 py-1 rounded-md font-bold hidden border border-slate-300 dark:border-slate-700">0.0 kg</span>
+                    <span id="indicador-cubagem" class="text-[10px] bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400 px-2 py-1 rounded-md font-bold hidden border border-indigo-200 dark:border-indigo-800">0.0000 m³</span>
+                </div>
             </div>
             
             <div class="flex-grow relative group">
@@ -949,16 +959,35 @@
         }
 
         function calcularTotais() {
-            let totalVolumes = 0; let totalPeso = 0;
+            let totalVolumes = 0; let totalPeso = 0; let totalCubagem = 0;
             const rows = document.querySelectorAll('.item-row');
             rows.forEach(row => {
                 const inputs = row.querySelectorAll('input');
                 const vol = parseInt(inputs[0].value.trim(), 10) || 0;
+                const comp = parseFloat(inputs[2].value.trim()) || 0;
+                const larg = parseFloat(inputs[3].value.trim()) || 0;
+                const alt = parseFloat(inputs[4].value.trim()) || 0;
                 const pesoUn = parseFloat(inputs[5].value.replace(',', '.').trim()) || 0;
-                totalVolumes += vol; totalPeso += (vol * pesoUn); 
+                
+                totalVolumes += vol; 
+                totalPeso += (vol * pesoUn); 
+                
+                if (comp > 0 && larg > 0 && alt > 0) {
+                    totalCubagem += ((comp * larg * alt) / 1000000) * vol;
+                }
             });
             document.getElementById('qtdVolumes').innerText = totalVolumes > 0 ? totalVolumes : "0";
             document.getElementById('pesoTotal').innerText = totalPeso > 0 ? totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 3}) : "0.0";
+            
+            const elCubagem = document.getElementById('cubagemTotal');
+            if (elCubagem) elCubagem.innerText = totalCubagem > 0 ? totalCubagem.toFixed(4) : "0.0000";
+
+            const indPeso = document.getElementById('indicador-peso');
+            const indCub = document.getElementById('indicador-cubagem');
+            if (indPeso) { indPeso.innerText = totalPeso > 0 ? totalPeso.toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 3}) + ' kg' : '0.0 kg'; indPeso.classList.remove('hidden'); }
+            if (indCub) { indCub.innerText = totalCubagem > 0 ? totalCubagem.toFixed(4) + ' m³' : '0.0000 m³'; indCub.classList.remove('hidden'); }
+            
+            window.cubagemTotalAtual = totalCubagem;
         }
 
         function validarBotaoCopiar() {
@@ -1084,7 +1113,14 @@
             texto += `CEP DESTINATÁRIO: ${val('destCep')}${cidDest}\n\n`;
             texto += `VALOR DA NOTA FISCAL: R$ ${val('valorNf')}.\n`;
             texto += `QUANTIDADE DE VOLUME(S): ${document.getElementById('qtdVolumes').innerText}.\n`;
-            texto += `PESO TOTAL: ${document.getElementById('pesoTotal').innerText} Kg.\n\n`;
+            texto += `PESO TOTAL: ${document.getElementById('pesoTotal').innerText} Kg.\n`;
+            
+            if (window.cubagemTotalAtual > 0) {
+                texto += `CUBAGEM TOTAL: ${window.cubagemTotalAtual.toFixed(4)} m³.\n\n`;
+            } else {
+                texto += `\n`;
+            }
+            
             texto += `VOLUME(S) E PESO(S) DO(S) ITEM(NS):\n\n`;
 
             const rows = document.querySelectorAll('.item-row');
