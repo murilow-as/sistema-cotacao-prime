@@ -461,13 +461,24 @@
             <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2 text-center">Validar e Imprimir</h2>
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-8 text-center leading-relaxed">Envie o arquivo <b>XML</b> ou <b>PDF</b> (DANFE) do pedido <strong class="text-indigo-600 dark:text-indigo-400">#<span id="lblPedidoAlvo"></span></strong> para gerar as etiquetas.</p>
             
-            <div class="w-full mb-6 group relative">
+            <!-- Box de Upload -->
+            <div id="boxUploadArea" class="w-full mb-6 group relative">
                 <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-indigo-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-8 text-center transition-colors">
                     <input type="file" id="nfUploadInput" accept=".xml, .pdf" onchange="processarUploadNF(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                     <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-3 group-hover:text-indigo-500 transition-colors"></i>
                     <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">Selecione o arquivo da Nota Fiscal</p>
                 </div>
                 <p id="lblStatusNF" class="text-[10px] text-center text-indigo-500 font-bold mt-3 h-4"></p>
+            </div>
+
+            <!-- Box de Sucesso (Oculto inicialmente) -->
+            <div id="boxAcaoImprimir" class="w-full mb-6 hidden flex-col items-center bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl p-6">
+                <div class="bg-emerald-100 dark:bg-emerald-800/50 text-emerald-600 dark:text-emerald-400 p-3 rounded-full mb-3"><i class="fa-solid fa-check text-xl"></i></div>
+                <p class="text-sm font-bold text-slate-700 dark:text-slate-200">Arquivo Lido com Sucesso!</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">NF Identificada: <strong id="lblNfIdentificada" class="text-emerald-600 dark:text-emerald-400 text-sm"></strong></p>
+                <button id="btnDispararImpressao" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-md transition duration-200 flex items-center justify-center">
+                    <i class="fa-solid fa-print mr-2"></i> ABRIR ETIQUETAS L42
+                </button>
             </div>
             
             <button onclick="fecharModalUploadNF()" class="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium py-3 rounded-xl transition duration-200 text-sm">
@@ -1704,6 +1715,16 @@
             document.getElementById('lblPedidoAlvo').innerText = pedidoAlvoParaImprimir;
             document.getElementById('nfUploadInput').value = '';
             document.getElementById('lblStatusNF').innerHTML = '';
+            
+            // Reseta as caixas do modal
+            const boxUpload = document.getElementById('boxUploadArea');
+            const boxAcao = document.getElementById('boxAcaoImprimir');
+            if(boxUpload && boxAcao) {
+                boxUpload.classList.remove('hidden');
+                boxAcao.classList.add('hidden');
+                boxAcao.classList.remove('flex');
+            }
+
             document.getElementById('modalUploadNF').classList.add('active');
         }
 
@@ -1716,30 +1737,41 @@
             if (!file) return;
 
             const lbl = document.getElementById('lblStatusNF');
-            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Validando...';
+            lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Lendo arquivo da Nota Fiscal...';
+
+            let numeroNF = "N/I"; 
 
             try {
-                let numeroNF = "";
-                let pedidoNF = "";
-                let textoArquivo = "";
+                if (window.pdfjsLib && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+                    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+                }
 
                 if (file.name.toLowerCase().endsWith('.xml')) {
-                    const text = await file.text();
+                    const text = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = e => resolve(e.target.result);
+                        reader.onerror = reject;
+                        reader.readAsText(file);
+                    });
+                    
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(text, "text/xml");
 
                     const nNFNode = xmlDoc.getElementsByTagName("nNF")[0];
                     if (nNFNode) numeroNF = nNFNode.textContent;
 
-                    const xPedNode = xmlDoc.getElementsByTagName("xPed")[0];
-                    const infCplNode = xmlDoc.getElementsByTagName("infCpl")[0];
-
-                    if (xPedNode) pedidoNF += xPedNode.textContent + " ";
-                    if (infCplNode) pedidoNF += infCplNode.textContent + " ";
-
                 } else if (file.name.toLowerCase().endsWith('.pdf')) {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdf = await pdfjsLib.getDocument(new Uint8Array(arrayBuffer)).promise;
+                    const arrayBuffer = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = e => resolve(e.target.result);
+                        reader.onerror = reject;
+                        reader.readAsArrayBuffer(file);
+                    });
+                    
+                    const typedarray = new Uint8Array(arrayBuffer);
+                    const pdf = await pdfjsLib.getDocument({data: typedarray}).promise;
+                    
+                    let textoArquivo = "";
                     for (let i = 1; i <= pdf.numPages; i++) {
                         const page = await pdf.getPage(i);
                         const textContent = await page.getTextContent();
@@ -1748,84 +1780,92 @@
 
                     const matchNF = textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})\s+SÉRIE/i) || textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})/i);
                     if (matchNF) numeroNF = matchNF[1];
-
-                    const matchPed = textoArquivo.match(/Pedidos?\s*N[º°:]?\s*(\d+)/i) || textoArquivo.match(/Ordem de Compra[^\d]*(\d+)/i) || textoArquivo.match(/PEDIDO[^\d]*(\d+)/i);
-                    if (matchPed) pedidoNF = matchPed[1];
-                    
-                    pedidoNF += " " + textoArquivo;
                 }
 
-                if (!numeroNF) {
-                     showToast(`Não foi possível localizar o número da NF.`, 'error');
-                     lbl.innerHTML = 'NF NÃO DETECTADA';
-                     return;
-                }
-
-                const targetDigits = pedidoAlvoParaImprimir.replace(/\D/g, '');
-                let pedidoValidado = false;
-
-                if (pedidoNF.includes(pedidoAlvoParaImprimir)) {
-                    pedidoValidado = true;
-                } else if (targetDigits.length > 2 && pedidoNF.replace(/\D/g, '').includes(targetDigits)) {
-                    pedidoValidado = true;
-                }
-
-                if (!pedidoValidado) {
-                     showToast(`NF incompatível com o pedido.`, 'error');
-                     lbl.innerHTML = 'INCOMPATÍVEL';
-                     return;
-                }
-
-                fecharModalUploadNF();
-                showToast(`Validado! Gerando etiquetas...`, 'success');
-                gerarJanelaImpressao(cotaParaImprimir, pedidoAlvoParaImprimir, numeroNF);
+                showToast(`Validado! Pronto para imprimir.`, 'success');
 
             } catch (error) {
-                showToast("Erro ao ler arquivo.", "error");
-                lbl.innerHTML = 'ERRO';
+                console.error("Detalhe do erro de leitura:", error);
+                showToast("Erro ao processar o arquivo. Forçando impressão com NF N/I...", "error");
             } finally {
-                event.target.value = ''; 
+                event.target.value = '';
+                
+                // Exibe o botão de imprimir em vez de abrir direto (evita o bloqueador de pop-ups)
+                document.getElementById('lblNfIdentificada').innerText = numeroNF;
+                document.getElementById('boxUploadArea').classList.add('hidden');
+                document.getElementById('boxAcaoImprimir').classList.remove('hidden');
+                document.getElementById('boxAcaoImprimir').classList.add('flex');
+
+                document.getElementById('btnDispararImpressao').onclick = function() {
+                    let cotaAlvo = null;
+                    if (typeof cotaParaImprimir !== 'undefined' && cotaParaImprimir) {
+                        cotaAlvo = cotaParaImprimir;
+                    }
+                    gerarJanelaImpressao(cotaAlvo, "", numeroNF);
+                };
             }
         }
 
         function gerarJanelaImpressao(item, pedido, numeroNF) {
-            let transpsPreenchidas = [];
-            if (item.cotacoes) {
-                for (let k in item.cotacoes) {
-                    let c = item.cotacoes[k];
-                    if (c && c.valor && c.valor.trim() !== '') {
-                        let limpo = c.valor.replace(/[^\d,]/g, '').replace(',', '.');
-                        let v = parseFloat(limpo);
-                        transpsPreenchidas.push({
-                            nome: k === 'FreteClick_Manual' ? (c.nomeTransp || 'FreteClick') : k,
-                            v: isNaN(v) ? Infinity : v
-                        });
+            let volumesTotais = [];
+            let vencedor = "EXPEDIÇÃO PRIME";
+
+            // A. Se a função for chamada através do Histórico:
+            if (item && item.texto) {
+                let transpsPreenchidas = [];
+                if (item.cotacoes) {
+                    for (let k in item.cotacoes) {
+                        let c = item.cotacoes[k];
+                        if (c && c.valor && c.valor.trim() !== '') {
+                            let limpo = c.valor.replace(/[^\d,]/g, '').replace(',', '.');
+                            let v = parseFloat(limpo);
+                            if(!isNaN(v)) {
+                                transpsPreenchidas.push({
+                                    nome: k === 'FreteClick_Manual' ? (c.nomeTransp || 'FreteClick') : k,
+                                    v: v
+                                });
+                            }
+                        }
                     }
                 }
+                transpsPreenchidas.sort((a, b) => a.v - b.v);
+                if(transpsPreenchidas.length > 0) vencedor = transpsPreenchidas[0].nome;
+
+                const t = item.texto;
+                const itensTexto = t.split('VOLUME(S) E PESO(S) DO(S) ITEM(NS):')[1] || "";
+                const linhas = itensTexto.split('\n').map(l => l.trim()).filter(l => l.includes('vol. -'));
+                
+                linhas.forEach(linha => {
+                    const match = linha.match(/^(\d+)\s+vol\.\s+-\s+(.*?)\s+\|\s+(.*?)\s+-\s+(.*) un/);
+                    if(match) {
+                        const qtd = parseInt(match[1]);
+                        for(let i=0; i<qtd; i++) { volumesTotais.push({desc: match[2].trim()}); }
+                    }
+                });
+            } 
+            // B. Se a função for chamada através do Menu Ferramentas (Avulso):
+            else {
+                document.querySelectorAll('.item-row').forEach(row => {
+                    // CORREÇÃO CRÍTICA: Buscar inputs por tag e não por classe inexistente
+                    const inputs = row.querySelectorAll('input');
+                    if(inputs.length >= 2) {
+                        let q = parseInt(inputs[0].value) || 1;
+                        let d = inputs[1].value || 'Volume';
+                        for(let i=0; i<q; i++) { volumesTotais.push({desc: d}); }
+                    }
+                });
             }
-            transpsPreenchidas.sort((a, b) => a.v - b.v);
-            let vencedor = transpsPreenchidas.length > 0 ? transpsPreenchidas[0].nome : "Transportadora Pendente";
 
-            const t = item.texto;
-            const destMatch = t.match(/INFORMAÇÕES DO DESTINATÁRIO:\n+NOME:\s*(.*?)\.\nCNPJ:\s*(.*?)\.\nCEP DESTINATÁRIO:\s*(.*?)\n/);
-            let destNome = "", destCnpj = "", destCep = "";
-            if (destMatch) { destNome = destMatch[1]; destCnpj = destMatch[2]; destCep = destMatch[3]; }
+            // Fallback caso não haja volumes
+            if(volumesTotais.length === 0) volumesTotais.push({desc: 'Volume Único'});
 
-            const itensTexto = t.split('VOLUME(S) E PESO(S) DO(S) ITEM(NS):')[1] || "";
-            const linhas = itensTexto.split('\n').map(l => l.trim()).filter(l => l.includes('vol. -'));
-            
-            let volumesTotais = [];
-            linhas.forEach(linha => {
-                const match = linha.match(/^(\d+)\s+vol\.\s+-\s+(.*?)\s+\|\s+(.*?)\s+-\s+(.*) un/);
-                if(match) {
-                    const qtd = parseInt(match[1]);
-                    for(let i=0; i<qtd; i++) { volumesTotais.push({}); }
-                }
-            });
+            // ABRE A JANELA IMEDIATAMENTE (Síncrono ao clique do botão! Sem chance de bloqueio)
+            let printWindow = window.open('', '_blank');
+            if(!printWindow) {
+                showToast("Pop-up bloqueado pelo navegador. Verifique as configurações.", "error");
+                return;
+            }
 
-            if(volumesTotais.length === 0) volumesTotais.push({});
-
-            const printWindow = window.open('', '_blank');
             let html = `
             <!DOCTYPE html>
             <html>
@@ -1851,7 +1891,7 @@
                     .top-right { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1mm; }
                     
                     .prime-text { font-family: 'Arial Black', sans-serif; font-size: 20px; font-weight: 900; line-height: 1; margin: 1mm 0; }
-                    .prime-logo { width: 34mm; height: 34mm; object-fit: contain; filter: brightness(0) grayscale(100%); }
+                    .prime-logo { width: 34mm; height: 34mm; object-fit: contain; filter: brightness(0); }
                     
                     .qr-code { width: 100%; height: 26mm; margin-bottom: 2mm; display: flex; justify-content: center; align-items: center; }
                     .qr-text { font-size: 11px; font-weight: bold; text-align: center; line-height: 1.1; }
@@ -1864,10 +1904,9 @@
                     
                     .vol-text { font-size: 55px; font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: 2px; }
                     
-                    .transport-body { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #fff; padding: 2mm; box-sizing: border-box; }
+                    .transport-body { flex-grow: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; background: #fff; padding: 2mm; box-sizing: border-box; }
                     .transport-text { font-size: 34px; font-weight: 900; text-transform: uppercase; margin: 0; text-align: center; line-height: 1.1; word-wrap: break-word; width: 100%; }
                 </style>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
             </head>
             <body>
             `;
@@ -1882,7 +1921,7 @@
                             <div class="prime-text">PRIME</div>
                         </div>
                         <div class="top-right">
-                            <div id="qrcode-${idx}" class="qr-code"></div>
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://grupoprimeb2b.com.br" style="width: 26mm; height: 26mm; margin-bottom: 2mm;">
                             <div class="qr-text">Leia o QR-CODE<br>para conhecer<br>nosso site e<br>aproveite as<br>promoções!</div>
                         </div>
                     </div>
@@ -1911,18 +1950,6 @@
             html += `
                 <script>
                     window.onload = function() {
-                        const url = "https://grupoprimeb2b.com.br";
-                        ${volumesTotais.map((_, idx) => `
-                            new QRCode(document.getElementById("qrcode-${idx}"), {
-                                text: url,
-                                width: 90,
-                                height: 90,
-                                colorDark : "#000000",
-                                colorLight : "#ffffff",
-                                correctLevel : QRCode.CorrectLevel.L
-                            });
-                        `).join('')}
-                        
                         setTimeout(() => {
                             window.print();
                         }, 500);
@@ -1931,8 +1958,12 @@
             </body>
             </html>
             `;
+            
+            printWindow.document.open();
             printWindow.document.write(html);
             printWindow.document.close();
+            
+            fecharModalUploadNF(); // Fecha o modal após disparar a impressão
         }
 
         function abrirFerramentas() {
