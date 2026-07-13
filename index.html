@@ -1740,6 +1740,8 @@
             lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Lendo arquivo da Nota Fiscal...';
 
             let numeroNF = "N/I"; 
+            let pedidoNF = ""; // Variável para armazenar o pedido encontrado no arquivo
+            let sucessoLeitura = false; // Flag de segurança
 
             try {
                 if (window.pdfjsLib && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
@@ -1759,6 +1761,13 @@
 
                     const nNFNode = xmlDoc.getElementsByTagName("nNF")[0];
                     if (nNFNode) numeroNF = nNFNode.textContent;
+
+                    // Busca o pedido no XML
+                    const xPedNode = xmlDoc.getElementsByTagName("xPed")[0];
+                    const infCplNode = xmlDoc.getElementsByTagName("infCpl")[0];
+
+                    if (xPedNode) pedidoNF += xPedNode.textContent + " ";
+                    if (infCplNode) pedidoNF += infCplNode.textContent + " ";
 
                 } else if (file.name.toLowerCase().endsWith('.pdf')) {
                     const arrayBuffer = await new Promise((resolve, reject) => {
@@ -1780,29 +1789,62 @@
 
                     const matchNF = textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})\s+SÉRIE/i) || textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})/i);
                     if (matchNF) numeroNF = matchNF[1];
+
+                    // Busca o pedido no texto do PDF
+                    const matchPed = textoArquivo.match(/Pedidos?\s*N[º°:]?\s*(\d+)/i) || textoArquivo.match(/Ordem de Compra[^\d]*(\d+)/i) || textoArquivo.match(/PEDIDO[^\d]*(\d+)/i);
+                    if (matchPed) pedidoNF = matchPed[1];
+                    
+                    // Adiciona todo o texto como contingência para a validação
+                    pedidoNF += " " + textoArquivo;
                 }
 
-                showToast(`Validado! Pronto para imprimir.`, 'success');
+                // VALIDAÇÃO INTELIGENTE (AGORA RESTRITIVA)
+                if (numeroNF === "N/I") {
+                    showToast(`Não foi possível localizar o número da NF.`, 'error');
+                    lbl.innerHTML = 'FALHA - NF NÃO DETECTADA';
+                    return; // Bloqueia e sai da função
+                } else {
+                    const targetDigits = pedidoAlvoParaImprimir.replace(/\D/g, '');
+                    let pedidoValidado = false;
+
+                    if (pedidoNF.includes(pedidoAlvoParaImprimir)) {
+                        pedidoValidado = true;
+                    } else if (targetDigits.length > 2 && pedidoNF.replace(/\D/g, '').includes(targetDigits)) {
+                        pedidoValidado = true;
+                    }
+
+                    if (!pedidoValidado) {
+                        showToast(`Erro: A NF não pertence a este pedido. Impressão bloqueada.`, 'error');
+                        lbl.innerHTML = 'FALHA - NF INCOMPATÍVEL';
+                        return; // Bloqueia e sai da função
+                    } else {
+                        showToast(`Validado! Pronto para imprimir.`, 'success');
+                        sucessoLeitura = true; // Só permite mostrar o botão se chegar aqui!
+                    }
+                }
 
             } catch (error) {
                 console.error("Detalhe do erro de leitura:", error);
-                showToast("Erro ao processar o arquivo. Forçando impressão com NF N/I...", "error");
+                showToast("Erro ao processar o arquivo.", "error");
+                lbl.innerHTML = 'ERRO DE LEITURA';
             } finally {
                 event.target.value = '';
                 
-                // Exibe o botão de imprimir em vez de abrir direto (evita o bloqueador de pop-ups)
-                document.getElementById('lblNfIdentificada').innerText = numeroNF;
-                document.getElementById('boxUploadArea').classList.add('hidden');
-                document.getElementById('boxAcaoImprimir').classList.remove('hidden');
-                document.getElementById('boxAcaoImprimir').classList.add('flex');
+                // Só exibe o botão de impressão SE a validação foi um sucesso absoluto
+                if (sucessoLeitura) {
+                    document.getElementById('lblNfIdentificada').innerText = numeroNF;
+                    document.getElementById('boxUploadArea').classList.add('hidden');
+                    document.getElementById('boxAcaoImprimir').classList.remove('hidden');
+                    document.getElementById('boxAcaoImprimir').classList.add('flex');
 
-                document.getElementById('btnDispararImpressao').onclick = function() {
-                    let cotaAlvo = null;
-                    if (typeof cotaParaImprimir !== 'undefined' && cotaParaImprimir) {
-                        cotaAlvo = cotaParaImprimir;
-                    }
-                    gerarJanelaImpressao(cotaAlvo, "", numeroNF);
-                };
+                    document.getElementById('btnDispararImpressao').onclick = function() {
+                        let cotaAlvo = null;
+                        if (typeof cotaParaImprimir !== 'undefined' && cotaParaImprimir) {
+                            cotaAlvo = cotaParaImprimir;
+                        }
+                        gerarJanelaImpressao(cotaAlvo, "", numeroNF);
+                    };
+                }
             }
         }
 
