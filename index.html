@@ -261,6 +261,9 @@
             <button onclick="abrirFerramentas()" class="hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-medium transition flex items-center justify-center flex-grow sm:flex-grow-0 text-sm">
                 <i class="fa-solid fa-toolbox mr-2 text-indigo-500"></i> Ferramentas
             </button>
+            <button onclick="gerarExtratoMedidas()" class="hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-medium transition flex items-center justify-center flex-grow sm:flex-grow-0 text-sm">
+                <i class="fa-solid fa-ruler-combined mr-2 text-emerald-500"></i> Extrato de Medidas
+            </button>
             <div class="w-px bg-slate-200 dark:bg-slate-700 my-2"></div>
             <button onclick="sairSistema()" class="hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 px-4 py-2 rounded-xl transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Sair do Sistema">
                 <i class="fa-solid fa-power-off"></i>
@@ -1852,26 +1855,22 @@
             let volumesTotais = [];
             let vencedor = "EXPEDIÇÃO PRIME";
 
-            // A. Se a função for chamada através do Histórico:
-            if (item && item.texto) {
+            if (item) {
                 let transpsPreenchidas = [];
                 if (item.cotacoes) {
                     for (let k in item.cotacoes) {
                         let c = item.cotacoes[k];
                         if (c && c.valor && c.valor.trim() !== '') {
-                            let limpo = c.valor.replace(/[^\d,]/g, '').replace(',', '.');
-                            let v = parseFloat(limpo);
-                            if(!isNaN(v)) {
-                                transpsPreenchidas.push({
-                                    nome: k === 'FreteClick_Manual' ? (c.nomeTransp || 'FreteClick') : k,
-                                    v: v
-                                });
-                            }
+                            let v = parseFloat(c.valor.replace(/[^\d,]/g, '').replace(',', '.'));
+                            transpsPreenchidas.push({
+                                nome: k === 'FreteClick_Manual' ? (c.nomeTransp || 'FreteClick') : k,
+                                v: isNaN(v) ? Infinity : v
+                            });
                         }
                     }
                 }
                 transpsPreenchidas.sort((a, b) => a.v - b.v);
-                if(transpsPreenchidas.length > 0) vencedor = transpsPreenchidas[0].nome;
+                vencedor = transpsPreenchidas.length > 0 ? transpsPreenchidas[0].nome : "Transportadora Pendente";
 
                 const t = item.texto;
                 const itensTexto = t.split('VOLUME(S) E PESO(S) DO(S) ITEM(NS):')[1] || "";
@@ -1881,131 +1880,176 @@
                     const match = linha.match(/^(\d+)\s+vol\.\s+-\s+(.*?)\s+\|\s+(.*?)\s+-\s+(.*) un/);
                     if(match) {
                         const qtd = parseInt(match[1]);
-                        for(let i=0; i<qtd; i++) { volumesTotais.push({desc: match[2].trim()}); }
+                        for(let i=0; i<qtd; i++) { volumesTotais.push({}); }
                     }
                 });
-            } 
-            // B. Se a função for chamada através do Menu Ferramentas (Avulso):
-            else {
+            } else {
+                // Modo Avulso: Puxar do formulário atual na tela
                 document.querySelectorAll('.item-row').forEach(row => {
-                    // CORREÇÃO CRÍTICA: Buscar inputs por tag e não por classe inexistente
                     const inputs = row.querySelectorAll('input');
                     if(inputs.length >= 2) {
                         let q = parseInt(inputs[0].value) || 1;
-                        let d = inputs[1].value || 'Volume';
-                        for(let i=0; i<q; i++) { volumesTotais.push({desc: d}); }
+                        for(let i=0; i<q; i++) { volumesTotais.push({}); }
                     }
                 });
             }
 
-            // Fallback caso não haja volumes
-            if(volumesTotais.length === 0) volumesTotais.push({desc: 'Volume Único'});
+            if(volumesTotais.length === 0) volumesTotais.push({});
 
-            // ABRE A JANELA IMEDIATAMENTE (Síncrono ao clique do botão! Sem chance de bloqueio)
             let printWindow = window.open('', '_blank');
             if(!printWindow) {
                 showToast("Pop-up bloqueado pelo navegador. Verifique as configurações.", "error");
                 return;
             }
 
-            let html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>Imprimir Etiquetas</title>
-                <style>
-                    @media print {
-                        @page { size: 100mm 150mm; margin: 0; }
-                        body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    }
-                    body { font-family: 'Arial', sans-serif; margin: 0; padding: 2mm; background: #fff; color: #000; }
-                    .label { 
-                        width: 96mm; height: 146mm; border: 2px solid #000; 
-                        box-sizing: border-box; page-break-after: always; 
-                        display: flex; flex-direction: column; overflow: hidden; 
-                        margin: 0 auto;
-                    }
-                    .label:last-child { page-break-after: auto; }
-                    
-                    .top-row { display: flex; height: 49mm; border-bottom: 2px solid #000; box-sizing: border-box; }
-                    .top-left { flex: 1; border-right: 2px solid #000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1mm; }
-                    .top-right { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1mm; }
-                    
-                    .prime-text { font-family: 'Arial Black', sans-serif; font-size: 20px; font-weight: 900; line-height: 1; margin: 1mm 0; }
-                    .prime-logo { width: 34mm; height: 34mm; object-fit: contain; filter: brightness(0); }
-                    
-                    .qr-code { width: 100%; height: 26mm; margin-bottom: 2mm; display: flex; justify-content: center; align-items: center; }
-                    .qr-text { font-size: 11px; font-weight: bold; text-align: center; line-height: 1.1; }
-                    
-                    .black-header { background: #000; color: #fff; text-align: center; padding: 1.5mm 0; border-bottom: 2px solid #000; }
-                    .black-header h2 { margin: 0; font-size: 22px; font-weight: 900; font-style: italic; text-transform: uppercase; }
-                    
-                    .white-body { background: #fff; text-align: center; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #000; }
-                    .nf-text { font-size: 85px; font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: 2px; }
-                    
-                    .vol-text { font-size: 55px; font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: 2px; }
-                    
-                    .transport-body { flex-grow: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; background: #fff; padding: 2mm; box-sizing: border-box; }
-                    .transport-text { font-size: 34px; font-weight: 900; text-transform: uppercase; margin: 0; text-align: center; line-height: 1.1; word-wrap: break-word; width: 100%; }
-                </style>
-            </head>
-            <body>
-            `;
+            let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Imprimir Etiquetas</title><style>
+                @media print { @page { size: 100mm 150mm; margin: 0; } body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                body { font-family: 'Arial', sans-serif; margin: 0; padding: 2mm; background: #fff; color: #000; }
+                .label { width: 96mm; height: 146mm; border: 2px solid #000; box-sizing: border-box; page-break-after: always; display: flex; flex-direction: column; overflow: hidden; margin: 0 auto; }
+                .label:last-child { page-break-after: auto; }
+                .top-row { display: flex; height: 49mm; border-bottom: 2px solid #000; box-sizing: border-box; }
+                .top-left { flex: 1; border-right: 2px solid #000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1mm; }
+                .top-right { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1mm; }
+                .prime-text { font-family: 'Arial Black', sans-serif; font-size: 20px; font-weight: 900; line-height: 1; margin: 1mm 0; }
+                .prime-logo { width: 34mm; height: 34mm; object-fit: contain; filter: brightness(0); } /* Retorno ao Preto Absoluto para o P */
+                .qr-code { width: 100%; height: 26mm; margin-bottom: 2mm; display: flex; justify-content: center; align-items: center; }
+                .qr-text { font-size: 11px; font-weight: bold; text-align: center; line-height: 1.1; }
+                .black-header { background: #000; color: #fff; text-align: center; padding: 1.5mm 0; border-bottom: 2px solid #000; }
+                .black-header h2 { margin: 0; font-size: 22px; font-weight: 900; font-style: italic; text-transform: uppercase; }
+                .white-body { background: #fff; text-align: center; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #000; }
+                .nf-text { font-size: 85px; font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: 2px; }
+                .vol-text { font-size: 55px; font-weight: 900; margin: 0; padding: 0; line-height: 1; letter-spacing: 2px; }
+                .transport-body { flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #fff; padding: 2mm; box-sizing: border-box; }
+                .transport-text { font-size: 34px; font-weight: 900; text-transform: uppercase; margin: 0; text-align: center; line-height: 1.1; word-wrap: break-word; width: 100%; }
+            </style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script></head><body>`;
             
             volumesTotais.forEach((vol, idx) => {
-                html += `
-                <div class="label">
-                    <div class="top-row">
-                        <div class="top-left">
-                            <div class="prime-text">GRUPO</div>
-                            <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" class="prime-logo">
-                            <div class="prime-text">PRIME</div>
-                        </div>
-                        <div class="top-right">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://grupoprimeb2b.com.br" style="width: 26mm; height: 26mm; margin-bottom: 2mm;">
-                            <div class="qr-text">Leia o QR-CODE<br>para conhecer<br>nosso site e<br>aproveite as<br>promoções!</div>
-                        </div>
-                    </div>
-                    
-                    <div class="black-header">
-                        <h2>NOTA FISCAL</h2>
-                    </div>
-                    <div class="white-body" style="height: 32mm;">
-                        <h1 class="nf-text">${numeroNF}</h1>
-                    </div>
-                    
-                    <div class="black-header">
-                        <h2>VOLUMES:</h2>
-                    </div>
-                    <div class="white-body" style="height: 22mm;">
-                        <h1 class="vol-text">${String(idx + 1).padStart(2, '0')} / ${String(volumesTotais.length).padStart(2, '0')}</h1>
-                    </div>
-                    
-                    <div class="transport-body">
-                        <h2 class="transport-text">${vencedor}</h2>
-                    </div>
-                </div>
-                `;
+                html += `<div class="label"><div class="top-row"><div class="top-left"><div class="prime-text">GRUPO</div><img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" class="prime-logo"><div class="prime-text">PRIME</div></div><div class="top-right"><div id="qrcode-${idx}" class="qr-code"></div><div class="qr-text">Leia o QR-CODE<br>para conhecer<br>nosso site e<br>aproveite as<br>promoções!</div></div></div><div class="black-header"><h2>NOTA FISCAL</h2></div><div class="white-body" style="height: 32mm;"><h1 class="nf-text">${numeroNF}</h1></div><div class="black-header"><h2>VOLUMES:</h2></div><div class="white-body" style="height: 22mm;"><h1 class="vol-text">${String(idx + 1).padStart(2, '0')} / ${String(volumesTotais.length).padStart(2, '0')}</h1></div><div class="transport-body"><h2 class="transport-text">${vencedor}</h2></div></div>`;
             });
+            html += `<script>window.onload = function() { const url = "https://grupoprimeb2b.com.br"; ${volumesTotais.map((_, idx) => `new QRCode(document.getElementById("qrcode-${idx}"), { text: url, width: 90, height: 90, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L });`).join('')} setTimeout(() => { window.print(); }, 500); };<\/script></body></html>`;
 
-            html += `
-                <script>
-                    window.onload = function() {
-                        setTimeout(() => {
-                            window.print();
-                        }, 500);
-                    };
-                <\/script>
-            </body>
-            </html>
-            `;
-            
             printWindow.document.open();
             printWindow.document.write(html);
             printWindow.document.close();
-            
-            fecharModalUploadNF(); // Fecha o modal após disparar a impressão
+
+            fecharModalUploadNF();
+        }
+
+        function gerarExtratoMedidas() {
+            let produtosLista = [];
+            for (let key in catalogoProdutos) {
+                produtosLista.push(catalogoProdutos[key]);
+            }
+
+            if (produtosLista.length === 0) {
+                showToast('Nenhuma medida salva no sistema ainda.', 'alert');
+                return;
+            }
+
+            showToast('A compilar Extrato de Medidas...', 'info');
+
+            // Ordenar por Ordem Alfabética (A-Z)
+            produtosLista.sort((a, b) => {
+                let descA = (a.desc || "").toUpperCase();
+                let descB = (b.desc || "").toUpperCase();
+                return descA.localeCompare(descB);
+            });
+
+            let linhasHTML = '';
+            let totalCubagem = 0;
+            let totalItens = 0;
+
+            produtosLista.forEach(prod => {
+                let parts = prod.parts || [{ vol: "1", comp: prod.comp, larg: prod.larg, alt: prod.alt, peso: prod.peso }];
+                
+                parts.forEach((part, index) => {
+                    let nomeExibicao = index === 0 
+                        ? `<strong style="color: #1e293b;">${prod.desc}</strong>` 
+                        : `<span style="color: #94a3b8; padding-left: 15px;">↳ Volume ${index + 1}</span>`;
+                    
+                    // Cálculo da Cubagem por item (C x L x A / 1.000.000)
+                    let comp = parseFloat(part.comp) || 0;
+                    let larg = parseFloat(part.larg) || 0;
+                    let alt = parseFloat(part.alt) || 0;
+                    let cubagemItem = (comp * larg * alt) / 1000000;
+                    
+                    totalCubagem += cubagemItem;
+                    totalItens++;
+
+                    linhasHTML += `
+                        <tr style="page-break-inside: avoid;">
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${nomeExibicao}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: bold;">1</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${part.comp || 0}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${part.larg || 0}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${part.alt || 0}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #059669; font-weight: bold;">${cubagemItem.toFixed(4)}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${part.peso || 0}</td>
+                        </tr>
+                    `;
+                });
+            });
+
+            let cubagemMedia = totalItens > 0 ? (totalCubagem / totalItens) : 0;
+
+            const container = document.createElement('div');
+            container.innerHTML = `
+                <div style="padding: 30px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
+                    <div style="border-bottom: 2px solid #10b981; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div>
+                            <h1 style="color: #0f172a; margin: 0; font-size: 22px; font-weight: 900; text-transform: uppercase;">Extrato de Medidas</h1>
+                            <p style="margin: 5px 0 0 0; color: #10b981; font-size: 13px; font-weight: bold;">Base de Conhecimento - Grupo Prime B2B</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="margin: 0; font-size: 11px; color: #64748b;">Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+                            <p style="margin: 3px 0 0 0; font-size: 11px; color: #64748b;">Total de Produtos: <strong>${produtosLista.length}</strong></p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                        <div style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; border: 1px solid #e2e8f0; flex: 1;">
+                            <p style="margin: 0; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold;">Cubagem Total Acumulada</p>
+                            <p style="margin: 5px 0 0 0; font-size: 18px; color: #0f172a; font-weight: 900;">${totalCubagem.toFixed(4)} m³</p>
+                        </div>
+                        <div style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; border: 1px solid #e2e8f0; flex: 1;">
+                            <p style="margin: 0; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold;">Cubagem Média / Item</p>
+                            <p style="margin: 5px 0 0 0; font-size: 18px; color: #0f172a; font-weight: 900;">${cubagemMedia.toFixed(4)} m³</p>
+                        </div>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                        <thead>
+                            <tr style="background-color: #f8fafc; color: #475569;">
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: left;">Descrição do Produto</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Qtd</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Comp (cm)</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Larg (cm)</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Alt (cm)</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Cubagem (m³)</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Peso (kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${linhasHTML}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            const opt = {
+                margin:       0.3,
+                filename:     `Extrato_Medidas_Prime_${new Date().getTime()}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(container).save().then(() => {
+                showToast('Extrato baixado com sucesso!', 'success');
+            }).catch(err => {
+                console.error(err);
+                showToast('Erro ao gerar extrato.', 'error');
+            });
         }
 
         function abrirFerramentas() {
@@ -2126,7 +2170,7 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-grow: 1; padding: 0 4mm; width: 100%; box-sizing: border-box;">
                             <div style="display: flex; align-items: center; gap: 6mm;">
                                 <div style="width: 34mm; height: 34mm; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                                    <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" style="width: 100%; height: 100%; object-fit: contain; filter: brightness(0) grayscale(100%);" alt="Logo">
+                                    <img src="https://www.google.com/s2/favicons?domain=grupoprimeb2b.com.br&sz=128" style="width: 100%; height: 100%; object-fit: contain; filter: brightness(0);" alt="Logo">
                                 </div>
                                 <div style="font-family: 'Arial Black', sans-serif; font-size: 32px; font-weight: 900; line-height: 1; text-align: left; color: #000; flex-shrink: 0; margin-top: 1mm;">
                                     GRUPO<br>PRIME<br>B2B
@@ -2343,6 +2387,122 @@
 
             lista.innerHTML = htmlPrimarias + htmlSecundarias;
             box.classList.remove('hidden');
+        }
+
+        function gerarExtratoMedidas() {
+            let produtosLista = [];
+            for (let key in catalogoProdutos) {
+                produtosLista.push(catalogoProdutos[key]);
+            }
+
+            if (produtosLista.length === 0) {
+                showToast('Nenhuma medida salva no sistema ainda.', 'alert');
+                return;
+            }
+
+            showToast('A compilar Extrato de Medidas...', 'info');
+
+            // Ordenar por Ordem Alfabética (A-Z)
+            produtosLista.sort((a, b) => {
+                let descA = (a.desc || "").toUpperCase();
+                let descB = (b.desc || "").toUpperCase();
+                return descA.localeCompare(descB);
+            });
+
+            let linhasHTML = '';
+            let totalCubagem = 0;
+            let totalItens = 0;
+
+            produtosLista.forEach(prod => {
+                let parts = prod.parts || [{ vol: "1", comp: prod.comp, larg: prod.larg, alt: prod.alt, peso: prod.peso }];
+                
+                parts.forEach((part, index) => {
+                    let nomeExibicao = index === 0 
+                        ? `<strong style="color: #1e293b;">${prod.desc}</strong>` 
+                        : `<span style="color: #94a3b8; padding-left: 15px;">↳ Volume ${index + 1}</span>`;
+                    
+                    let comp = parseFloat(part.comp) || 0;
+                    let larg = parseFloat(part.larg) || 0;
+                    let alt = parseFloat(part.alt) || 0;
+                    let cubagemItem = (comp * larg * alt) / 1000000;
+                    
+                    totalCubagem += cubagemItem;
+                    totalItens++;
+
+                    linhasHTML += `
+                        <tr style="page-break-inside: avoid;">
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${nomeExibicao}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: bold;">1</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${part.comp || 0}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${part.larg || 0}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${part.alt || 0}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #059669; font-weight: bold;">${cubagemItem.toFixed(4)}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center;">${part.peso || 0}</td>
+                        </tr>
+                    `;
+                });
+            });
+
+            let cubagemMedia = totalItens > 0 ? (totalCubagem / totalItens) : 0;
+
+            const container = document.createElement('div');
+            container.innerHTML = `
+                <div style="padding: 30px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff;">
+                    <div style="border-bottom: 2px solid #10b981; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div>
+                            <h1 style="color: #0f172a; margin: 0; font-size: 22px; font-weight: 900; text-transform: uppercase;">Extrato de Medidas</h1>
+                            <p style="margin: 5px 0 0 0; color: #10b981; font-size: 13px; font-weight: bold;">Base de Conhecimento - Grupo Prime B2B</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="margin: 0; font-size: 11px; color: #64748b;">Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+                            <p style="margin: 3px 0 0 0; font-size: 11px; color: #64748b;">Total de Produtos: <strong>${produtosLista.length}</strong></p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                        <div style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; border: 1px solid #e2e8f0; flex: 1;">
+                            <p style="margin: 0; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold;">Cubagem Total Acumulada</p>
+                            <p style="margin: 5px 0 0 0; font-size: 18px; color: #0f172a; font-weight: 900;">${totalCubagem.toFixed(4)} m³</p>
+                        </div>
+                        <div style="background: #f8fafc; padding: 10px 15px; border-radius: 8px; border: 1px solid #e2e8f0; flex: 1;">
+                            <p style="margin: 0; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold;">Cubagem Média / Item</p>
+                            <p style="margin: 5px 0 0 0; font-size: 18px; color: #0f172a; font-weight: 900;">${cubagemMedia.toFixed(4)} m³</p>
+                        </div>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                        <thead>
+                            <tr style="background-color: #f8fafc; color: #475569;">
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: left;">Descrição do Produto</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Qtd</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Comp (cm)</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Larg (cm)</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Alt (cm)</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Cubagem (m³)</th>
+                                <th style="padding: 10px 8px; border-bottom: 2px solid #cbd5e1; text-align: center;">Peso (kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${linhasHTML}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            const opt = {
+                margin:       0.3,
+                filename:     `Extrato_Medidas_Prime_${new Date().getTime()}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(container).save().then(() => {
+                showToast('Extrato baixado com sucesso!', 'success');
+            }).catch(err => {
+                console.error(err);
+                showToast('Erro ao gerar extrato.', 'error');
+            });
         }
 
         async function buscarCNPJ(cnpj, nomeId, loadingId) {
