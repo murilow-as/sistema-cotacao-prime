@@ -1591,7 +1591,8 @@
             if (matchTotal) document.getElementById('valorNf').value = mascaraMoeda(matchTotal[1]);
             else { let matches = [...texto.matchAll(/R\$\s*([\d\.,]+)/gi)]; if (matches.length > 0) document.getElementById('valorNf').value = mascaraMoeda(matches[matches.length - 1][1]); }
 
-            let matchOC = texto.match(/OC\s+CLIENTE[\s:]*([A-Za-z0-9]+)/i) || texto.match(/ORDEM\s+DE\s+COMPRA[\s:]*([A-Za-z0-9]+)/i);
+            // NOVA LÓGICA DA ORDEM DE COMPRA: Ignora textos intrometidos (como "ENDEREÇO") e busca o primeiro número
+            let matchOC = texto.match(/(?:OC\s+CLIENTE|ORDEM\s+DE\s+COMPRA)[^\d]*(\d[A-Za-z0-9\-_]*)/i);
             if (matchOC) document.getElementById('ordemCompra').value = matchOC[1];
 
             if (texto.toUpperCase().includes('GIOVANNA')) document.getElementById('vendedor').value = "GIO";
