@@ -1473,6 +1473,14 @@
             finally {
                 event.target.value = '';
                 if (sucessoLeitura) {
+                    
+                    // SALVAR A NF NA NUVEM PARA ATIVAR O BOTÃO PLANILHA
+                    if (window.cotaParaImprimir && window.cotaParaImprimir.id) {
+                        database.ref('historico/' + window.cotaParaImprimir.id).update({
+                            numeroNF: numeroNF
+                        });
+                    }
+
                     document.getElementById('lblNfIdentificada').innerText = numeroNF; document.getElementById('boxUploadArea').classList.add('hidden');
                     document.getElementById('boxAcaoImprimir').classList.remove('hidden'); document.getElementById('boxAcaoImprimir').classList.add('flex');
                     document.getElementById('btnDispararImpressao').onclick = function() { gerarJanelaImpressao(window.cotaParaImprimir || null, "", numeroNF); };
