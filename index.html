@@ -305,7 +305,7 @@
                 </div>
             </div>
 
-            <!-- BLOCO: DADOS GERAIS (BLINDADO) -->
+            <!-- BLOCO: DADOS GERAIS -->
             <div class="mb-8">
                 <h3 class="text-xs font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase mb-4 pl-1">Dados Gerais</h3>
 
@@ -487,19 +487,20 @@
         </div>
     </div>
 
+    <!-- MODAL DE UPLOAD DE NF PARA ETIQUETAS (EXIGE XML) -->
     <div id="modalUploadNF" class="modal fixed inset-0 z-[70] items-center justify-center">
         <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl w-11/12 max-w-md flex flex-col items-center border border-slate-100 dark:border-slate-700">
             <div class="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-4 rounded-full mb-5">
                 <i class="fa-solid fa-file-invoice text-2xl"></i>
             </div>
             <h2 class="text-xl font-bold text-slate-800 dark:text-white mb-2 text-center">Validar e Imprimir</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mb-8 text-center leading-relaxed">Envie o arquivo <b>XML</b> ou <b>PDF</b> do pedido <strong class="text-indigo-600 dark:text-indigo-400">#<span id="lblPedidoAlvo"></span></strong>.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-8 text-center leading-relaxed">Envie o arquivo <b>XML</b> da nota fiscal do pedido <strong class="text-indigo-600 dark:text-indigo-400">#<span id="lblPedidoAlvo"></span></strong>.</p>
             
             <div id="boxUploadArea" class="w-full mb-6 group relative">
                 <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-indigo-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-8 text-center transition-colors">
-                    <input type="file" id="nfUploadInput" accept=".xml, .pdf" onchange="processarUploadNF(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                    <input type="file" id="nfUploadInput" accept=".xml" onchange="processarUploadNF(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                     <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-3 group-hover:text-indigo-500 transition-colors"></i>
-                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">Selecione o arquivo da Nota Fiscal</p>
+                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">Selecione o arquivo XML da NF</p>
                 </div>
                 <p id="lblStatusNF" class="text-[10px] text-center text-indigo-500 font-bold mt-3 h-4"></p>
             </div>
@@ -662,7 +663,10 @@
                 });
 
                 database.ref('produtos').on('value', (snapshot) => { catalogoProdutos = snapshot.val() || {}; atualizarDataListProdutos(); });
-            } catch (err) { showToast("Erro de conexão. Funções online indisponíveis.", "error"); } 
+            } catch (err) { 
+                console.error("Erro na conexão com o Firebase:", err);
+                showToast("Erro de conexão. Funções online indisponíveis.", "error"); 
+            } 
             finally { setTimeout(() => { const tela = document.getElementById('telaCarregamento'); if (tela) { tela.style.opacity = '0'; setTimeout(() => tela.style.display = 'none', 300); } }, 800); }
         }
 
@@ -1427,7 +1431,6 @@
                     if (uf) ufEnt = uf.textContent.trim().toUpperCase();
                 }
 
-                // Divergência se as UFs existirem e forem diferentes
                 if (ufDest && ufEnt && ufDest !== ufEnt) {
                     return true;
                 }
@@ -1439,12 +1442,10 @@
 
         async function processarUploadNF(event) {
             const file = event.target.files[0]; if (!file) return;
-            const lbl = document.getElementById('lblStatusNF'); lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Lendo arquivo da Nota Fiscal...';
+            const lbl = document.getElementById('lblStatusNF'); lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Lendo arquivo XML...';
             let numeroNF = "N/I"; let pedidoNF = ""; let sucessoLeitura = false; let isNonCompliant = false;
 
             try {
-                if (window.pdfjsLib && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
                 if (file.name.toLowerCase().endsWith('.xml')) {
                     const text = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.onerror = reject; reader.readAsText(file); });
                     const xmlDoc = new DOMParser().parseFromString(text, "text/xml");
@@ -1452,20 +1453,11 @@
                     const xPedNode = xmlDoc.getElementsByTagName("xPed")[0]; const infCplNode = xmlDoc.getElementsByTagName("infCpl")[0];
                     if (xPedNode) pedidoNF += xPedNode.textContent + " "; if (infCplNode) pedidoNF += infCplNode.textContent + " ";
                     isNonCompliant = verificarDivergenciaFiscal(text);
-                } else if (file.name.toLowerCase().endsWith('.pdf')) {
-                    const arrayBuffer = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.onerror = reject; reader.readAsArrayBuffer(file); });
-                    const pdf = await pdfjsLib.getDocument({data: new Uint8Array(arrayBuffer)}).promise;
-                    let textoArquivo = "";
-                    for (let i = 1; i <= pdf.numPages; i++) { const page = await pdf.getPage(i); const textContent = await page.getTextContent(); textoArquivo += textContent.items.map(item => item.str).join(" ") + " "; }
-                    const matchNF = textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})\s+SÉRIE/i) || textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})/i); if (matchNF) numeroNF = matchNF[1];
-                    const matchPed = textoArquivo.match(/Pedidos?\s*N[º°:]?\s*(\d+)/i) || textoArquivo.match(/Ordem de Compra[^\d]*(\d+)/i) || textoArquivo.match(/PEDIDO[^\d]*(\d+)/i); if (matchPed) pedidoNF = matchPed[1];
-                    pedidoNF += " " + textoArquivo;
-                    
-                    const matchXML = textoArquivo.match(/<nfeProc.*?<\/nfeProc>/is) || textoArquivo.match(/<NFe.*?<\/NFe>/is);
-                    if (matchXML) { isNonCompliant = verificarDivergenciaFiscal(matchXML[0]); }
+                } else {
+                    showToast(`Apenas arquivos XML são aceitos para a emissão de etiquetas.`, 'error'); lbl.innerHTML = 'FALHA - FORMATO INVÁLIDO'; return; 
                 }
 
-                if (numeroNF === "N/I") { showToast(`Não foi possível localizar o número da NF.`, 'error'); lbl.innerHTML = 'FALHA - NF NÃO DETECTADA'; return; } 
+                if (numeroNF === "N/I") { showToast(`Não foi possível localizar o número da NF no XML.`, 'error'); lbl.innerHTML = 'FALHA - NF NÃO DETECTADA'; return; } 
                 else {
                     let pedidoValidado = false;
                     if (!window.pedidoAlvoParaImprimir) { pedidoValidado = true; } 
@@ -1481,11 +1473,10 @@
                         lbl.innerHTML = 'FALHA - NÃO CONFORMIDADE FISCAL';
                         sucessoLeitura = false;
                         
-                        // Grava na nuvem que o pedido tem alerta
                         if (window.cotaParaImprimir && window.cotaParaImprimir.id) {
                             database.ref('historico/' + window.cotaParaImprimir.id).update({
                                 alertaFiscal: true,
-                                detalheAlerta: "Divergência entre UF do Destinatário e Local de Entrega"
+                                detalheAlerta: "Divergência entre UF do Destinatário e Local de Entrega no XML"
                             });
                         }
                         
@@ -1497,9 +1488,9 @@
                         if(boxBloqueada) { boxBloqueada.classList.remove('hidden'); boxBloqueada.classList.add('flex'); }
                         return;
                     }
-                    else { showToast(`Validado! Pronto para imprimir.`, 'success'); sucessoLeitura = true; }
+                    else { showToast(`Validado com sucesso via XML.`, 'success'); sucessoLeitura = true; }
                 }
-            } catch (error) { showToast("Erro ao processar o arquivo.", "error"); lbl.innerHTML = 'ERRO DE LEITURA'; } 
+            } catch (error) { showToast("Erro ao processar o arquivo XML.", "error"); lbl.innerHTML = 'ERRO DE LEITURA'; } 
             finally {
                 event.target.value = '';
                 if (sucessoLeitura) {
@@ -1614,7 +1605,6 @@
         }
 
         function analisarTextoPDF(texto) {
-            // Reset seguro dos campos bloqueados
             document.getElementById('ordemCompra').value = "-";
             document.getElementById('pedido').value = "";
             document.getElementById('valorNf').value = "";
@@ -1637,7 +1627,6 @@
             let matchOC = texto.match(/(?:OC\s+CLIENTE|ORDEM\s+DE\s+COMPRA)[\s:\-]*([A-Za-z0-9\-_À-ÿ]+)/i);
             if (matchOC) {
                 let ocStr = matchOC[1].toUpperCase();
-                // Se a próxima palavra for um rótulo do sistema, significa que o campo estava em branco
                 if (["VENDEDOR", "PEDIDO", "DATA", "CLIENTE", "FORMA", "TRANSP", "TRANSPORTADORA", "ENDERECO", "ENDEREÇO", "ENDERE", "NOME", "CNPJ", "CPF", "RAZAO", "RAZÃO", "BAIRRO", "CIDADE", "CEP"].includes(ocStr)) {
                     document.getElementById('ordemCompra').value = "-";
                 } else {
