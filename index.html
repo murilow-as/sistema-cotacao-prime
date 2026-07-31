@@ -513,6 +513,13 @@
                 </button>
             </div>
             
+            <div id="boxAcaoBloqueada" class="w-full mb-6 hidden flex-col items-center bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-2xl p-6">
+                <div class="bg-red-100 dark:bg-red-800/50 text-red-600 dark:text-red-400 p-3 rounded-full mb-3"><i class="fa-solid fa-ban text-xl"></i></div>
+                <p class="text-sm font-bold text-slate-700 dark:text-slate-200 text-center">Impressão Bloqueada</p>
+                <p class="text-xs text-red-600 dark:text-red-400 mb-2 text-center mt-2 font-medium">Divergência fiscal detectada: UF do Destinatário não confere com a UF do Local de Entrega.</p>
+                <p class="text-[10px] text-red-500/80 text-center">Esta nota não está em conformidade para envio.</p>
+            </div>
+
             <button onclick="fecharModalUploadNF()" class="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium py-3 rounded-xl transition duration-200 text-sm">
                 Cancelar
             </button>
@@ -1130,6 +1137,11 @@
                         `;
                     }
 
+                    let badgeAlerta = '';
+                    if (item.alertaFiscal) {
+                        badgeAlerta = `<span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-md mr-3 font-bold flex items-center animate-pulse shadow-sm shadow-red-500/30" title="Bloqueio: Divergência de UF/CEP"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> BLOQUEIO FISCAL</span>`;
+                    }
+
                     lista.innerHTML += `
                         <div class="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden transition-all mb-4">
                             <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/80">
@@ -1137,6 +1149,7 @@
                                     <div class="flex items-center flex-wrap gap-y-2 mb-1">
                                         <i id="icone-${item.id}" class="fa-solid fa-chevron-right text-slate-400 mr-2 w-3 text-center transition-transform duration-200 text-xs"></i>
                                         <span class="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-md mr-3">${item.id}</span>
+                                        ${badgeAlerta}
                                         <span class="text-[10px] text-slate-500 mr-3">${item.data}</span>
                                         <span class="text-[10px] text-brand-600 dark:text-brand-400 font-medium"><i class="fa-regular fa-user mr-1"></i>${item.usuario || 'N/I'}</span>
                                     </div>
@@ -1382,6 +1395,7 @@
             window.cotaParaImprimir = item; const pedidoMatch = item.texto.match(/PEDIDO\s+([^\.]+)/); window.pedidoAlvoParaImprimir = pedidoMatch ? pedidoMatch[1].trim() : item.id;
             document.getElementById('lblPedidoAlvo').innerText = window.pedidoAlvoParaImprimir; document.getElementById('nfUploadInput').value = ''; document.getElementById('lblStatusNF').innerHTML = '';
             document.getElementById('boxUploadArea').classList.remove('hidden'); document.getElementById('boxAcaoImprimir').classList.add('hidden'); document.getElementById('boxAcaoImprimir').classList.remove('flex');
+            const boxBloq = document.getElementById('boxAcaoBloqueada'); if(boxBloq) { boxBloq.classList.add('hidden'); boxBloq.classList.remove('flex'); }
             document.getElementById('modalUploadNF').classList.add('active');
         }
 
@@ -1389,15 +1403,44 @@
             fecharFerramentas(); window.cotaParaImprimir = null; window.pedidoAlvoParaImprimir = "";
             document.getElementById('lblPedidoAlvo').innerText = "Múltiplos / Avulso"; document.getElementById('nfUploadInput').value = ''; document.getElementById('lblStatusNF').innerHTML = '';
             document.getElementById('boxUploadArea').classList.remove('hidden'); document.getElementById('boxAcaoImprimir').classList.add('hidden'); document.getElementById('boxAcaoImprimir').classList.remove('flex');
+            const boxBloq = document.getElementById('boxAcaoBloqueada'); if(boxBloq) { boxBloq.classList.add('hidden'); boxBloq.classList.remove('flex'); }
             document.getElementById('modalUploadNF').classList.add('active');
         }
 
         function fecharModalUploadNF() { document.getElementById('modalUploadNF').classList.remove('active'); }
 
+        function verificarDivergenciaFiscal(xmlString) {
+            try {
+                const xmlDoc = new DOMParser().parseFromString(xmlString, "text/xml");
+                let ufDest = "", ufEnt = "";
+                const dest = xmlDoc.getElementsByTagName("dest")[0];
+                if (dest) {
+                    const ender = dest.getElementsByTagName("enderDest")[0];
+                    if (ender) {
+                        const uf = ender.getElementsByTagName("UF")[0];
+                        if (uf) ufDest = uf.textContent.trim().toUpperCase();
+                    }
+                }
+                const entrega = xmlDoc.getElementsByTagName("entrega")[0];
+                if (entrega) {
+                    const uf = entrega.getElementsByTagName("UF")[0];
+                    if (uf) ufEnt = uf.textContent.trim().toUpperCase();
+                }
+
+                // Divergência se as UFs existirem e forem diferentes
+                if (ufDest && ufEnt && ufDest !== ufEnt) {
+                    return true;
+                }
+                return false;
+            } catch(e) {
+                return false;
+            }
+        }
+
         async function processarUploadNF(event) {
             const file = event.target.files[0]; if (!file) return;
             const lbl = document.getElementById('lblStatusNF'); lbl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Lendo arquivo da Nota Fiscal...';
-            let numeroNF = "N/I"; let pedidoNF = ""; let sucessoLeitura = false; 
+            let numeroNF = "N/I"; let pedidoNF = ""; let sucessoLeitura = false; let isNonCompliant = false;
 
             try {
                 if (window.pdfjsLib && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -1408,6 +1451,7 @@
                     const nNFNode = xmlDoc.getElementsByTagName("nNF")[0]; if (nNFNode) numeroNF = nNFNode.textContent;
                     const xPedNode = xmlDoc.getElementsByTagName("xPed")[0]; const infCplNode = xmlDoc.getElementsByTagName("infCpl")[0];
                     if (xPedNode) pedidoNF += xPedNode.textContent + " "; if (infCplNode) pedidoNF += infCplNode.textContent + " ";
+                    isNonCompliant = verificarDivergenciaFiscal(text);
                 } else if (file.name.toLowerCase().endsWith('.pdf')) {
                     const arrayBuffer = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.onerror = reject; reader.readAsArrayBuffer(file); });
                     const pdf = await pdfjsLib.getDocument({data: new Uint8Array(arrayBuffer)}).promise;
@@ -1416,6 +1460,9 @@
                     const matchNF = textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})\s+SÉRIE/i) || textoArquivo.match(/N[º°\.]?\s*0*(\d{1,9})/i); if (matchNF) numeroNF = matchNF[1];
                     const matchPed = textoArquivo.match(/Pedidos?\s*N[º°:]?\s*(\d+)/i) || textoArquivo.match(/Ordem de Compra[^\d]*(\d+)/i) || textoArquivo.match(/PEDIDO[^\d]*(\d+)/i); if (matchPed) pedidoNF = matchPed[1];
                     pedidoNF += " " + textoArquivo;
+                    
+                    const matchXML = textoArquivo.match(/<nfeProc.*?<\/nfeProc>/is) || textoArquivo.match(/<NFe.*?<\/NFe>/is);
+                    if (matchXML) { isNonCompliant = verificarDivergenciaFiscal(matchXML[0]); }
                 }
 
                 if (numeroNF === "N/I") { showToast(`Não foi possível localizar o número da NF.`, 'error'); lbl.innerHTML = 'FALHA - NF NÃO DETECTADA'; return; } 
@@ -1427,7 +1474,29 @@
                         if (pedidoNF.includes(window.pedidoAlvoParaImprimir)) pedidoValidado = true;
                         else if (targetDigits.length > 2 && pedidoNF.replace(/\D/g, '').includes(targetDigits)) pedidoValidado = true;
                     }
+                    
                     if (!pedidoValidado) { showToast(`Erro: A NF não pertence a este pedido. Impressão bloqueada.`, 'error'); lbl.innerHTML = 'FALHA - NF INCOMPATÍVEL'; return; } 
+                    else if (isNonCompliant) {
+                        showToast(`Atenção: Divergência Fiscal detectada!`, 'error');
+                        lbl.innerHTML = 'FALHA - NÃO CONFORMIDADE FISCAL';
+                        sucessoLeitura = false;
+                        
+                        // Grava na nuvem que o pedido tem alerta
+                        if (window.cotaParaImprimir && window.cotaParaImprimir.id) {
+                            database.ref('historico/' + window.cotaParaImprimir.id).update({
+                                alertaFiscal: true,
+                                detalheAlerta: "Divergência entre UF do Destinatário e Local de Entrega"
+                            });
+                        }
+                        
+                        document.getElementById('boxUploadArea').classList.add('hidden');
+                        document.getElementById('boxAcaoImprimir').classList.add('hidden');
+                        document.getElementById('boxAcaoImprimir').classList.remove('flex');
+                        
+                        const boxBloqueada = document.getElementById('boxAcaoBloqueada');
+                        if(boxBloqueada) { boxBloqueada.classList.remove('hidden'); boxBloqueada.classList.add('flex'); }
+                        return;
+                    }
                     else { showToast(`Validado! Pronto para imprimir.`, 'success'); sucessoLeitura = true; }
                 }
             } catch (error) { showToast("Erro ao processar o arquivo.", "error"); lbl.innerHTML = 'ERRO DE LEITURA'; } 
