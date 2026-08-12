@@ -463,7 +463,7 @@
 
     <!-- MODAL DE HISTÓRICO -->
     <div id="modalHistorico" class="modal fixed inset-0 z-50 items-center justify-center">
-        <div class="bg-white dark:bg-slate-800 w-11/12 max-w-5xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 w-11/12 max-w-[1200px] rounded-2xl shadow-2xl flex flex-col max-h-[85vh] border border-slate-100 dark:border-slate-700 overflow-hidden">
             <div class="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80">
                 <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center"><i class="fa-solid fa-cloud-arrow-up mr-3 text-brand-500"></i> Base de Conhecimento</h2>
                 <button onclick="fecharHistorico()" class="text-slate-400 hover:text-red-500 text-xl transition"><i class="fa-solid fa-xmark"></i></button>
@@ -548,7 +548,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1 block pl-1">Modalidade</label>
-                    <select id="ccModalidade" class="input-field cursor-pointer" onchange="atualizarPreviewCC()">
+                    <select id="ccModalidade" class="input-field cursor-pointer font-bold" onchange="atualizarPreviewCC()">
                         <option value="CIF">CIF (Remetente)</option>
                         <option value="FOB">FOB (Destinatário)</option>
                         <option value="FRETECLICK">FreteClick (Terceiros)</option>
@@ -556,7 +556,7 @@
                 </div>
                 <div>
                     <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1 block pl-1">Transportadora</label>
-                    <select id="ccTransportadora" class="input-field cursor-pointer" onchange="atualizarPreviewCC()">
+                    <select id="ccTransportadora" class="input-field cursor-pointer font-bold" onchange="atualizarPreviewCC()">
                         <!-- Options will be populated dynamically -->
                     </select>
                     <p class="text-[9px] text-slate-400 mt-1 pl-1">Razão, CNPJ e IE serão injetados automaticamente.</p>
@@ -594,12 +594,12 @@
                     </div>
                     <div class="sm:col-span-2">
                         <label class="text-[10px] text-slate-500 mb-1 block">Número</label>
-                        <input type="text" id="ccNumero" class="input-field text-sm font-bold text-brand-600" placeholder="[NÚMERO]" oninput="atualizarPreviewCC()">
+                        <input type="text" id="ccNumero" class="input-field text-sm font-bold text-brand-600" oninput="atualizarPreviewCC()">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                    <div class="sm:col-span-4">
+                    <div class="sm:col-span-6">
                         <label class="text-[10px] text-slate-500 mb-1 block">Bairro</label>
                         <input type="text" id="ccBairro" class="input-field text-sm" oninput="atualizarPreviewCC()">
                     </div>
@@ -611,27 +611,29 @@
                         <label class="text-[10px] text-slate-500 mb-1 block">UF</label>
                         <input type="text" id="ccUf" class="input-field text-sm" maxlength="2" oninput="atualizarPreviewCC()">
                     </div>
-                    <div class="sm:col-span-2">
-                        <label class="text-[10px] text-slate-500 mb-1 block">Compl.</label>
-                        <input type="text" id="ccComplEnd" class="input-field text-sm" oninput="atualizarPreviewCC()">
-                    </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                    <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1 block pl-1">Contato / Recebedor</label>
+                    <div class="flex justify-between items-end mb-1">
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase block pl-1">Contato / Recebedor</label>
+                        <div class="flex items-center gap-1.5 pr-1">
+                            <input type="checkbox" id="ccSemContato" class="w-3 h-3 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer" onchange="toggleContatoCC(); atualizarPreviewCC()">
+                            <label for="ccSemContato" class="text-[10px] font-medium text-slate-500 cursor-pointer select-none">Não possui contato</label>
+                        </div>
+                    </div>
                     <input type="text" id="ccContato" class="input-field" placeholder="Nome - (11) 99999-9999" oninput="atualizarPreviewCC()">
                 </div>
                 <div>
-                    <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1 block pl-1">Complementos da Carta</label>
+                    <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1 block pl-1 mt-4 md:mt-0">Complementos da Carta</label>
                     <input type="text" id="ccComplementos" class="input-field" placeholder="Qualquer obs. adicional" oninput="atualizarPreviewCC()">
                 </div>
             </div>
 
             <div class="mb-4">
                 <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1 block pl-1">Preview em Tempo Real</label>
-                <textarea id="ccPreview" class="w-full h-32 p-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-700 dark:text-slate-300 resize-none focus:outline-none" readonly></textarea>
+                <textarea id="ccPreview" class="w-full h-32 p-4 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono leading-relaxed text-slate-700 dark:text-slate-300 resize-none focus:outline-none" readonly></textarea>
             </div>
 
             <button onclick="copiarCartaCorrecao()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 rounded-xl shadow-md transition duration-200 flex items-center justify-center text-sm">
@@ -1278,14 +1280,19 @@
 
                     let btnDownload = '';
                     if (temMinimoDuas) {
-                        let disabledClass = item.numeroNF ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 cursor-pointer" : "bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600";
-                        let onclickAction = item.numeroNF ? `onclick="copiarParaPlanilha('${item.id}')"` : `onclick="showToast('Gere as etiquetas L42 Pro primeiro para obter a NF.', 'alert')"`;
+                        let btnL42Class = item.numeroNF ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:text-indigo-400 dark:hover:bg-indigo-800/50" : "bg-transparent text-slate-500 hover:text-indigo-600 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-indigo-400";
+                        let btnPlanilhaClass = item.numeroNF ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 dark:hover:bg-emerald-800/50" : "bg-transparent text-slate-400 cursor-not-allowed dark:text-slate-500";
+                        let btnCCClass = item.numeroNF ? "bg-transparent text-blue-600 hover:bg-blue-100 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/40" : "bg-transparent text-slate-400 cursor-not-allowed dark:text-slate-500";
+                        let onclickPlanilha = item.numeroNF ? `onclick="copiarParaPlanilha('${item.id}')"` : `onclick="showToast('Gere as etiquetas L42 Pro primeiro para obter a NF.', 'alert')"`;
+                        let onclickCC = item.numeroNF ? `onclick="abrirCartaCorrecao('${item.id}')"` : ``;
 
                         btnDownload = `
-                            <button onclick="baixarCotacaoPdf('${item.id}')" class="text-brand-600 hover:text-brand-700 dark:text-brand-400 font-medium px-3 py-1.5 rounded transition text-xs flex items-center" title="Baixar Relatório PDF"><i class="fa-solid fa-file-pdf mr-1.5"></i> PDF</button>
-                            <button ${onclickAction} class="${disabledClass} font-medium px-3 py-1.5 rounded transition text-xs flex items-center ml-2" title="${item.numeroNF ? 'Copiar para Excel' : 'Anexe a NF via L42 Pro'}"><i class="fa-solid fa-file-excel mr-1.5"></i> Planilha</button>
-                            <button onclick="iniciarImpressaoEtiquetas('${item.id}')" class="${item.numeroNF ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'} font-medium px-3 py-1.5 rounded transition text-xs flex items-center ml-2"><i class="fa-solid fa-tags mr-1.5"></i> L42 Pro</button>
-                            <button onclick="abrirCartaCorrecao('${item.id}')" class="${item.numeroNF ? 'text-blue-600 hover:text-blue-700 dark:text-blue-400' : 'text-slate-400 cursor-not-allowed dark:text-slate-600'} font-medium px-3 py-1.5 rounded transition text-xs flex items-center ml-2" ${item.numeroNF ? '' : 'title="Exige NF anexada"'}><i class="fa-solid fa-pen-to-square mr-1.5"></i> C. Correção</button>
+                            <div class="flex items-center bg-slate-100 dark:bg-slate-700/50 rounded-lg p-0.5 border border-slate-200 dark:border-slate-600 shadow-sm flex-wrap sm:flex-nowrap gap-0.5">
+                                <button onclick="iniciarImpressaoEtiquetas('${item.id}')" class="${btnL42Class} font-semibold px-3 py-1.5 rounded-md transition text-[11px] flex items-center h-full"><i class="fa-solid fa-tags mr-1.5"></i> L42 Pro</button>
+                                <button ${onclickPlanilha} class="${btnPlanilhaClass} font-semibold px-3 py-1.5 rounded-md transition text-[11px] flex items-center h-full" title="${item.numeroNF ? 'Copiar para Excel' : 'Anexe a NF via L42 Pro'}"><i class="fa-solid fa-file-excel mr-1.5"></i> Planilha</button>
+                                <button ${onclickCC} class="${btnCCClass} font-semibold px-3 py-1.5 rounded-md transition text-[11px] flex items-center h-full" ${item.numeroNF ? '' : 'title="Exige NF anexada"'}><i class="fa-solid fa-pen-to-square mr-1.5"></i> C. Correção</button>
+                                <button onclick="baixarCotacaoPdf('${item.id}')" class="bg-transparent text-slate-600 hover:bg-slate-200 hover:text-brand-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-brand-400 font-semibold px-3 py-1.5 rounded-md transition text-[11px] flex items-center h-full" title="Baixar Relatório PDF"><i class="fa-solid fa-file-pdf mr-1.5"></i> PDF</button>
+                            </div>
                         `;
                     }
 
@@ -1296,7 +1303,7 @@
 
                     lista.innerHTML += `
                         <div class="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden transition-all mb-4">
-                            <div class="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/80">
+                            <div class="p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/80">
                                 <div class="flex-grow w-full cursor-pointer select-none" onclick="togglePrevia('${item.id}')">
                                     <div class="flex items-center flex-wrap gap-y-2 mb-1">
                                         <i id="icone-${item.id}" class="fa-solid fa-chevron-right text-slate-400 mr-2 w-3 text-center transition-transform duration-200 text-xs"></i>
@@ -1307,11 +1314,12 @@
                                     </div>
                                     <p class="text-sm font-semibold text-slate-700 dark:text-slate-200 ml-6">${item.destinatario}</p>
                                 </div>
-                                <div class="flex gap-1 items-center flex-wrap">
+                                <div class="flex gap-2 items-center flex-wrap mt-2 lg:mt-0 justify-end w-full lg:w-auto">
                                     ${btnDownload}
-                                    <div class="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-2"></div>
-                                    <button onclick="copiarDoHistorico('${item.id}')" class="text-slate-400 hover:text-brand-500 px-2 py-1 transition" title="Copiar Texto"><i class="fa-regular fa-copy"></i></button>
-                                    <button onclick="apagarCotacaoHistorico('${item.id}')" class="text-slate-400 hover:text-red-500 px-2 py-1 transition" title="Apagar"><i class="fa-solid fa-trash-can"></i></button>
+                                    <div class="flex items-center bg-slate-100 dark:bg-slate-700/50 rounded-lg p-0.5 border border-slate-200 dark:border-slate-600 shadow-sm flex-wrap sm:flex-nowrap">
+                                        <button onclick="copiarDoHistorico('${item.id}')" class="bg-transparent text-slate-500 hover:text-brand-600 hover:bg-slate-200 dark:text-slate-400 dark:hover:text-brand-400 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-md transition" title="Copiar Texto"><i class="fa-regular fa-copy"></i></button>
+                                        <button onclick="apagarCotacaoHistorico('${item.id}')" class="bg-transparent text-slate-500 hover:text-red-600 hover:bg-red-100 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/40 px-2.5 py-1.5 rounded-md transition ml-0.5" title="Apagar"><i class="fa-solid fa-trash-can"></i></button>
+                                    </div>
                                 </div>
                             </div>
                             <div id="previa-${item.id}" class="hidden bg-slate-50/50 dark:bg-slate-900/30 p-5 border-t border-slate-100 dark:border-slate-700">
@@ -1608,14 +1616,15 @@
             document.getElementById('ccBairro').value = "";
             document.getElementById('ccCidade').value = item.uf ? item.texto.match(/CEP DESTINATÁRIO:.*-\s*(.*)/)?.[1]?.split('/')[0]?.trim() || "" : "";
             document.getElementById('ccUf').value = item.uf || "";
-            document.getElementById('ccComplEnd').value = "";
+            document.getElementById('ccComplementos').value = "";
 
             if(cepExtracted) {
                 buscarCepCC(cepExtracted);
             }
 
+            document.getElementById('ccSemContato').checked = false;
+            toggleContatoCC();
             document.getElementById('ccContato').value = "";
-            document.getElementById('ccComplementos').value = "";
 
             atualizarPreviewCC();
             document.getElementById('modalCartaCorrecao').classList.add('active');
@@ -1637,13 +1646,23 @@
                             document.getElementById('ccBairro').value = data.bairro || "";
                             document.getElementById('ccCidade').value = data.localidade || "";
                             document.getElementById('ccUf').value = data.uf || "";
-                            if(document.getElementById('ccNumero').value === "") {
-                                document.getElementById('ccNumero').value = "[NÚMERO]";
-                            }
                             atualizarPreviewCC();
                         }
                     }
                 } catch (error) {}
+            }
+        }
+
+        function toggleContatoCC() {
+            const checkbox = document.getElementById('ccSemContato');
+            const inputContato = document.getElementById('ccContato');
+            if (checkbox.checked) {
+                inputContato.value = "";
+                inputContato.classList.add('input-disabled');
+                inputContato.disabled = true;
+            } else {
+                inputContato.classList.remove('input-disabled');
+                inputContato.disabled = false;
             }
         }
 
@@ -1655,8 +1674,7 @@
             const dest = document.getElementById('ccDestinatario').value.trim();
             
             const rua = document.getElementById('ccRua').value.trim();
-            const num = document.getElementById('ccNumero').value.trim() || "[NÚMERO]";
-            const complEnd = document.getElementById('ccComplEnd').value.trim();
+            const num = document.getElementById('ccNumero').value.trim();
             const bairro = document.getElementById('ccBairro').value.trim();
             const cidade = document.getElementById('ccCidade').value.trim();
             const uf = document.getElementById('ccUf').value.trim();
@@ -1664,8 +1682,8 @@
 
             let enderecoCompleto = "";
             if(rua) {
-                enderecoCompleto = `${rua}, ${num}`;
-                if(complEnd) enderecoCompleto += ` ${complEnd}`;
+                enderecoCompleto = rua;
+                if(num) enderecoCompleto += `, ${num}`;
                 if(bairro) enderecoCompleto += ` - ${bairro}`;
                 if(cidade && uf) enderecoCompleto += ` - ${cidade}/${uf}`;
                 if(cep) enderecoCompleto += ` - CEP: ${cep}`;
@@ -1673,7 +1691,12 @@
                 enderecoCompleto = "[PREENCHA O ENDEREÇO]";
             }
 
-            const contato = document.getElementById('ccContato').value.trim() || "[NOME E TELEFONE]";
+            let contatoStr = "";
+            if (!document.getElementById('ccSemContato').checked) {
+                const contato = document.getElementById('ccContato').value.trim() || "[NOME E TELEFONE]";
+                contatoStr = ` Contato: ${contato}.`;
+            }
+
             const complementos = document.getElementById('ccComplementos').value.trim();
 
             let dadosTransp = "";
@@ -1687,11 +1710,11 @@
             let texto = "";
 
             if (mod === "CIF") {
-                texto = `FRETE CIF, O PAGADOR DO FRETE É O REMETENTE. ${dadosTransp} DADOS DA MERCADORIA: ${vols} Volume (s), ${peso} Kg. DESTINATÁRIO: ${dest}, ENDEREÇO DE ENTREGA: ${enderecoCompleto}. Contato: ${contato}.`;
+                texto = `FRETE CIF, O PAGADOR DO FRETE É O REMETENTE. ${dadosTransp} DADOS DA MERCADORIA: ${vols} Volume (s), ${peso} Kg. DESTINATÁRIO: ${dest}, ENDEREÇO DE ENTREGA: ${enderecoCompleto}.${contatoStr}`;
             } else if (mod === "FOB") {
-                texto = `FRETE FOB, O PAGADOR DO FRETE É O DESTINATÁRIO. ${dadosTransp} DADOS DA MERCADORIA: ${vols} Volume (s), ${peso} Kg. DESTINATÁRIO: ${dest}, ENDEREÇO DE ENTREGA: ${enderecoCompleto}. Contato: ${contato}.`;
+                texto = `FRETE FOB, O PAGADOR DO FRETE É O DESTINATÁRIO. ${dadosTransp} DADOS DA MERCADORIA: ${vols} Volume (s), ${peso} Kg. DESTINATÁRIO: ${dest}, ENDEREÇO DE ENTREGA: ${enderecoCompleto}.${contatoStr}`;
             } else if (mod === "FRETECLICK") {
-                texto = `FRETE POR CONTA DE TERCEIROS, FRETE NUMERO ######## POR CONTA E ORDEM DA ONIX TECNOLOGIA E PARTICIPACOES LTDA CNPJ: 28.214.795/0001-50. ${dadosTransp} DADOS DA MERCADORIA: ${vols} Volume (s), ${peso} Kg. DESTINATÁRIO: ${dest}, ENDEREÇO DE ENTREGA: ${enderecoCompleto}. Contato: ${contato}.`;
+                texto = `FRETE POR CONTA DE TERCEIROS, FRETE NUMERO ######## POR CONTA E ORDEM DA ONIX TECNOLOGIA E PARTICIPACOES LTDA CNPJ: 28.214.795/0001-50. ${dadosTransp} DADOS DA MERCADORIA: ${vols} Volume (s), ${peso} Kg. DESTINATÁRIO: ${dest}, ENDEREÇO DE ENTREGA: ${enderecoCompleto}.${contatoStr}`;
             }
 
             if (complementos) {
