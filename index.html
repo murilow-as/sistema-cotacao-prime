@@ -471,13 +471,17 @@
             
             <div class="p-4 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <div class="flex flex-col gap-4">
-                    <div class="flex flex-wrap gap-2" id="filtrosHistorico">
-                        <button onclick="aplicarFiltroHistorico('todos')" id="btnFiltro-todos" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-brand-600 text-white shadow-md">Todas as Cotações</button>
-                        <button onclick="aplicarFiltroHistorico('aguardando')" id="btnFiltro-aguardando" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600">Aguardando Cotação</button>
-                        <button onclick="aplicarFiltroHistorico('planilha')" id="btnFiltro-planilha" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600">Planilha Habilitada</button>
+                    <div class="flex flex-wrap gap-2 w-full justify-between items-center">
+                        <div class="flex flex-wrap gap-2" id="filtrosHistorico">
+                            <button onclick="aplicarFiltroHistorico('todos')" id="btnFiltro-todos" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-brand-600 text-white shadow-md">Todas as Cotações</button>
+                            <button onclick="aplicarFiltroHistorico('aguardando')" id="btnFiltro-aguardando" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600">Aguardando Cotação</button>
+                            <button onclick="aplicarFiltroHistorico('planilha')" id="btnFiltro-planilha" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600">Planilha Habilitada</button>
+                        </div>
+                        <button onclick="copiarSelecionadosParaPlanilha()" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-emerald-600 hover:bg-emerald-700 text-white shadow-md flex items-center ml-auto"><i class="fa-solid fa-file-excel mr-2"></i> Copiar Selecionados (<span id="contagemSelecionados">0</span>)</button>
                     </div>
                     <div class="relative flex">
-                        <input type="text" id="inputBuscaHistorico" oninput="renderizarListaHistorico()" onkeydown="if(event.key === 'Enter') renderizarListaHistorico()" placeholder="Buscar por ID, cliente, cidade..." class="w-full pl-4 pr-14 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-sm transition-all">
+                        <!-- Busca com Debounce acionado via JS -->
+                        <input type="text" id="inputBuscaHistorico" oninput="debouncedRenderizarHistorico()" onkeydown="if(event.key === 'Enter') renderizarListaHistorico()" placeholder="Buscar por ID, cliente, cidade..." class="w-full pl-4 pr-14 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-sm transition-all">
                         <button type="button" onclick="renderizarListaHistorico()" class="absolute right-2 top-2 bottom-2 bg-brand-100 hover:bg-brand-200 transition-colors text-brand-600 px-4 rounded-lg flex items-center justify-center shadow-sm cursor-pointer"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
@@ -579,7 +583,7 @@
                 <input type="text" id="ccDestinatario" class="input-field" oninput="atualizarPreviewCC()">
             </div>
 
-            <!-- Address Fields Split -->
+            <!-- Address Fields Split Sem Complemento -->
             <div class="mb-4 border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-50 dark:bg-slate-900/50">
                 <h3 class="text-[10px] font-semibold text-slate-500 uppercase mb-3 block">Endereço de Entrega (Auto-CEP)</h3>
                 
@@ -614,21 +618,15 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                    <div class="flex justify-between items-end mb-1">
-                        <label class="text-[10px] font-semibold text-slate-500 uppercase block pl-1">Contato / Recebedor</label>
-                        <div class="flex items-center gap-1.5 pr-1">
-                            <input type="checkbox" id="ccSemContato" class="w-3 h-3 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer" onchange="toggleContatoCC(); atualizarPreviewCC()">
-                            <label for="ccSemContato" class="text-[10px] font-medium text-slate-500 cursor-pointer select-none">Não possui contato</label>
-                        </div>
+            <div class="mb-4">
+                <div class="flex justify-between items-end mb-1">
+                    <label class="text-[10px] font-semibold text-slate-500 uppercase block pl-1">Contato / Recebedor</label>
+                    <div class="flex items-center gap-1.5 pr-1">
+                        <input type="checkbox" id="ccSemContato" class="w-3 h-3 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer" onchange="toggleContatoCC(); atualizarPreviewCC()">
+                        <label for="ccSemContato" class="text-[10px] font-medium text-slate-500 cursor-pointer select-none">Não possui contato</label>
                     </div>
-                    <input type="text" id="ccContato" class="input-field" placeholder="Nome - (11) 99999-9999" oninput="atualizarPreviewCC()">
                 </div>
-                <div>
-                    <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1 block pl-1 mt-4 md:mt-0">Complementos da Carta</label>
-                    <input type="text" id="ccComplementos" class="input-field" placeholder="Qualquer obs. adicional" oninput="atualizarPreviewCC()">
-                </div>
+                <input type="text" id="ccContato" class="input-field" placeholder="Nome - (11) 99999-9999" oninput="atualizarPreviewCC()">
             </div>
 
             <div class="mb-4">
@@ -690,6 +688,7 @@
         let codigoRecuperacaoAtual = null;
         let callbackConfirmDialog = null;
         let filtroAtivoHistorico = 'todos';
+        let debounceTimerHistorico = null; // Para otimizar a busca
 
         const firebaseConfig = {
             apiKey: "AIzaSyDhrqD3K9BdIZCLui282igMLfv4gcgQv6I",
@@ -728,7 +727,6 @@
             { nome: "IDEALE CARGAS", ufs: ["SP", "RJ", "ES"] },
             { nome: "MANDALÁ", ufs: ["SP", "DF", "GO", "MT", "MS", "TO", "MG", "AC", "PA", "RO"] },
             { nome: "MIRIN DO SUL", ufs: ["SP", "PR", "SC", "RS"] },
-            { nome: "PÁSSARO TRANSPORTES", ufs: ["AL","BA","CE","MA","PB","PE","PI","RN","SE"] },
             { nome: "RÁPIDO FIGUEIREDO", ufs: ["AL","BA","CE","MA","PB","PE","PI","RN","SE"] },
             { nome: "RODOCARGAS", ufs: ["MA", "PI"] },
             { nome: "RODONAVES", ufs: ["AC","AP","AM","DF","ES","GO","MT","MS","MG","PA","PR","RJ","RS","RO","RR","SC","SP","TO"] }, 
@@ -738,37 +736,36 @@
         ];
 
         const transportadorasCadastradas = {
-            "RODOCARGAS": { razao: "RODOCARGAS NORDESTE TRANSPORTE DE CARGAS EIRELI.", cnpj: "07.494.510/0003-73", ie: "336.885.273.112", end: "RUA VIELA URGA, 144 - VILA NOVA BONSUCESSO, GUARULHOS-SP, CEP: 07175-332" },
-            "NJP EXPRESS": { razao: "NJP EXPRESS LTDA.", cnpj: "46.249.962/0001-80", ie: "442.627.724.111", end: "AVENIDA JOÃO RAMALHO, 1504 - VILA NOEMIA, MAUA-SP, CEP: 09371-520" },
-            "MIRIN DO SUL": { razao: "MIR TRANSPORTES E LOGISTICA LTDA.", cnpj: "03.565.095/0002-60", ie: "336.500.015.117", end: "RUA QUELUZ, 211 - CIDADE INDUSTRIAL SATELITE, GUARULHOS-SP, CEP: 07220-050" },
-            "TRANSWELLS": { razao: "TRANS WELLS EXPRESSO RODOVIARIO EIRELI.", cnpj: "60.157.377/0001-80", ie: "112.237.410.117", end: "RUA ELI, 13 - VILA MARIA, SÃO PAULO-SP, CEP: 02114-010" },
-            "MANDALÁ": { razao: "MANDA LA TRANSPORTES DE CARGAS LTDA.", cnpj: "03.298.420/0003-56", ie: "336.832.471.110", end: "RUA MONICA APARECIDA MOREDO, 350, GALPAO, JARDIM FATIMA, GUARULHOS-SP, CEP: 07177-220" },
-            "FEDEX TNT": { razao: "TNT MERCURIO CARGAS E ENCOMENDAS EXPRESSAS LTDA.", cnpj: "95.591.723/0038-00", ie: "108.254.280.116", end: "AVENIDA MARGINAL DIREITA DO TIETE, 2500, VILA DOS REMEDIOS, SÃO PAULO-SP, CEP: 05118-100" },
-            "FORMATO": { razao: "FORMATO TRANSPORTES LTDA.", cnpj: "13.727.240/0001-34", ie: "796.441.310.114", end: "RUA RIO GRANDE DO PIAUI, 130, CIDADE ARACILIA, GUARULHOS-SP, CEP: 07252-250" },
-            "RODOVITOR": { razao: "RODOVITOR TRANSPORTES E LOCACAO DE VEICULOS LTDA.", cnpj: "08.408.736/0002-96", ie: "796.516.339.114", end: "RUA JOAO RANIERI, 1001, BONSUCESSO, GUARULHOS-SP, CEP: 07177-120" },
-            "MIRA TRANSPORTES": { razao: "MIRA OTM TRANSPORTES LTDA", cnpj: "58.506.155/0036-04", ie: "138.402.091.116", end: "RUA SOLD HAMILTON SILVA COSTA, 58, PARQUE NOVO MUNDO, SÃO PAULO-SP, CEP: 02190-901" },
-            "ÖBEN CARGO": { razao: "OBEN CARGO LTDA.", cnpj: "50.951.660/0001-26", ie: "132.319.981.110", end: "RUA OSCAR BARBOSA, 249, PARQUE CONTINENTAL, GUARULHOS-SP, CEP: 07070-109" },
-            "TODO BRASIL": { razao: "TODOBRASIL TRANSPORTES LTDA.", cnpj: "46.556.446/0001-06", ie: "127.682.042.110", end: "AVENIDA PAPA JOÃO PAULO I, 687, GALPÃO 09 BLOCO A - JARDIM PRESIDENTE DUTRA, GUARULHOS-SP, CEP: 07174-000" },
-            "IDEALE CARGAS": { razao: "IDEALE TRANSPORTES DE CARGAS LTDA.", cnpj: "12.592.569/0001-72", ie: "142.414.931.115", end: "RUA SOLDADO FRANCISCO TAMBORIM,49, PARQUE NOVO MUNDO - SÃO PAULO-SP, CEP: 02176-070" },
-            "RODONAVES": { razao: "RODONAVES TRANSPORTES E ENCOMENDAS LTDA", cnpj: "44.914.992/0037-49", ie: "336.512.662.111", end: "RUA SAO QUIRINO, 1090, PARQUE VELOSO (VILA GUILHERME) - SÃO PAULO-SP, CEP: 02064-100" },
-            "MOVVI": { razao: "MOVVI LOGISTICA LTDA.", cnpj: "23.864.838/0004-71", ie: "113.893.783.112", end: "RUA SAO QUIRINO, 862, PARQUE VELOSO (VILA GUILHERME) - SÃO PAULO-SP, CEP: 02064-100" },
             "AMAZON TRANSPORTES": { razao: "AMAZON TRANSPORTES LTDA.", cnpj: "01.661.770/0001-48", ie: "148.348.986.110", end: "RUA NILTON COELHO DE ANDRADE, 210, JARDIM ANDARAI - SÃO PAULO-SP, CEP: 02167-010" },
-            "TADEX": { razao: "TADLOG TRANSPORTES LTDA.", cnpj: "35.523.401/0001-00", ie: "125.070.652.110", end: "RUA DOZE DE SETEMBRO, 1200, VILA GUILHERME - SÃO PAULO-SP, CEP: 02052-001" },
-            "LUZ TRANSPORTES": { razao: "RODOVIARIO LUZ TRANSPORTES LTDA.", cnpj: "17.344.049/0002-45", ie: "796.347.820.116", end: "RUA BELA VISTA DO PARAISO, 51, JARDIM PRESIDENTE DUTRA - GUARULHOS-SP, CEP: 07171-000" },
-            "SUDOESTE": { razao: "SUDOESTE TRANSPORTES LTDA .", cnpj: "02.343.801/0004-28", ie: "127.417.669.112", end: "RUA GIANCARLO VESTRI, 1258, CIDADE INDUSTRIAL SATELITE DE SAO PAULO - GUARULHOS-SP, CEP: 07232-060" },
-            "IDEIA DE MINAS": { razao: "IDEIA DE MINAS LG DE CAMPOS TRANSPORTES.", cnpj: "35.109.406/0001-91", ie: "126.893.110.116", end: "RUA DOMINGOS PACHECO, 225, JARDIM JULIETA, SÃO PAULO-SP, CEP 02162-020" },
             "BRASSPRESS": { razao: "BRASPRESS TRANSPORTES URGENTES LTDA.", cnpj: "48.740.351/0021-09", ie: "796.481.688.110", end: "AVENIDA MONTEIRO LOBATO, 4794 BLOCO B, CIDADE JARDIM CUMBICA, GUARULHOS -SP ,CEP: 07180-000" },
-            "REUNIDAS": { razao: "REUNIDAS TRANSPORTADORA RODOVIARIA DE CARGAS S.A.", cnpj: "83.083.428/0003-34", ie: "112.328.043.117", end: "RUA NELSON FRANCISCO, 66, JARDIM PEREIRA LEITE, SÃO PAULO-SP, CEP: 02712-100" },
-            "TRD TRANSPORTES": { razao: "TRD TRANSPORTE RODOVIARIO DALFAN LTDA.", cnpj: "03.350.624/0001-27", ie: "132.845.586.113", end: "AVENIDA SANTANA, 200, JARDIM MUNHOZ, GUARULHOS-SP, CEP: 07033-010" },
-            "TRANS CJ": { razao: "TRANS CJ TRANSPORTE E LOGISTICA LTDA.", cnpj: "11.484.376/0001-35", ie: "148.970.678.116", end: "AVENIDA TENENTE AMARO FELICÍSSIMO DA SILVEIRA, 0, PARQUE NOVO MUNDO, SÃO PAULO-SP, CEP: 02177-010" },
-            "RÁPIDO FIGUEIREDO": { razao: "RÁPIDO FIGUEIREDO LOGÍSTICA E TRANSPORTES LTDA.", cnpj: "10.973.773/0001-08", ie: "336.889.818.111", end: "RUA OURO VERDE DE GOIÁS, 1233, CIDADE INDUSTRIAL SATÉLITE, GUARULHOS-SP, CEP:07221-080" },
-            "GRUPO X (SHAZAN)": { razao: "TRANSPORTADORA SHAZAN LTDA.", cnpj: "24.916.711/0001-79", ie: "140.893.460.114", end: "RUA CONEGO ARAUJO MARCONDES, 167, LIMÃO, SÃO PAULO-SP, CEP: 02550-080" },
-            "GRUPO GRAVITOL": { razao: "EMPRESA DE TRANSPORTES DE CARGAS GRATIVOL LTDA.", cnpj: "00.124.050/0002-61", ie: "336.754.123.118", end: "RUA UTINGA, 330. JARDIM OLIVEIRA, GUARULHOS-SP, CEP: 07241-410" },
-            "PÁSSARO TRANSPORTES": { razao: "PASSARO TRANSPORTES LOGISTICA E ARMAZENAMENTO LTDA.", cnpj: "20.287.188/0006-12", ie: "137.580.260.114", end: "AVENIDA PAPA JOÃO PAULO L627-GP 15 E 16, JARDIM PRESIDENTE DUTRA, GUARULHOS-SP, CEP:07174-000" },
-            "FRILOG TRANSPORTES": { razao: "(FRILOG) JC THEDIN TRANSPORTES LTDA.", cnpj: "06.979.577/0001-73", ie: "149.883.964.110", end: "RUA CARMINE GAETA, 92, VILA GUILHERME, SÃO PAULO-SP, CEP: 02060-100" },
-            "JE PETROLINA": { razao: "JE PETROLINA TRANSPORTES LTDA.", cnpj: "15.372.802/0003-61", ie: "", end: "VIELA VITORIA DA CONQUISTA, 700, JARDIM PRESIDENTE DUTRA, GUARULHOS-SP, CEP 07171-325" },
+            "CAMPINENSE TRANSPORTES": { razao: "CAMPINENSE TRANSPORTES DE CARGAS E LOCACOES LTDA.", cnpj: "08.706.145/0010-05", ie: "137.431.661.112", end: "RUA URBANO SANTOS, 599, GALPAO A, SITIO DOS BRITOS, GUARULHOS-SP, CEP 07182-320" },
+            "FEDEX TNT": { razao: "TNT MERCURIO CARGAS E ENCOMENDAS EXPRESSAS LTDA.", cnpj: "95.591.723/0038-00", ie: "108.254.280.116", end: "AVENIDA MARGINAL DIREITA DO TIETE, 2500, VILA DOS REMEDIOS, SÃO PAULO-SP, CEP: 05118-100" },
             "FGD TRANSPORTES": { razao: "FGD TRANSPORTES LTDA.", cnpj: "19.741.163/0001-53", ie: "127.226.038.117", end: "AVENIDA NOVA CUMBICA, 203, VILA NOVA CUMBICA, GUARULHOS-SP, CEP: 07231-000" },
-            "CAMPINENSE TRANSPORTES": { razao: "CAMPINENSE TRANSPORTES", cnpj: "N/I", ie: "N/I", end: "N/I" }
+            "FORMATO": { razao: "FORMATO TRANSPORTES LTDA.", cnpj: "13.727.240/0001-34", ie: "796.441.310.114", end: "RUA RIO GRANDE DO PIAUI, 130, CIDADE ARACILIA, GUARULHOS-SP, CEP: 07252-250" },
+            "FRILOG TRANSPORTES": { razao: "(FRILOG) JC THEDIN TRANSPORTES LTDA.", cnpj: "06.979.577/0001-73", ie: "149.883.964.110", end: "RUA CARMINE GAETA, 92, VILA GUILHERME, SÃO PAULO-SP, CEP: 02060-100" },
+            "GRUPO GRAVITOL": { razao: "EMPRESA DE TRANSPORTES DE CARGAS GRATIVOL LTDA.", cnpj: "00.124.050/0002-61", ie: "336.754.123.118", end: "RUA UTINGA, 330. JARDIM OLIVEIRA, GUARULHOS-SP, CEP: 07241-410" },
+            "GRUPO X (SHAZAN)": { razao: "TRANSPORTADORA SHAZAN LTDA.", cnpj: "24.916.711/0001-79", ie: "140.893.460.114", end: "RUA CONEGO ARAUJO MARCONDES, 167, LIMÃO, SÃO PAULO-SP, CEP: 02550-080" },
+            "IDEALE CARGAS": { razao: "IDEALE TRANSPORTES DE CARGAS LTDA.", cnpj: "12.592.569/0001-72", ie: "142.414.931.115", end: "RUA SOLDADO FRANCISCO TAMBORIM,49, PARQUE NOVO MUNDO - SÃO PAULO-SP, CEP: 02176-070" },
+            "IDEIA DE MINAS": { razao: "IDEIA DE MINAS LG DE CAMPOS TRANSPORTES.", cnpj: "35.109.406/0001-91", ie: "126.893.110.116", end: "RUA DOMINGOS PACHECO, 225, JARDIM JULIETA, SÃO PAULO-SP, CEP 02162-020" },
+            "JE PETROLINA": { razao: "JE PETROLINA TRANSPORTES LTDA.", cnpj: "15.372.802/0003-61", ie: "", end: "VIELA VITORIA DA CONQUISTA, 700, JARDIM PRESIDENTE DUTRA, GUARULHOS-SP, CEP 07171-325" },
+            "LUZ TRANSPORTES": { razao: "RODOVIARIO LUZ TRANSPORTES LTDA.", cnpj: "17.344.049/0002-45", ie: "796.347.820.116", end: "RUA BELA VISTA DO PARAISO, 51, JARDIM PRESIDENTE DUTRA - GUARULHOS-SP, CEP: 07171-000" },
+            "MANDALÁ": { razao: "MANDA LA TRANSPORTES DE CARGAS LTDA.", cnpj: "03.298.420/0003-56", ie: "336.832.471.110", end: "RUA MONICA APARECIDA MOREDO, 350, GALPAO, JARDIM FATIMA, GUARULHOS-SP, CEP: 07177-220" },
+            "MIRA TRANSPORTES": { razao: "MIRA OTM TRANSPORTES LTDA", cnpj: "58.506.155/0036-04", ie: "138.402.091.116", end: "RUA SOLD HAMILTON SILVA COSTA, 58, PARQUE NOVO MUNDO, SÃO PAULO-SP, CEP: 02190-901" },
+            "MIRIN DO SUL": { razao: "MIR TRANSPORTES E LOGISTICA LTDA.", cnpj: "03.565.095/0002-60", ie: "336.500.015.117", end: "RUA QUELUZ, 211 - CIDADE INDUSTRIAL SATELITE, GUARULHOS-SP, CEP: 07220-050" },
+            "MOVVI": { razao: "MOVVI LOGISTICA LTDA.", cnpj: "23.864.838/0004-71", ie: "113.893.783.112", end: "RUA SAO QUIRINO, 862, PARQUE VELOSO (VILA GUILHERME) - SÃO PAULO-SP, CEP: 02064-100" },
+            "NJP EXPRESS": { razao: "NJP EXPRESS LTDA.", cnpj: "46.249.962/0001-80", ie: "442.627.724.111", end: "AVENIDA JOÃO RAMALHO, 1504 - VILA NOEMIA, MAUA-SP, CEP: 09371-520" },
+            "ÖBEN CARGO": { razao: "OBEN CARGO LTDA.", cnpj: "50.951.660/0001-26", ie: "132.319.981.110", end: "RUA OSCAR BARBOSA, 249, PARQUE CONTINENTAL, GUARULHOS-SP, CEP: 07070-109" },
+            "RÁPIDO FIGUEIREDO": { razao: "RÁPIDO FIGUEIREDO LOGÍSTICA E TRANSPORTES LTDA.", cnpj: "10.973.773/0001-08", ie: "336.889.818.111", end: "RUA OURO VERDE DE GOIÁS, 1233, CIDADE INDUSTRIAL SATÉLITE, GUARULHOS-SP, CEP:07221-080" },
+            "REUNIDAS": { razao: "REUNIDAS TRANSPORTADORA RODOVIARIA DE CARGAS S.A.", cnpj: "83.083.428/0003-34", ie: "112.328.043.117", end: "RUA NELSON FRANCISCO, 66, JARDIM PEREIRA LEITE, SÃO PAULO-SP, CEP: 02712-100" },
+            "RODOCARGAS": { razao: "RODOCARGAS NORDESTE TRANSPORTE DE CARGAS EIRELI.", cnpj: "07.494.510/0003-73", ie: "336.885.273.112", end: "RUA VIELA URGA, 144 - VILA NOVA BONSUCESSO, GUARULHOS-SP, CEP: 07175-332" },
+            "RODONAVES": { razao: "RODONAVES TRANSPORTES E ENCOMENDAS LTDA", cnpj: "44.914.992/0037-49", ie: "336.512.662.111", end: "RUA SAO QUIRINO, 1090, PARQUE VELOSO (VILA GUILHERME) - SÃO PAULO-SP, CEP: 02064-100" },
+            "RODOVITOR": { razao: "RODOVITOR TRANSPORTES E LOCACAO DE VEICULOS LTDA.", cnpj: "08.408.736/0002-96", ie: "796.516.339.114", end: "RUA JOAO RANIERI, 1001, BONSUCESSO, GUARULHOS-SP, CEP: 07177-120" },
+            "SUDOESTE": { razao: "SUDOESTE TRANSPORTES LTDA .", cnpj: "02.343.801/0004-28", ie: "127.417.669.112", end: "RUA GIANCARLO VESTRI, 1258, CIDADE INDUSTRIAL SATELITE DE SAO PAULO - GUARULHOS-SP, CEP: 07232-060" },
+            "TADEX": { razao: "TADLOG TRANSPORTES LTDA.", cnpj: "35.523.401/0001-00", ie: "125.070.652.110", end: "RUA DOZE DE SETEMBRO, 1200, VILA GUILHERME - SÃO PAULO-SP, CEP: 02052-001" },
+            "TODO BRASIL": { razao: "TODOBRASIL TRANSPORTES LTDA.", cnpj: "46.556.446/0001-06", ie: "127.682.042.110", end: "AVENIDA PAPA JOÃO PAULO I, 687, GALPÃO 09 BLOCO A - JARDIM PRESIDENTE DUTRA, GUARULHOS-SP, CEP: 07174-000" },
+            "TRANS CJ": { razao: "TRANS CJ TRANSPORTE E LOGISTICA LTDA.", cnpj: "11.484.376/0001-35", ie: "148.970.678.116", end: "AVENIDA TENENTE AMARO FELICÍSSIMO DA SILVEIRA, 0, PARQUE NOVO MUNDO, SÃO PAULO-SP, CEP: 02177-010" },
+            "TRANSWELLS": { razao: "TRANS WELLS EXPRESSO RODOVIARIO EIRELI.", cnpj: "60.157.377/0001-80", ie: "112.237.410.117", end: "RUA ELI, 13 - VILA MARIA, SÃO PAULO-SP, CEP: 02114-010" },
+            "TRD TRANSPORTES": { razao: "TRD TRANSPORTE RODOVIARIO DALFAN LTDA.", cnpj: "03.350.624/0001-27", ie: "132.845.586.113", end: "AVENIDA SANTANA, 200, JARDIM MUNHOZ, GUARULHOS-SP, CEP: 07033-010" }
         };
 
         function mascaraMoeda(v) { v = v.replace(/\D/g, ""); v = (v/100).toFixed(2) + ""; v = v.replace(".", ","); return v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1."); }
@@ -808,7 +805,7 @@
                 database.ref('historico').on('value', (snapshot) => {
                     const dados = snapshot.val(); let array = []; for(let key in dados) { array.push(dados[key]); }
                     array.sort((a,b) => b.timestamp - a.timestamp); historicoNuvem = array;
-                    if(document.getElementById('modalHistorico').classList.contains('active')) renderizarListaHistorico();
+                    if(document.getElementById('modalHistorico').classList.contains('active')) debouncedRenderizarHistorico();
                 });
 
                 database.ref('produtos').on('value', (snapshot) => { catalogoProdutos = snapshot.val() || {}; atualizarDataListProdutos(); });
@@ -1161,7 +1158,7 @@
             }
         }
 
-        function abrirHistorico() { document.getElementById('inputBuscaHistorico').value = ''; renderizarListaHistorico(); document.getElementById('modalHistorico').classList.add('active'); }
+        function abrirHistorico() { document.getElementById('inputBuscaHistorico').value = ''; debouncedRenderizarHistorico(); document.getElementById('modalHistorico').classList.add('active'); }
         function fecharHistorico() { document.getElementById('modalHistorico').classList.remove('active'); }
         function toggleSecundariasUI(id) {
             const box = document.getElementById(`box-sec-${id}`); const icone = document.getElementById(`icone-sec-${id}`);
@@ -1181,13 +1178,22 @@
                     btn.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
                 }
             });
-            renderizarListaHistorico();
+            debouncedRenderizarHistorico();
+        }
+
+        // Função para evitar travamentos ao digitar muito rápido
+        function debouncedRenderizarHistorico() {
+            clearTimeout(debounceTimerHistorico);
+            debounceTimerHistorico = setTimeout(() => {
+                renderizarListaHistorico();
+            }, 300);
         }
 
         function renderizarListaHistorico() {
             let openItems = []; document.querySelectorAll('[id^="previa-"]').forEach(el => { if (!el.classList.contains('hidden')) { openItems.push(el.id.replace('previa-', '')); } });
             const lista = document.getElementById('listaHistorico'); const termoBusca = document.getElementById('inputBuscaHistorico').value.toLowerCase();
-            lista.innerHTML = ''; let historicoFiltrado = historicoNuvem;
+            
+            let historicoFiltrado = historicoNuvem;
 
             if (termoBusca) {
                 historicoFiltrado = historicoFiltrado.filter(item => 
@@ -1219,8 +1225,16 @@
                 });
             }
             
-            if (historicoFiltrado.length === 0) { lista.innerHTML = '<div class="text-center text-slate-400 py-10 text-sm">Nenhum registo encontrado para este filtro.</div>'; } 
-            else {
+            // Limite de 100 itens para não travar o DOM (Memória do Navegador)
+            const maxItemsRender = 100;
+            const totalEncontrados = historicoFiltrado.length;
+            historicoFiltrado = historicoFiltrado.slice(0, maxItemsRender);
+
+            let htmlContent = ''; // Buffer para não recarregar o DOM a cada loop
+
+            if (historicoFiltrado.length === 0) { 
+                htmlContent = '<div class="text-center text-slate-400 py-10 text-sm">Nenhum registo encontrado para este filtro.</div>'; 
+            } else {
                 historicoFiltrado.forEach((item) => {
                     let transpsPreenchidas = [];
                     if (item.cotacoes) {
@@ -1288,10 +1302,10 @@
 
                         btnDownload = `
                             <div class="flex items-center bg-slate-100 dark:bg-slate-700/50 rounded-lg p-0.5 border border-slate-200 dark:border-slate-600 shadow-sm flex-wrap sm:flex-nowrap gap-0.5">
-                                <button onclick="iniciarImpressaoEtiquetas('${item.id}')" class="${btnL42Class} font-semibold px-3 py-1.5 rounded-md transition text-[11px] flex items-center h-full"><i class="fa-solid fa-tags mr-1.5"></i> L42 Pro</button>
+                                <button onclick="baixarCotacaoPdf('${item.id}')" class="bg-transparent text-slate-600 hover:bg-slate-200 hover:text-brand-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-brand-400 font-semibold px-3 py-1.5 rounded-md transition text-[11px] flex items-center h-full" title="Baixar Relatório PDF"><i class="fa-solid fa-file-pdf mr-1.5"></i> PDF</button>
                                 <button ${onclickPlanilha} class="${btnPlanilhaClass} font-semibold px-3 py-1.5 rounded-md transition text-[11px] flex items-center h-full" title="${item.numeroNF ? 'Copiar para Excel' : 'Anexe a NF via L42 Pro'}"><i class="fa-solid fa-file-excel mr-1.5"></i> Planilha</button>
                                 <button ${onclickCC} class="${btnCCClass} font-semibold px-3 py-1.5 rounded-md transition text-[11px] flex items-center h-full" ${item.numeroNF ? '' : 'title="Exige NF anexada"'}><i class="fa-solid fa-pen-to-square mr-1.5"></i> C. Correção</button>
-                                <button onclick="baixarCotacaoPdf('${item.id}')" class="bg-transparent text-slate-600 hover:bg-slate-200 hover:text-brand-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-brand-400 font-semibold px-3 py-1.5 rounded-md transition text-[11px] flex items-center h-full" title="Baixar Relatório PDF"><i class="fa-solid fa-file-pdf mr-1.5"></i> PDF</button>
+                                <button onclick="iniciarImpressaoEtiquetas('${item.id}')" class="${btnL42Class} font-semibold px-3 py-1.5 rounded-md transition text-[11px] flex items-center h-full"><i class="fa-solid fa-tags mr-1.5"></i> L42 Pro</button>
                             </div>
                         `;
                     }
@@ -1301,12 +1315,19 @@
                         badgeAlerta = `<span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-md mr-3 font-bold flex items-center animate-pulse shadow-sm shadow-red-500/30" title="Bloqueio: Divergência de UF/CEP"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> BLOQUEIO FISCAL</span>`;
                     }
 
-                    lista.innerHTML += `
+                    let checkboxPlanilha = '';
+                    if (temMinimoDuas && item.numeroNF) {
+                        checkboxPlanilha = `<input type="checkbox" value="${item.id}" class="chk-planilha w-3.5 h-3.5 mr-2 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" onclick="event.stopPropagation(); atualizarContagemSelecionados()" title="Selecionar para planilha">`;
+                    }
+
+                    // A concatenação agora vai para a variável (buffer), não pro ecrã ainda
+                    htmlContent += `
                         <div class="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden transition-all mb-4">
                             <div class="p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/80">
                                 <div class="flex-grow w-full cursor-pointer select-none" onclick="togglePrevia('${item.id}')">
                                     <div class="flex items-center flex-wrap gap-y-2 mb-1">
                                         <i id="icone-${item.id}" class="fa-solid fa-chevron-right text-slate-400 mr-2 w-3 text-center transition-transform duration-200 text-xs"></i>
+                                        ${checkboxPlanilha}
                                         <span class="bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-md mr-3">${item.id}</span>
                                         ${badgeAlerta}
                                         <span class="text-[10px] text-slate-500 mr-3">${item.data}</span>
@@ -1329,7 +1350,16 @@
                         </div>
                     `;
                 });
+                
+                if (totalEncontrados > maxItemsRender) {
+                    htmlContent += `<div class="text-center text-slate-400 py-4 text-xs font-medium">Mostrando os últimos ${maxItemsRender} registos por segurança. Use a busca para encontrar itens mais antigos.</div>`;
+                }
             }
+
+            // Uma única injeção no DOM para não travar!
+            lista.innerHTML = htmlContent;
+
+            atualizarContagemSelecionados();
 
             openItems.forEach(id => {
                 let previa = document.getElementById(`previa-${id}`); let icone = document.getElementById(`icone-${id}`);
@@ -1361,10 +1391,7 @@
         function copiarDoHistorico(id) { let item = historicoNuvem.find(i => i.id === id); if(item) { let temp = document.createElement("textarea"); temp.value = item.texto; document.body.appendChild(temp); temp.select(); window.isSystemCopy = true; document.execCommand("copy"); window.isSystemCopy = false; document.body.removeChild(temp); showToast(`Copiado!`, 'success'); } }
         function togglePrevia(id) { const previa = document.getElementById(`previa-${id}`); const icone = document.getElementById(`icone-${id}`); if (previa.classList.contains('hidden')) { previa.classList.remove('hidden'); icone.classList.replace('fa-chevron-right', 'fa-chevron-down'); } else { previa.classList.add('hidden'); icone.classList.replace('fa-chevron-down', 'fa-chevron-right'); } }
 
-        function copiarParaPlanilha(id) {
-            let item = historicoNuvem.find(i => i.id === id);
-            if(!item) return;
-
+        function obterDadosPlanilha(item) {
             item.texto = item.texto || ""; 
 
             let transpsPreenchidas = [];
@@ -1385,10 +1412,7 @@
                     }
                 }
             }
-            if(transpsPreenchidas.length === 0) {
-                showToast("Preencha e salve os valores da cotação primeiro.", "alert");
-                return;
-            }
+            if(transpsPreenchidas.length === 0) return null;
             transpsPreenchidas.sort((a, b) => a.v - b.v);
             let vencedor = transpsPreenchidas[0];
 
@@ -1398,18 +1422,13 @@
             
             if (vencedor.keyOriginal === 'FreteClick_Manual') {
                 nomeTransp = "FreteClick"; 
-                
                 let carrierName = vencedor.nomeTranspRaw || "";
                 carrierName = carrierName.replace(/FreteClick/gi, '').replace(/[()]/g, '').trim();
-                
-                if (carrierName) {
-                    codigoCotacao = `${vencedor.codigo || "-"} (${titleCase(carrierName)})`; 
-                } else {
-                    codigoCotacao = vencedor.codigo || "-";
-                }
+                if (carrierName) codigoCotacao = `${vencedor.codigo || "-"} (${titleCase(carrierName)})`; 
+                else codigoCotacao = vencedor.codigo || "-";
             }
 
-            let prefixo = id.split('-')[0] || "";
+            let prefixo = item.id.split('-')[0] || "";
             let vendSufixo = "2P";
             if (prefixo === "XD") vendSufixo = "XD";
             if (prefixo === "XC") vendSufixo = "XC";
@@ -1422,9 +1441,7 @@
             let matchCep = item.texto.match(/CEP DESTINATÁRIO:.*-\s*(.*)/);
             if (matchCep) {
                 cidadeDest = matchCep[1].trim();
-                if (cidadeDest.includes('/')) {
-                    cidadeDest = cidadeDest.split('/')[0].trim();
-                }
+                if (cidadeDest.includes('/')) cidadeDest = cidadeDest.split('/')[0].trim();
             }
 
             let valorNF = item.valorNfStr || "";
@@ -1451,13 +1468,9 @@
             let kwEletro = ['tv', 'televisão', 'televisao', 'smart', 'monitor', 'notebook', 'computador', 'pc', 'celular', 'telefone', 'tablet', 'fone', 'caixa de som', 'impressora', 'teclado', 'mouse', 'nobreak', 'roteador', 'switch', 'câmera', 'camera', 'projetor'];
             let kwMaquinasPecas = ['máquina', 'maquina', 'peça', 'peca', 'motor', 'compressor', 'bomba', 'engrenagem', 'válvula', 'valvula', 'equipamento', 'painel', 'fio', 'cabo', 'rolamento', 'filtro', 'ferramenta', 'correia', 'parafuso'];
 
-            if (kwLinhaBranca.some(kw => textLower.includes(kw))) {
-                categoria = "Linha Branca";
-            } else if (kwEletro.some(kw => textLower.includes(kw))) {
-                categoria = "Eletro-Eletrônicos";
-            } else if (kwMaquinasPecas.some(kw => textLower.includes(kw))) {
-                categoria = "Máquinas e Peças";
-            }
+            if (kwLinhaBranca.some(kw => textLower.includes(kw))) categoria = "Linha Branca";
+            else if (kwEletro.some(kw => textLower.includes(kw))) categoria = "Eletro-Eletrônicos";
+            else if (kwMaquinasPecas.some(kw => textLower.includes(kw))) categoria = "Máquinas e Peças";
 
             let pedidoNumber = item.texto.match(/PEDIDO\s+([^\.]+)/)?.[1] || "";
             let dataColeta = new Date().toLocaleDateString('pt-BR');
@@ -1472,32 +1485,88 @@
             if (itemFreteInterno === "0,00" || itemFreteInterno === "-") itemFreteInterno = "";
 
             let row = [
-                itemOrdemCompra,                            // 1. Ordem
-                pedidoNumber,                               // 2. Pedido
-                item.numeroNF || "",                        // 3. NF
-                item.emissaoNF || "",                       // 4. Emissão
-                vendSigla,                                  // 5. Vendedor
-                item.uf || "",                              // 6. UF
-                cidadeDest,                                 // 7. Cidade
-                categoria,                                  // 8. Categoria
-                valorNF,                                    // 9. Valor NF
-                pesoArredondado,                            // 10. Peso (Arredondado)
-                itemFreteInterno,                           // 11. Autorizado (Frete Interno)
-                itemPrevisao,                               // 12. Previsão
-                nomeTransp,                                 // 13. Transportadora Vencedora
-                codigoCotacao,                              // 14. Código de Cotação
-                valorFreteFormatado,                        // 15. Valor Frete (Limpo)
-                dataColeta                                  // 16. Data Coleta
+                itemOrdemCompra, pedidoNumber, item.numeroNF || "", item.emissaoNF || "", vendSigla, item.uf || "",
+                cidadeDest, categoria, valorNF, pesoArredondado, itemFreteInterno, itemPrevisao,
+                nomeTransp, codigoCotacao, valorFreteFormatado, dataColeta
             ];
 
-            let tsv = row.join("\t");
+            return { tsvRow: row.join("\t"), nomeTransp, pedidoNumber };
+        }
+
+        function copiarParaPlanilha(id) {
+            let item = historicoNuvem.find(i => i.id === id);
+            if(!item) return;
+
+            let dados = obterDadosPlanilha(item);
+            if(!dados) { showToast("Preencha e salve os valores da cotação primeiro.", "alert"); return; }
+
             let temp = document.createElement("textarea");
-            temp.value = tsv;
+            temp.value = dados.tsvRow;
             document.body.appendChild(temp);
             temp.select();
+            window.isSystemCopy = true;
             document.execCommand("copy");
+            window.isSystemCopy = false;
             document.body.removeChild(temp);
             showToast("Linha copiada para o Excel!", "success");
+        }
+
+        function atualizarContagemSelecionados() {
+            const count = document.querySelectorAll('.chk-planilha:checked').length;
+            const badge = document.getElementById('contagemSelecionados');
+            if(badge) badge.innerText = count;
+        }
+
+        function copiarSelecionadosParaPlanilha() {
+            const marcados = Array.from(document.querySelectorAll('.chk-planilha:checked')).map(cb => cb.value);
+            
+            if(marcados.length === 0) {
+                showToast("Selecione pelo menos um pedido marcando a caixinha.", "alert");
+                return;
+            }
+
+            let linhasValidas = [];
+            
+            marcados.forEach(id => {
+                let item = historicoNuvem.find(i => i.id === id);
+                if(item) {
+                    let dados = obterDadosPlanilha(item);
+                    if(dados) linhasValidas.push(dados);
+                }
+            });
+
+            if(linhasValidas.length === 0) {
+                showToast("Erro ao formatar os pedidos selecionados.", "error");
+                return;
+            }
+
+            // Ordenação: 1º Transportadora, 2º Número do Pedido
+            linhasValidas.sort((a, b) => {
+                let cmpTransp = a.nomeTransp.localeCompare(b.nomeTransp);
+                if (cmpTransp !== 0) return cmpTransp;
+                
+                let numA = parseInt(a.pedidoNumber) || 0;
+                let numB = parseInt(b.pedidoNumber) || 0;
+                if(numA !== numB) return numA - numB;
+                
+                return a.pedidoNumber.localeCompare(b.pedidoNumber);
+            });
+
+            let textoTsvFinal = linhasValidas.map(d => d.tsvRow).join("\n");
+            let temp = document.createElement("textarea");
+            temp.value = textoTsvFinal;
+            document.body.appendChild(temp);
+            temp.select();
+            window.isSystemCopy = true;
+            document.execCommand("copy");
+            window.isSystemCopy = false;
+            document.body.removeChild(temp);
+            
+            showToast(`${linhasValidas.length} pedidos copiados com sucesso!`, "success");
+            
+            // Limpar seleção após copiar e zerar o contador
+            document.querySelectorAll('.chk-planilha:checked').forEach(cb => cb.checked = false);
+            atualizarContagemSelecionados();
         }
 
         function baixarCotacaoPdf(id) {
@@ -1616,7 +1685,6 @@
             document.getElementById('ccBairro').value = "";
             document.getElementById('ccCidade').value = item.uf ? item.texto.match(/CEP DESTINATÁRIO:.*-\s*(.*)/)?.[1]?.split('/')[0]?.trim() || "" : "";
             document.getElementById('ccUf').value = item.uf || "";
-            document.getElementById('ccComplementos').value = "";
 
             if(cepExtracted) {
                 buscarCepCC(cepExtracted);
@@ -1697,8 +1765,6 @@
                 contatoStr = ` Contato: ${contato}.`;
             }
 
-            const complementos = document.getElementById('ccComplementos').value.trim();
-
             let dadosTransp = "";
             if (transpKey && transportadorasCadastradas[transpKey]) {
                 const t = transportadorasCadastradas[transpKey];
@@ -1717,10 +1783,6 @@
                 texto = `FRETE POR CONTA DE TERCEIROS, FRETE NUMERO ######## POR CONTA E ORDEM DA ONIX TECNOLOGIA E PARTICIPACOES LTDA CNPJ: 28.214.795/0001-50. ${dadosTransp} DADOS DA MERCADORIA: ${vols} Volume (s), ${peso} Kg. DESTINATÁRIO: ${dest}, ENDEREÇO DE ENTREGA: ${enderecoCompleto}.${contatoStr}`;
             }
 
-            if (complementos) {
-                texto += ` OBS: ${complementos}`;
-            }
-
             document.getElementById('ccPreview').value = texto;
         }
 
@@ -1730,6 +1792,13 @@
                 showToast("Selecione a transportadora antes de copiar.", "alert");
                 return;
             }
+
+            const idCotacao = document.getElementById('ccIdCotacao').innerText;
+            const vols = document.getElementById('ccVolumes').value.trim();
+            if (idCotacao) {
+                database.ref('historico/' + idCotacao).update({ cc_volumes: vols });
+            }
+
             let temp = document.createElement("textarea");
             temp.value = texto;
             document.body.appendChild(temp);
@@ -1872,8 +1941,16 @@
                 }
                 transpsPreenchidas.sort((a, b) => a.v - b.v); vencedor = transpsPreenchidas.length > 0 ? transpsPreenchidas[0].nome : "Transportadora Pendente";
 
-                const linhas = (item.texto.split('VOLUME(S) E PESO(S) DO(S) ITEM(NS):')[1] || "").split('\n').map(l => l.trim()).filter(l => l.includes('vol. -'));
-                linhas.forEach(linha => { const match = linha.match(/^(\d+)\s+vol\.\s+-\s+(.*?)\s+\|\s+(.*?)\s+-\s+(.*) un/); if(match) { const qtd = parseInt(match[1]); for(let i=0; i<qtd; i++) { volumesTotais.push({}); } } });
+                let qtdVols = 0;
+                if (item.cc_volumes && !isNaN(parseInt(item.cc_volumes))) {
+                    qtdVols = parseInt(item.cc_volumes);
+                } else {
+                    const linhas = (item.texto.split('VOLUME(S) E PESO(S) DO(S) ITEM(NS):')[1] || "").split('\n').map(l => l.trim()).filter(l => l.includes('vol. -'));
+                    linhas.forEach(linha => { const match = linha.match(/^(\d+)\s+vol\.\s+-\s+(.*?)\s+\|\s+(.*?)\s+-\s+(.*) un/); if(match) { qtdVols += parseInt(match[1]); } });
+                }
+                
+                if (qtdVols <= 0) qtdVols = 1;
+                for(let i=0; i<qtdVols; i++) { volumesTotais.push({}); }
             } else {
                 document.querySelectorAll('.item-row').forEach(row => { const inputs = row.querySelectorAll('input'); if(inputs.length >= 2) { let q = parseInt(inputs[0].value) || 1; for(let i=0; i<q; i++) { volumesTotais.push({}); } } });
             }
