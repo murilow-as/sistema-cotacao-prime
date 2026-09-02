@@ -689,6 +689,7 @@
         let callbackConfirmDialog = null;
         let filtroAtivoHistorico = 'todos';
         let debounceTimerHistorico = null; // Para otimizar a busca
+        let itensSelecionadosPlanilha = new Set(); // Memória global dos selecionados
 
         const firebaseConfig = {
             apiKey: "AIzaSyDhrqD3K9BdIZCLui282igMLfv4gcgQv6I",
@@ -1317,7 +1318,8 @@
 
                     let checkboxPlanilha = '';
                     if (temMinimoDuas && item.numeroNF) {
-                        checkboxPlanilha = `<input type="checkbox" value="${item.id}" class="chk-planilha w-3.5 h-3.5 mr-2 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" onclick="event.stopPropagation(); atualizarContagemSelecionados()" title="Selecionar para planilha">`;
+                        let isChecked = itensSelecionadosPlanilha.has(item.id) ? 'checked' : '';
+                        checkboxPlanilha = `<input type="checkbox" value="${item.id}" class="chk-planilha w-3.5 h-3.5 mr-2 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer" onclick="event.stopPropagation(); toggleSelecaoPlanilha('${item.id}', this)" title="Selecionar para planilha" ${isChecked}>`;
                     }
 
                     // A concatenação agora vai para a variável (buffer), não pro ecrã ainda
@@ -1390,6 +1392,15 @@
         function apagarCotacaoHistorico(id) { showDialog(`Apagar a cotação ${id} do servidor?`, 'confirm', async () => { try { await database.ref('historico/' + id).remove(); } catch(e) { showToast('Erro ao apagar.', 'error'); } }); }
         function copiarDoHistorico(id) { let item = historicoNuvem.find(i => i.id === id); if(item) { let temp = document.createElement("textarea"); temp.value = item.texto; document.body.appendChild(temp); temp.select(); window.isSystemCopy = true; document.execCommand("copy"); window.isSystemCopy = false; document.body.removeChild(temp); showToast(`Copiado!`, 'success'); } }
         function togglePrevia(id) { const previa = document.getElementById(`previa-${id}`); const icone = document.getElementById(`icone-${id}`); if (previa.classList.contains('hidden')) { previa.classList.remove('hidden'); icone.classList.replace('fa-chevron-right', 'fa-chevron-down'); } else { previa.classList.add('hidden'); icone.classList.replace('fa-chevron-down', 'fa-chevron-right'); } }
+
+        function toggleSelecaoPlanilha(id, el) {
+            if (el.checked) {
+                itensSelecionadosPlanilha.add(id);
+            } else {
+                itensSelecionadosPlanilha.delete(id);
+            }
+            atualizarContagemSelecionados();
+        }
 
         function obterDadosPlanilha(item) {
             item.texto = item.texto || ""; 
@@ -1512,13 +1523,12 @@
         }
 
         function atualizarContagemSelecionados() {
-            const count = document.querySelectorAll('.chk-planilha:checked').length;
             const badge = document.getElementById('contagemSelecionados');
-            if(badge) badge.innerText = count;
+            if(badge) badge.innerText = itensSelecionadosPlanilha.size;
         }
 
         function copiarSelecionadosParaPlanilha() {
-            const marcados = Array.from(document.querySelectorAll('.chk-planilha:checked')).map(cb => cb.value);
+            const marcados = Array.from(itensSelecionadosPlanilha);
             
             if(marcados.length === 0) {
                 showToast("Selecione pelo menos um pedido marcando a caixinha.", "alert");
@@ -1565,6 +1575,7 @@
             showToast(`${linhasValidas.length} pedidos copiados com sucesso!`, "success");
             
             // Limpar seleção após copiar e zerar o contador
+            itensSelecionadosPlanilha.clear();
             document.querySelectorAll('.chk-planilha:checked').forEach(cb => cb.checked = false);
             atualizarContagemSelecionados();
         }
