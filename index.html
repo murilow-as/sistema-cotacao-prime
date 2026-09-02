@@ -278,6 +278,9 @@
             <button onclick="gerarExtratoMedidas()" class="hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-medium transition flex items-center justify-center flex-grow sm:flex-grow-0 text-sm">
                 <i class="fa-solid fa-ruler-combined mr-2 text-emerald-500"></i> Extrato de Medidas
             </button>
+            <button onclick="abrirSpotifyPopup()" class="hover:bg-green-50 dark:hover:bg-green-900/20 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Rádio Expedição (Spotify)">
+                <i class="fa-brands fa-spotify text-green-500 text-xl"></i>
+            </button>
             <div class="w-px bg-slate-200 dark:bg-slate-700 my-2"></div>
             <button onclick="sairSistema()" class="hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 px-4 py-2 rounded-xl transition flex items-center justify-center flex-grow sm:flex-grow-0" title="Sair do Sistema">
                 <i class="fa-solid fa-power-off"></i>
@@ -455,15 +458,15 @@
             </div>
 
             <button onclick="processarECopiar()" id="btnCopiar" class="mt-6 w-full py-4 bg-slate-200 text-slate-500 font-semibold rounded-2xl transition duration-300 flex items-center justify-center text-sm cursor-not-allowed">
-                PREENCHA OS DADOS
-            </button>
-        </div>
-
+            PREENCHA OS DADOS
+        </button>
     </div>
 
-    <!-- MODAL DE HISTÓRICO -->
-    <div id="modalHistorico" class="modal fixed inset-0 z-50 items-center justify-center">
-        <div class="bg-white dark:bg-slate-800 w-11/12 max-w-[1200px] rounded-2xl shadow-2xl flex flex-col max-h-[85vh] border border-slate-100 dark:border-slate-700 overflow-hidden">
+</div>
+
+<!-- MODAL DE HISTÓRICO -->
+<div id="modalHistorico" class="modal fixed inset-0 z-50 items-center justify-center">
+    <div class="bg-white dark:bg-slate-800 w-11/12 max-w-[1200px] rounded-2xl shadow-2xl flex flex-col max-h-[85vh] border border-slate-100 dark:border-slate-700 overflow-hidden">
             <div class="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80">
                 <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center"><i class="fa-solid fa-cloud-arrow-up mr-3 text-brand-500"></i> Base de Conhecimento</h2>
                 <button onclick="fecharHistorico()" class="text-slate-400 hover:text-red-500 text-xl transition"><i class="fa-solid fa-xmark"></i></button>
@@ -1825,8 +1828,23 @@
         function abrirFerramentas() { document.getElementById('modalFerramentas').classList.add('active'); }
         function fecharFerramentas() { document.getElementById('modalFerramentas').classList.remove('active'); }
 
-        function iniciarImpressaoEtiquetas(id) {
-            let item = historicoNuvem.find(i => i.id === id); if(!item) return;
+    function abrirSpotifyPopup() {
+        const url = 'https://open.spotify.com/playlist/7kHnSfFVdf6HzrdQQ5XswS';
+        
+        // Medidas exatas para mostrar as 3 colunas do Spotify (Menu, Lista e Capa)
+        const w = 1050; 
+        const h = 650;
+        
+        // Matemática para abrir a janela centralizada e puxada para a direita
+        const left = (window.screen.width / 2) - (w / 2) + 150; 
+        const top = (window.screen.height / 2) - (h / 2);
+        
+        const popupConfig = `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes,status=no,toolbar=no,menubar=no,location=no`;
+        window.open(url, 'RadioExpedicao', popupConfig);
+    }
+
+    function iniciarImpressaoEtiquetas(id) {
+        let item = historicoNuvem.find(i => i.id === id); if(!item) return;
             window.cotaParaImprimir = item; const pedidoMatch = item.texto.match(/PEDIDO\s+([^\.]+)/); window.pedidoAlvoParaImprimir = pedidoMatch ? pedidoMatch[1].trim() : item.id;
             document.getElementById('lblPedidoAlvo').innerText = window.pedidoAlvoParaImprimir; document.getElementById('nfUploadInput').value = ''; document.getElementById('lblStatusNF').innerHTML = '';
             document.getElementById('boxUploadArea').classList.remove('hidden'); document.getElementById('boxAcaoImprimir').classList.add('hidden'); document.getElementById('boxAcaoImprimir').classList.remove('flex');
