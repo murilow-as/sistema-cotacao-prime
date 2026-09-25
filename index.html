@@ -275,6 +275,9 @@
             <button onclick="abrirFerramentas()" class="hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-medium transition flex items-center justify-center flex-grow sm:flex-grow-0 text-sm">
                 <i class="fa-solid fa-toolbox mr-2 text-indigo-500"></i> Ferramentas
             </button>
+            <button onclick="gerarRelatorioCSV()" class="hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-medium transition flex items-center justify-center flex-grow sm:flex-grow-0 text-sm">
+                <i class="fa-solid fa-file-csv mr-2 text-emerald-600"></i> Relatório
+            </button>
             <button onclick="gerarExtratoMedidas()" class="hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-medium transition flex items-center justify-center flex-grow sm:flex-grow-0 text-sm">
                 <i class="fa-solid fa-ruler-combined mr-2 text-emerald-500"></i> Extrato de Medidas
             </button>
@@ -1827,6 +1830,146 @@
 
         function abrirFerramentas() { document.getElementById('modalFerramentas').classList.add('active'); }
         function fecharFerramentas() { document.getElementById('modalFerramentas').classList.remove('active'); }
+
+        function gerarRelatorioCSV() {
+            if (historicoNuvem.length === 0) {
+                showToast('Nenhum dado no histórico para exportar.', 'alert');
+                return;
+            }
+
+            showToast('A compilar relatório...', 'info');
+
+            // Função para padronizar os nomes das transportadoras conforme a sua lista
+            const formatarNome = (nomeOriginal) => {
+                if (!nomeOriginal) return "";
+                const mapa = {
+                    "MANDALÁ": "Manda lá",
+                    "RODOILHA": "Rodoilha",
+                    "RODOCARGAS": "Rodocargas",
+                    "FORMATO": "Formato Transportes",
+                    "MIRIN DO SUL": "MirindoSUL",
+                    "MIRA": "Mira Transportes",
+                    "LUZ": "Luz Transportes",
+                    "TODO BRASIL": "Todo Brasil",
+                    "IDEALE": "Ideale Cargas",
+                    "RODONAVES": "Rodonaves",
+                    "TRANSWELLS": "TransWells",
+                    "BRASPRESS": "Braspress",
+                    "BRASSPRESS": "Braspress",
+                    "RÁPIDO FIGUEIREDO": "Rápido Figueiredo",
+                    "PÁSSARO": "Pássaro Transportes",
+                    "JE PETROLINA": "JE Petrolina",
+                    "TADEX": "Tadex",
+                    "THIGA": "Thiga Transportes",
+                    "FGD": "FGD Transportes",
+                    "CAMPINENSE": "Campinense",
+                    "AMAZON": "Amazon Transportes"
+                };
+                
+                let n = nomeOriginal.toUpperCase().trim();
+                for (let key in mapa) {
+                    if (n.includes(key)) return mapa[key];
+                }
+                return nomeOriginal; // Retorna o original se não encontrar correspondência
+            };
+
+            let linhas = [];
+            let maxCotacoes = 0;
+
+            // 1. Processa os itens e formata cotações
+            historicoNuvem.forEach(item => {
+                let cotacoesValidas = [];
+                if (item.cotacoes) {
+                    for (let k in item.cotacoes) {
+                        let c = item.cotacoes[k];
+                        if (c && c.valor && c.valor.trim() !== '') {
+                            let v = parseFloat(c.valor.replace(/[^\d,]/g, '').replace(',', '.'));
+                            if (!isNaN(v)) {
+                                let transpNomeRaw = k === 'FreteClick_Manual' ? (c.nomeTransp || 'FreteClick') : k;
+                                let transpNomePadronizado = formatarNome(transpNomeRaw);
+                                
+                                // Garante que o valor tem sempre "R$" na frente para ficar bonito na planilha
+                                let valorFormatado = c.valor.trim();
+                                if (!valorFormatado.toUpperCase().includes('R$')) {
+                                    valorFormatado = 'R$ ' + valorFormatado;
+                                }
+
+                                cotacoesValidas.push({ nome: transpNomePadronizado, valorStr: valorFormatado, v: v });
+                            }
+                        }
+                    }
+                }
+
+                if (cotacoesValidas.length > 0) {
+                    if (cotacoesValidas.length > maxCotacoes) maxCotacoes = cotacoesValidas.length;
+                    
+                    // Ordena para encontrar a vencedora (menor valor)
+                    cotacoesValidas.sort((a, b) => a.v - b.v);
+                    let vencedora = cotacoesValidas[0];
+
+                    let pedido = "";
+                    let matchPedido = (item.texto || "").match(/PEDIDO\s+([^\.]+)/);
+                    if (matchPedido) pedido = matchPedido[1].trim();
+                    else pedido = item.id;
+
+                    let uf = item.uf || "";
+                    let cidade = "";
+                    let matchCep = (item.texto || "").match(/CEP DESTINATÁRIO:.*-\s*(.*)/);
+                    if (matchCep) {
+                        let partes = matchCep[1].split('/');
+                        cidade = partes[0].trim();
+                        if(!uf && partes.length > 1) uf = partes[1].trim();
+                    }
+
+                    linhas.push({
+                        pedido: pedido,
+                        uf: uf,
+                        cidade: cidade,
+                        cotacoes: cotacoesValidas,
+                        vencedoraNome: vencedora.nome,
+                        vencedoraValor: vencedora.valorStr
+                    });
+                }
+            });
+
+            if (linhas.length === 0) {
+                showToast('Nenhuma cotação com valores preenchidos encontrada.', 'alert');
+                return;
+            }
+
+            // 2. Constrói o Cabeçalho com colunas desmembradas (Nome e Valor separados)
+            let csvContent = "PEDIDO;UF;CIDADE;";
+            for (let i = 1; i <= maxCotacoes; i++) {
+                csvContent += `COTAÇÃO ${i} NOME;COTAÇÃO ${i} VALOR;`;
+            }
+            csvContent += "VENCEDORA NOME;VENCEDORA VALOR\n";
+
+            // 3. Constrói as Linhas respeitando as células vazias
+            linhas.forEach(linha => {
+                let rowStr = `${linha.pedido};${linha.uf};${linha.cidade};`;
+                
+                for (let i = 0; i < maxCotacoes; i++) {
+                    if (i < linha.cotacoes.length) {
+                        rowStr += `${linha.cotacoes[i].nome};${linha.cotacoes[i].valorStr};`;
+                    } else {
+                        rowStr += ";;"; // Adiciona duas células vazias caso falte cotação
+                    }
+                }
+                rowStr += `${linha.vencedoraNome};${linha.vencedoraValor}\n`;
+                csvContent += rowStr;
+            });
+
+            // 4. Cria e baixa o ficheiro CSV
+            let blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            let url = URL.createObjectURL(blob);
+            let link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Relatorio_Cotacoes_${new Date().getTime()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Relatório baixado com sucesso!', 'success');
+        }
 
     function abrirSpotifyPopup() {
         const url = 'https://open.spotify.com/playlist/7kHnSfFVdf6HzrdQQ5XswS';
