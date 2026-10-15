@@ -375,7 +375,7 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1.5 block pl-1">Razão Social</label>
-                        <input type="text" id="destNome" class="input-field input-disabled font-medium" readonly placeholder="Busca automática..." oninput="dadosAlterados()">
+                        <input type="text" id="destNome" class="input-field font-medium" placeholder="Nome ou Razão Social..." oninput="dadosAlterados()">
                     </div>
                     <div>
                         <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1.5 block pl-1">CEP</label>
@@ -383,7 +383,7 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-semibold text-slate-500 uppercase mb-1.5 block pl-1">Cidade / UF</label>
-                        <input type="text" id="destCidade" class="input-field input-disabled font-medium" readonly placeholder="Busca automática..." oninput="dadosAlterados()">
+                        <input type="text" id="destCidade" class="input-field font-medium" placeholder="Ex: São Paulo / SP" oninput="dadosAlterados()">
                     </div>
                 </div>
 
@@ -1073,10 +1073,35 @@
             let cnpjLimpo = cnpj.replace(/\D/g, '');
             if (cnpjLimpo.length === 14) {
                 document.getElementById(loadingId).classList.remove('hidden');
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000); // Cancela se demorar mais de 8 segundos
+
                 try {
-                    let response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
-                    if (response.ok) { let data = await response.json(); document.getElementById(nomeId).value = data.nome_fantasia || data.razao_social || ""; dadosAlterados(); }
-                } catch (error) {} finally { document.getElementById(loadingId).classList.add('hidden'); }
+                    // Tentativa 1: BrasilAPI
+                    let response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`, { signal: controller.signal });
+                    if (response.ok) { 
+                        let data = await response.json(); 
+                        document.getElementById(nomeId).value = data.nome_fantasia || data.razao_social || ""; 
+                        dadosAlterados(); 
+                    } else {
+                        // Tentativa 2: Fallback para o CNPJ.ws
+                        let fallback = await fetch(`https://publica.cnpj.ws/cnpj/${cnpjLimpo}`, { signal: controller.signal });
+                        if (fallback.ok) {
+                            let dataFall = await fallback.json();
+                            document.getElementById(nomeId).value = dataFall.estabelecimento?.nome_fantasia || dataFall.razao_social || "";
+                            dadosAlterados();
+                        } else {
+                            showToast("CNPJ não encontrado. Por favor, preencha manualmente.", "alert");
+                            document.getElementById(nomeId).focus();
+                        }
+                    }
+                } catch (error) { 
+                    showToast("Falha na consulta automática. Preencha o nome manualmente.", "error");
+                    document.getElementById(nomeId).focus();
+                } finally { 
+                    clearTimeout(timeoutId);
+                    document.getElementById(loadingId).classList.add('hidden'); 
+                }
             }
         }
 
@@ -1084,13 +1109,27 @@
             let cepLimpo = cep.replace(/\D/g, '');
             if (cepLimpo.length === 8) {
                 document.getElementById(loadingId).classList.remove('hidden');
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000); // Proteção para o CEP também
+
                 try {
-                    let response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+                    let response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`, { signal: controller.signal });
                     if (response.ok) {
                         let data = await response.json();
-                        if (!data.erro) { document.getElementById(cidadeId).value = `${data.localidade} / ${data.uf}`; sugerirTransportadora(data.uf); dadosAlterados(); }
+                        if (!data.erro) { 
+                            document.getElementById(cidadeId).value = `${data.localidade} / ${data.uf}`; 
+                            sugerirTransportadora(data.uf); 
+                            dadosAlterados(); 
+                        } else {
+                            showToast("CEP não encontrado. Preencha manualmente.", "alert");
+                        }
                     }
-                } catch (error) {} finally { document.getElementById(loadingId).classList.add('hidden'); }
+                } catch (error) { 
+                    showToast("Falha ao buscar CEP. Preencha manualmente.", "error");
+                } finally { 
+                    clearTimeout(timeoutId);
+                    document.getElementById(loadingId).classList.add('hidden'); 
+                }
             }
         }
 
