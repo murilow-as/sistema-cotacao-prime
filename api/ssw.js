@@ -1,48 +1,81 @@
 export default async function handler(req, res) {
+    // Cabeçalhos CORS para permitir que o seu Portal de Rastreio leia os dados
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     const { cnpj, nf } = req.query;
 
     if (!cnpj || !nf) {
-        return res.status(400).json({ error: "Faltam parâmetros CNPJ ou NF." });
+        return res.status(400).json({ sucesso: false, erro: "Faltam parâmetros CNPJ ou NF." });
     }
 
-    // A MÁGICA: Bater no endpoint clássico (que tem a tabela real) em vez do /app/tracking
-    const urlClassic = `https://ssw.inf.br/2/rastreamento_nfe?cnpj=${cnpj}&nfe=${nf}`;
+    // Higienização de entrada (Exatamente como na spec)
+    const cnpj_limpo = String(cnpj).replace(/\D/g, "");
+    const nf_limpa = String(nf).replace(/\D/g, "");
+    
+    // URL alvo do Web Scraping
+    const url = `https://ssw.inf.br/app/tracking/${cnpj_limpo}/${nf_limpa}`;
 
     try {
-        let response = await fetch(urlClassic, {
+        const response = await fetch(url, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "Accept-Language": "pt-BR,pt;q=0.9"
             }
         });
 
         if (!response.ok) {
-            throw new Error(`O SSW respondeu com erro: ${response.status}`);
+            throw new Error(`Erro HTTP: ${response.status}`);
         }
 
-        let html = await response.text();
-
-        // O SSW esconde a tabela dentro de um iframe. A Vercel resolve isso automaticamente no backend!
-        const frameMatch = html.match(/<i?frame[^>]+src=["']([^"']+)["']/i);
-        if (frameMatch && !html.toLowerCase().includes('situação')) {
-            let fPath = frameMatch[1];
-            // Monta o link do frame
-            let fUrl = fPath.startsWith('http') ? fPath : `https://ssw.inf.br/2/${fPath.replace(/^\.\//, '')}`;
-            
-            let frameResponse = await fetch(fUrl, {
-                headers: { 'User-Agent': 'Mozilla/5.0' }
-            });
-            
-            if (frameResponse.ok) {
-                html = await frameResponse.text();
-            }
-        }
-
-        // Permite que o seu portal leia isto sem ser bloqueado por CORS
-        res.setHeader('Access-Control-Allow-Origin', '*'); 
-        res.status(200).send(html);
+        const html = await response.text();
         
+        // Remove tags HTML para simular o comportamento do BeautifulSoup (get_text)
+        const texto_pagina = html.replace(/<[^>]+>/g, ' ');
+
+        // 1. Busca por Previsão de Entrega
+        const regexPrevisao = /Previs[aã]o de entrega:\s*(\d{2}\/\d{2}\/\d{2,4})/i;
+        const previsaoMatch = texto_pagina.match(regexPrevisao);
+        const previsao = previsaoMatch ? previsaoMatch[1] : null;
+
+        // 2. Busca por Data Efetiva de Entrega
+        const regexEntrega1 = /ENTREGUE\s+EM\s+(\d{2}\/\d{2}\/\d{2,4})/i;
+        const regexEntrega2 = /MERCADORIA ENTREGUE.*?(\d{2}\/\d{2}\/\d{2,4})/i;
+        const entregaMatch = texto_pagina.match(regexEntrega1) || texto_pagina.match(regexEntrega2);
+        const data_entrega = entregaMatch ? entregaMatch[1] : null;
+
+        // 3. Definição do status
+        let status = "NAO_ENCONTRADO_OU_SEM_DADOS";
+        if (data_entrega) {
+            status = "ENTREGUE";
+        } else if (previsao) {
+            status = "EM TRÂNSITO / PENDENTE";
+        }
+
+        // Retorna o Payload JSON
+        return res.status(200).json({
+            sucesso: true,
+            cnpj: cnpj_limpo,
+            nf: nf_limpa,
+            previsao_entrega: previsao,
+            data_entrega: data_entrega,
+            status: status,
+            erro: null
+        });
+
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            sucesso: false,
+            cnpj: cnpj_limpo,
+            nf: nf_limpa,
+            previsao_entrega: null,
+            data_entrega: null,
+            status: "ERRO_CONEXAO",
+            erro: error.message
+        });
     }
 }
